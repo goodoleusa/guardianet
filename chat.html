@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guardian Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     :root {
-      --bg:        #d4d0c8;    /* Windows 98 grey */
+      --bg:        #d4d0c8;
       --white:     #ffffff;
       --black:     #000000;
-      --hi:        #dfdfdf;    /* highlight edge */
-      --shadow:    #808080;    /* shadow edge */
-      --darkshadow:#404040;    /* dark shadow */
-      --titleL:    #000080;    /* title bar gradient start */
-      --titleR:    #1084d0;    /* title bar gradient end */
-      --desktop:   #008080;    /* Win98 teal desktop */
+      --hi:        #dfdfdf;
+      --shadow:    #808080;
+      --darkshadow:#404040;
+      --titleL:    #000080;
+      --titleR:    #1084d0;
+      --desktop:   #008080;
       --aim-blue:  #0033bb;
       --aim-link:  #0000cc;
       --aim-yellow:#ffcc00;
-      --msg-self:  #0000cc;    /* classic AIM blue for self */
-      --msg-other: #cc0000;    /* classic AIM red for others */
+      --msg-self:  #0000cc;
+      --msg-other: #cc0000;
       --msg-sys:   #007700;
       --font-ui:   'Tahoma','Arial',sans-serif;
       --font-msg:  'Arial','Helvetica',sans-serif;
@@ -29,8 +30,8 @@
     html, body { height: 100%; overflow: hidden; background: var(--desktop); font-family: var(--font-ui); font-size: 11px; color: var(--black); }
 
     /* ── Win98 primitives ── */
-    .raised  { border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); box-shadow:inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow); }
-    .sunken  { border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); box-shadow:inset 1px 1px 0 var(--darkshadow); }
+    .raised { border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); box-shadow:inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow); }
+    .sunken { border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); box-shadow:inset 1px 1px 0 var(--darkshadow); }
 
     .titlebar { background:linear-gradient(90deg,var(--titleL),var(--titleR)); height:22px; padding:2px 4px 2px 6px; display:flex; align-items:center; gap:4px; user-select:none; flex-shrink:0; }
     .titlebar-text { color:white; font:bold 11px 'Tahoma',sans-serif; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
@@ -39,22 +40,34 @@
     .wbtn { width:16px; height:14px; background:var(--bg); border:1px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); font:bold 8px 'Arial'; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:#000; flex-shrink:0; }
     .wbtn:hover { background:#e8e8e8; }
     .wbtn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); }
-    .wbtn.close { font-size:9px; }
-
-    .menubar { background:var(--bg); display:flex; align-items:center; padding:1px 2px; border-bottom:1px solid var(--shadow); height:19px; flex-shrink:0; }
-    .mitem { padding:1px 6px; font:11px 'Tahoma'; cursor:pointer; }
-    .mitem:hover { background:#000080; color:white; }
 
     .w98-btn { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); padding:2px 8px; font:11px 'Tahoma'; cursor:pointer; color:#000; white-space:nowrap; min-width:36px; }
     .w98-btn:hover { background:#e8e8e8; }
     .w98-btn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); padding:3px 7px 1px 9px; }
     .w98-btn:disabled { color:var(--shadow); cursor:default; }
-    .w98-btn.def { border-color:var(--shadow) var(--hi) var(--hi) var(--shadow); } /* default button has extra dark border */
+    .w98-btn.def { outline:2px solid #000; outline-offset:-4px; }
+
+    /* ── Dropdown menus ── */
+    .menubar { background:var(--bg); display:flex; align-items:center; padding:1px 2px; border-bottom:1px solid var(--shadow); height:19px; flex-shrink:0; position:relative; z-index:100; }
+    .mitem-wrap { position:relative; }
+    .mitem { padding:1px 6px; font:11px 'Tahoma'; cursor:pointer; display:block; line-height:17px; }
+    .mitem:hover, .mitem.open { background:#000080; color:white; }
+    .mdrop { position:absolute; top:17px; left:0; background:var(--bg); border:2px solid; border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); min-width:180px; z-index:500; display:none; box-shadow:3px 3px 0 rgba(0,0,0,0.25); }
+    .mdrop.open { display:block; }
+    .ditem { padding:3px 20px 3px 6px; font:11px 'Tahoma'; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+    .ditem:hover { background:#000080; color:white; }
+    .ditem-ico { width:14px; text-align:center; font-size:11px; }
+    .ditem-key { margin-left:auto; font:9px 'Tahoma'; color:var(--shadow); padding-left:12px; }
+    .ditem:hover .ditem-key { color:#a0b8ff; }
+    .ditem.dim { color:var(--shadow); cursor:default; }
+    .ditem.dim:hover { background:transparent; color:var(--shadow); }
+    .dsep { border-top:1px solid var(--shadow); margin:2px 0; }
+    .menu-conn { margin-left:auto; padding:0 6px; font:10px 'Tahoma'; color:#808080; }
 
     /* ── Layout ── */
     .desktop { display:flex; height:100vh; gap:3px; padding:3px; }
 
-    /* ── Buddy List window ── */
+    /* ── Buddy List ── */
     .bl-win { width:188px; min-width:188px; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); }
 
     .sn-bar { background:white; border-bottom:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; display:flex; align-items:center; gap:5px; flex-shrink:0; }
@@ -66,7 +79,6 @@
 
     .buddy-scroll { flex:1; overflow-y:auto; background:white; }
 
-    .bcat { }
     .bcat-hdr { background:var(--bg); padding:2px 4px 2px 6px; font:bold 11px 'Tahoma'; cursor:pointer; display:flex; align-items:center; gap:3px; user-select:none; border-bottom:1px solid var(--shadow); }
     .bcat-hdr:hover { background:#e4e0d8; }
     .bcat-arr { font-size:7px; transition:transform 0.1s; }
@@ -83,7 +95,7 @@
     .bitem-ico { font-size:13px; flex-shrink:0; }
     .bitem-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .bitem-sub { font-size:9px; color:var(--shadow); }
-    .bitem-badge { margin-left:auto; background:#cc0000; color:white; font:bold 8px 'Tahoma'; padding:0 3px; min-width:13px; text-align:center; border-radius:1px; }
+    .bitem-badge { margin-left:auto; background:#cc0000; color:white; font:bold 8px 'Tahoma'; padding:0 3px; min-width:13px; text-align:center; }
 
     .bl-toolbar { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:4px 4px 3px; display:flex; gap:3px; flex-shrink:0; }
     .bl-toolbar .w98-btn { padding:2px 5px; font-size:10px; }
@@ -97,100 +109,150 @@
     .ctab.active { background:var(--bg); font-weight:bold; border-bottom:2px solid var(--bg); }
 
     /* Message area */
-    .msg-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; margin:3px 3px 0; }
-    .msg-area { flex:1; background:white; overflow-y:auto; padding:6px 8px; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Arial'; }
+    .msg-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; margin:3px 3px 0; min-height:0; }
+    .msg-area { flex:1; background:white; overflow-y:auto; padding:6px 8px; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Arial'; min-height:0; }
 
-    /* AIM-style messages */
     .aim-msg { margin-bottom:3px; line-height:1.55; }
     .aim-who { font:bold 11px 'Tahoma'; }
     .aim-who.me { color:var(--msg-self); }
     .aim-who.them { color:var(--msg-other); }
     .aim-who.sys { color:var(--msg-sys); font-style:italic; font-weight:normal; }
-    .aim-ts { font:9px 'Tahoma'; color:var(--shadow); margin-left:3px; font-weight:normal; }
+    .aim-ts { font:9px 'Tahoma'; color:var(--shadow); margin-left:3px; }
     .aim-body { display:block; font:12px 'Arial'; color:#000; padding-left:4px; }
     .aim-body a { color:var(--aim-link); text-decoration:underline; }
-    .aim-body a:hover { color:blue; }
     .cid-badge { background:#eef0ff; border:1px solid #0000bb; padding:0 3px; font:10px 'Tahoma'; color:#0000bb; margin-right:2px; }
-    .aim-divider { border:none; border-top:1px solid #e0e0e0; margin:5px 0; }
 
     /* Format bar */
     .fmt-bar { background:var(--bg); border-top:1px solid var(--shadow); border-bottom:1px solid #c0bdb5; padding:2px 6px; display:flex; align-items:center; gap:2px; flex-shrink:0; }
     .fmt-btn { background:var(--bg); border:1px solid transparent; padding:1px 5px; cursor:pointer; font-size:11px; color:#000; min-width:20px; text-align:center; }
     .fmt-btn:hover { border-color:var(--shadow); background:#e4e0d8; }
+    .fmt-btn.active { border-color:var(--shadow); background:#c8c4bc; font-weight:bold; }
     .fmt-sep { width:1px; height:14px; background:var(--shadow); margin:0 2px; }
     .fmt-spacer { flex:1; }
     .warn-lv { font:10px 'Tahoma'; color:var(--shadow); white-space:nowrap; }
 
-    /* Typing row */
-    .typing-row { height:16px; padding:0 8px; font:italic 10px 'Tahoma'; color:var(--shadow); flex-shrink:0; overflow:hidden; }
+    .typing-row { height:16px; padding:0 8px; font:italic 10px 'Tahoma'; color:var(--shadow); flex-shrink:0; }
 
-    /* Input */
     .input-row { display:flex; gap:4px; padding:3px 4px; background:var(--bg); flex-shrink:0; }
     .chat-input { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:3px 5px; font:12px 'Arial'; color:#000; outline:none; }
 
-    /* Status bar */
     .aim-sb { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:1px 8px; font:10px 'Tahoma'; color:#000; display:flex; gap:12px; height:19px; align-items:center; flex-shrink:0; }
     .sb-sep { width:1px; height:12px; background:var(--shadow); }
 
     /* ── Modal ── */
-    .modal-ov { position:fixed; inset:0; background:rgba(0,0,60,0.5); display:flex; align-items:center; justify-content:center; z-index:100; }
+    .modal-ov { position:fixed; inset:0; background:rgba(0,0,60,0.5); display:flex; align-items:center; justify-content:center; z-index:200; }
     .modal-win { background:var(--bg); border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); width:310px; }
     .modal-body { padding:14px 16px; }
     .modal-label { font:11px 'Tahoma'; margin-bottom:6px; }
     .name-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px; }
     .name-opt { background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; font:11px 'Tahoma'; cursor:pointer; text-align:center; color:var(--aim-blue); }
-    .name-opt:hover,.name-opt.picked { background:#000080; color:white; border-color:#000080; }
+    .name-opt:hover, .name-opt.picked { background:#000080; color:white; border-color:#000080; }
     .shuffle-lnk { font:10px 'Tahoma'; color:var(--aim-link); cursor:pointer; text-decoration:underline; text-align:center; display:block; margin-bottom:10px; }
-    .shuffle-lnk:hover { color:blue; }
     .modal-div { text-align:center; font:10px 'Tahoma'; color:var(--shadow); margin:6px 0; }
     .modal-footer { display:flex; justify-content:flex-end; gap:6px; margin-top:12px; }
     .modal-note { font:9px 'Tahoma'; color:var(--shadow); margin-top:8px; text-align:center; }
 
-    /* AOL toast */
-    .aol-toast { position:fixed; bottom:8px; right:8px; background:#ffffcc; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); padding:8px 12px; font:11px 'Tahoma'; color:#000; z-index:200; max-width:240px; box-shadow:2px 2px 4px rgba(0,0,0,0.4); animation:tIn .15s ease; }
+    /* ── Export / IPFS modal ── */
+    .xmodal-ov { position:fixed; inset:0; background:rgba(0,0,60,0.5); display:flex; align-items:center; justify-content:center; z-index:300; }
+    .xmodal-win { background:var(--bg); border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); width:460px; max-height:82vh; display:flex; flex-direction:column; }
+    .xmodal-body { padding:10px 14px 4px; overflow-y:auto; flex:1; font:11px 'Tahoma'; line-height:1.6; }
+    .xmodal-body pre { background:white; border:1px solid var(--shadow); padding:5px 8px; font:10px 'Courier New'; overflow-x:auto; margin:5px 0 8px; color:#000; white-space:pre; }
+    .xmodal-body h4 { font:bold 11px 'Tahoma'; margin:10px 0 4px; color:#000080; border-bottom:1px solid #b0aaa0; padding-bottom:2px; }
+    .xmodal-body p { margin-bottom:5px; }
+    .xmodal-footer { padding:6px 14px 10px; display:flex; justify-content:flex-end; gap:6px; border-top:1px solid var(--shadow); flex-shrink:0; }
+
+    /* ── Code Pad ── */
+    .codepad { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); display:flex; flex-direction:column; flex-shrink:0; height:200px; }
+    .codepad-bar { padding:2px 4px; display:flex; align-items:center; gap:3px; height:24px; border-bottom:1px solid var(--shadow); background:var(--bg); flex-shrink:0; }
+    .codepad-lbl { font:bold 11px 'Tahoma'; margin-right:2px; }
+    .codepad-who { font:italic 10px 'Tahoma'; color:var(--shadow); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Pad mode tabs */
+    .pad-modes { display:flex; gap:0; margin-right:4px; }
+    .pm { background:var(--bg); border:1px solid var(--shadow); border-bottom:none; padding:1px 7px; font:10px 'Tahoma'; cursor:pointer; color:#000; }
+    .pm:hover { background:#e4e0d8; }
+    .pm.active { background:white; font-weight:bold; position:relative; z-index:1; }
+
+    .pad-pane { display:flex; flex:1; overflow:hidden; min-height:0; }
+    .pad-pane.hidden { display:none; }
+
+    .codepad-area { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Courier New','Lucida Console',monospace; padding:4px 6px; color:#000; outline:none; resize:none; margin:3px; tab-size:2; }
+
+    /* Arduino mode split */
+    .ard-split { display:flex; flex:1; overflow:hidden; min-height:0; }
+    .ard-editor { flex:1; display:flex; min-height:0; }
+    .ard-snippets { width:148px; min-width:148px; background:#f0ede6; border-left:1px solid var(--shadow); overflow-y:auto; padding:3px; display:flex; flex-direction:column; gap:2px; }
+    .snip-hdr { font:bold 9px 'Tahoma'; color:var(--shadow); padding:2px 3px 1px; text-transform:uppercase; letter-spacing:.5px; }
+    .snip-card { background:white; border:1px solid #c0bdb5; padding:3px 5px; cursor:pointer; }
+    .snip-card:hover { background:#000080; color:white; border-color:#000080; }
+    .snip-title { font:bold 10px 'Tahoma'; display:block; }
+    .snip-prev { font:9px 'Courier New'; color:var(--shadow); display:block; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .snip-card:hover .snip-prev, .snip-card:hover .snip-title { color:white; }
+
+    /* BOM mode */
+    .bom-wrap { display:flex; flex-direction:column; flex:1; overflow:hidden; min-height:0; }
+    .bom-toolbar { padding:2px 5px; background:var(--bg); border-bottom:1px solid var(--shadow); display:flex; gap:4px; align-items:center; flex-shrink:0; }
+    .bom-toolbar .w98-btn { padding:1px 7px; font-size:10px; }
+    .bom-scroll { flex:1; overflow:auto; margin:3px; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); background:white; }
+    .bom-table { border-collapse:collapse; width:100%; font:11px 'Tahoma'; }
+    .bom-table th { background:#e8e4dc; border-bottom:2px solid var(--shadow); border-right:1px solid #c0bdb5; padding:2px 6px; text-align:left; font:bold 10px 'Tahoma'; white-space:nowrap; position:sticky; top:0; }
+    .bom-table td { border-bottom:1px solid #e8e4dc; border-right:1px solid #e8e4dc; padding:0; }
+    .bom-table td input { border:none; outline:none; width:100%; font:11px 'Tahoma'; padding:2px 4px; background:transparent; }
+    .bom-table td input:focus { background:#fffff0; }
+    .bom-table tr:nth-child(even) td { background:#f8f6f2; }
+    .bom-table tr:hover td { background:#e8e8f8; }
+    .bom-del { background:none; border:none; cursor:pointer; color:#808080; font:11px 'Arial'; padding:0 5px; }
+    .bom-del:hover { color:#cc0000; }
+
+    /* ── Toast ── */
+    .aol-toast { position:fixed; bottom:8px; right:8px; background:#ffffcc; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); padding:8px 12px; font:11px 'Tahoma'; color:#000; z-index:400; max-width:260px; box-shadow:2px 2px 4px rgba(0,0,0,0.35); animation:tIn .15s ease; }
     @keyframes tIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 
     ::-webkit-scrollbar { width:16px; }
     ::-webkit-scrollbar-track { background:var(--bg); border:1px solid var(--shadow); }
     ::-webkit-scrollbar-thumb { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); }
 
-    /* ── Code Pad ── */
-    .codepad { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); display:flex; flex-direction:column; flex-shrink:0; height:180px; }
-    .codepad-bar { padding:2px 5px; display:flex; align-items:center; gap:4px; height:23px; border-bottom:1px solid var(--shadow); background:var(--bg); }
-    .codepad-lbl { font:bold 11px 'Tahoma'; }
-    .codepad-who { font:italic 10px 'Tahoma'; color:var(--shadow); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:6px; }
-    .codepad-area { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Courier New','Lucida Console',monospace; padding:4px 6px; color:#000; outline:none; resize:none; margin:3px; tab-size:2; }
-    .codepad-area::placeholder { color:#b0b0b0; }
-
     .hidden { display:none!important; }
   </style>
 </head>
 <body>
 
-<!-- ── Screen name modal ─────────────────────────────────────────────────── -->
+<!-- ── Screen name modal ── -->
 <div class="modal-ov" id="nameModal">
   <div class="modal-win">
     <div class="titlebar">
       <span class="titlebar-icon">🏃</span>
       <span class="titlebar-text">Welcome to Guardian Chat</span>
-      <div class="wbtn close">✕</div>
     </div>
     <div class="modal-body">
       <div class="modal-label"><b>Choose your Guardian screen name:</b></div>
       <div class="name-grid" id="nameGrid"></div>
-      <a class="shuffle-lnk" id="shuffleBtn">↻ Generate more names</a>
+      <a class="shuffle-lnk" id="shuffleBtn" href="#">↻ Generate more names</a>
       <div class="modal-div">— or enter your own below —</div>
       <div class="modal-label">Screen name:</div>
-      <input class="w98-btn" style="width:100%;padding:3px 6px;background:white;border:2px solid;border-color:#808080 #fff #fff #808080;font:12px Tahoma;color:#000;outline:none" id="nameInput" maxlength="16" autocomplete="off" spellcheck="false">
+      <input style="width:100%;padding:3px 6px;background:white;border:2px solid;border-color:#808080 #fff #fff #808080;font:12px Tahoma;color:#000;outline:none;display:block" id="nameInput" maxlength="16" autocomplete="off" spellcheck="false">
       <div class="modal-footer">
-        <button class="w98-btn def" id="nameBtn" style="padding:3px 20px">Sign On</button>
+        <button class="w98-btn def" id="nameBtn" style="padding:3px 20px">Sign On ▶</button>
       </div>
       <div class="modal-note">No account required. Name saved locally.</div>
     </div>
   </div>
 </div>
 
-<!-- ── Desktop ───────────────────────────────────────────────────────────── -->
+<!-- ── Export / IPFS modal ── -->
+<div class="xmodal-ov hidden" id="xmodal">
+  <div class="xmodal-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">📦</span>
+      <span class="titlebar-text" id="xmodalTitle">Export Project</span>
+      <div style="display:flex;gap:2px"><div class="wbtn close" onclick="closeXModal()">✕</div></div>
+    </div>
+    <div class="xmodal-body" id="xmodalBody"></div>
+    <div class="xmodal-footer" id="xmodalFooter"></div>
+  </div>
+</div>
+
+<!-- ── Desktop ── -->
 <div class="desktop hidden" id="appRoot">
 
   <!-- Buddy List window -->
@@ -199,39 +261,73 @@
       <span class="titlebar-icon" style="color:var(--aim-yellow)">🏃</span>
       <span class="titlebar-text">Guardian Buddy List</span>
       <div style="display:flex;gap:2px">
-        <div class="wbtn">–</div>
-        <div class="wbtn">□</div>
-        <div class="wbtn close">✕</div>
+        <div class="wbtn">–</div><div class="wbtn">□</div>
+        <div class="wbtn close" onclick="window.location='index.html'">✕</div>
       </div>
     </div>
+
     <div class="menubar">
-      <span class="mitem">File</span>
-      <span class="mitem">Edit</span>
-      <span class="mitem">People</span>
-      <span class="mitem">Help</span>
+      <!-- File menu -->
+      <div class="mitem-wrap">
+        <span class="mitem" id="mFile" onclick="toggleMenu('file')">File</span>
+        <div class="mdrop" id="mdrop-file">
+          <div class="ditem" onclick="saveChatLog()"><span class="ditem-ico">💾</span>Save Chat Log<span class="ditem-key">Ctrl+S</span></div>
+          <div class="ditem" onclick="showExportModal()"><span class="ditem-ico">📦</span>Export Project ZIP</div>
+          <div class="ditem" onclick="showIpfsModal()"><span class="ditem-ico">🌐</span>Publish to IPFS…</div>
+          <div class="dsep"></div>
+          <div class="ditem" onclick="signOff()"><span class="ditem-ico">🚪</span>Sign Off</div>
+        </div>
+      </div>
+      <!-- Edit menu -->
+      <div class="mitem-wrap">
+        <span class="mitem" id="mEdit" onclick="toggleMenu('edit')">Edit</span>
+        <div class="mdrop" id="mdrop-edit">
+          <div class="ditem" onclick="clearChat()"><span class="ditem-ico">🗑</span>Clear Chat</div>
+          <div class="ditem" onclick="copyMsgs()"><span class="ditem-ico">📋</span>Copy All Messages</div>
+          <div class="dsep"></div>
+          <div class="ditem" onclick="changeScreenName()"><span class="ditem-ico">✏</span>Change Screen Name…</div>
+          <div class="ditem" onclick="clearSaved()"><span class="ditem-ico">⚠</span>Forget My Name</div>
+        </div>
+      </div>
+      <!-- People menu -->
+      <div class="mitem-wrap">
+        <span class="mitem" id="mPeople" onclick="toggleMenu('people')">People</span>
+        <div class="mdrop" id="mdrop-people">
+          <div class="ditem" onclick="sysMsg('Online: '+Object.keys(onlinePeers).join(', ')||'just you')"><span class="ditem-ico">👥</span>Who's Online</div>
+          <div class="ditem" onclick="focusInput()"><span class="ditem-ico">💬</span>Send Instant Message</div>
+          <div class="dsep"></div>
+          <div class="ditem dim"><span class="ditem-ico">📬</span>Invite to Room<span class="ditem-key">soon</span></div>
+        </div>
+      </div>
+      <!-- Help menu -->
+      <div class="mitem-wrap">
+        <span class="mitem" id="mHelp" onclick="toggleMenu('help')">Help</span>
+        <div class="mdrop" id="mdrop-help">
+          <div class="ditem" onclick="sysMsg('/help /rooms /name /clear /asl /cid /bom — type any command in chat')"><span class="ditem-ico">❓</span>Chat Commands</div>
+          <div class="ditem" onclick="showAbout()"><span class="ditem-ico">ℹ</span>About Guardian Chat</div>
+        </div>
+      </div>
     </div>
 
     <!-- My SN -->
     <div class="sn-bar">
       <div class="sn-icon">🏃</div>
       <div class="sn-info">
-        <div class="sn-name" id="snDisplay" title="Click to change">(loading)</div>
+        <div class="sn-name" id="snDisplay" title="Click to change">(loading…)</div>
         <div class="sn-status">● Available</div>
       </div>
     </div>
 
     <!-- Buddy scroll -->
     <div class="buddy-scroll" id="buddyScroll">
-      <!-- Chat Rooms category -->
       <div class="bcat" id="catRooms">
         <div class="bcat-hdr" onclick="toggleCat('catRooms')">
           <span class="bcat-arr" id="arr-catRooms">▼</span>
           Chat Rooms
-          <span class="bcat-cnt" id="cnt-catRooms">5</span>
+          <span class="bcat-cnt" id="cnt-catRooms">0</span>
         </div>
-        <div class="bcat-body" id="body-catRooms" id="roomList"></div>
+        <div class="bcat-body" id="body-catRooms"></div>
       </div>
-      <!-- Online guardians category -->
       <div class="bcat" id="catOnline">
         <div class="bcat-hdr" onclick="toggleCat('catOnline')">
           <span class="bcat-arr" id="arr-catOnline">▼</span>
@@ -244,10 +340,10 @@
 
     <!-- Toolbar -->
     <div class="bl-toolbar">
-      <button class="w98-btn" title="Send an Instant Message" onclick="focusInput()">IM</button>
-      <button class="w98-btn" title="Go to chat room" id="blChatBtn">Chat</button>
-      <button class="w98-btn" style="color:#808080" title="Set Away message">Away</button>
-      <button class="w98-btn" style="margin-left:auto" title="Preferences" onclick="window.location='index.html'">Net ↗</button>
+      <button class="w98-btn" onclick="focusInput()">IM</button>
+      <button class="w98-btn" onclick="focusInput()">Chat</button>
+      <button class="w98-btn" style="color:#808080">Away</button>
+      <button class="w98-btn" style="margin-left:auto" onclick="window.location='index.html'">Net ↗</button>
     </div>
   </div>
 
@@ -257,18 +353,53 @@
       <span class="titlebar-icon">💬</span>
       <span class="titlebar-text" id="winTitle">Guardian Chat</span>
       <div style="display:flex;gap:2px">
-        <div class="wbtn">–</div>
-        <div class="wbtn">□</div>
+        <div class="wbtn">–</div><div class="wbtn">□</div>
         <div class="wbtn close" onclick="window.location='index.html'">✕</div>
       </div>
     </div>
+
+    <!-- Chat window menubar -->
     <div class="menubar">
-      <span class="mitem">File</span>
-      <span class="mitem">Edit</span>
-      <span class="mitem">Insert</span>
-      <span class="mitem">People</span>
-      <span class="mitem">Smileys</span>
-      <span class="mitem" style="margin-left:auto;text-decoration:none;color:#808080" id="tbConn">connecting…</span>
+      <div class="mitem-wrap">
+        <span class="mitem" onclick="toggleMenu('cfile')">File</span>
+        <div class="mdrop" id="mdrop-cfile">
+          <div class="ditem" onclick="saveChatLog()"><span class="ditem-ico">💾</span>Save Chat Log</div>
+          <div class="ditem" onclick="showExportModal()"><span class="ditem-ico">📦</span>Export Project ZIP</div>
+          <div class="ditem" onclick="showIpfsModal()"><span class="ditem-ico">🌐</span>Publish to IPFS…</div>
+          <div class="dsep"></div>
+          <div class="ditem" onclick="window.location='chain.html'"><span class="ditem-ico">⛓</span>Dead Man's Chain ↗</div>
+        </div>
+      </div>
+      <div class="mitem-wrap">
+        <span class="mitem" onclick="toggleMenu('cedit')">Edit</span>
+        <div class="mdrop" id="mdrop-cedit">
+          <div class="ditem" onclick="clearChat()"><span class="ditem-ico">🗑</span>Clear Chat</div>
+          <div class="ditem" onclick="copyMsgs()"><span class="ditem-ico">📋</span>Copy All Messages</div>
+        </div>
+      </div>
+      <div class="mitem-wrap">
+        <span class="mitem" onclick="toggleMenu('chard')">Hardware</span>
+        <div class="mdrop" id="mdrop-chard">
+          <div class="ditem" onclick="openPadMode('arduino')"><span class="ditem-ico">🔧</span>Arduino Pad</div>
+          <div class="ditem" onclick="openPadMode('bom')"><span class="ditem-ico">📋</span>Bill of Materials</div>
+          <div class="ditem" onclick="openPadMode('code')"><span class="ditem-ico">💻</span>Code Pad</div>
+          <div class="dsep"></div>
+          <div class="ditem" onclick="switchRoom('hardware')"><span class="ditem-ico">⚡</span>Go to #hardware-lab</div>
+          <div class="ditem" onclick="showSchematicHelp()"><span class="ditem-ico">📐</span>Schematic via IPFS…</div>
+        </div>
+      </div>
+      <div class="mitem-wrap">
+        <span class="mitem" onclick="toggleMenu('csmil')">Smileys</span>
+        <div class="mdrop" id="mdrop-csmil">
+          <div class="ditem" onclick="insertEmoji(':-)')"><span class="ditem-ico">😊</span>Happy  :-)</div>
+          <div class="ditem" onclick="insertEmoji(':-D')"><span class="ditem-ico">😁</span>Grin   :-D</div>
+          <div class="ditem" onclick="insertEmoji(';-)')"><span class="ditem-ico">😉</span>Wink   ;-)</div>
+          <div class="ditem" onclick="insertEmoji(':-(')" ><span class="ditem-ico">😞</span>Sad    :-(</div>
+          <div class="ditem" onclick="insertEmoji(':-O')"><span class="ditem-ico">😮</span>Shock  :-O</div>
+          <div class="ditem" onclick="insertEmoji(':roll:')"><span class="ditem-ico">🙄</span>Eye roll</div>
+        </div>
+      </div>
+      <span class="menu-conn" id="tbConn">connecting…</span>
     </div>
 
     <!-- Tabs -->
@@ -279,38 +410,88 @@
       <div class="msg-area" id="msgArea"></div>
     </div>
 
-    <!-- Typing -->
-    <!-- Code Pad — shared live buffer -->
+    <!-- CodePad (collapsed by default) -->
     <div class="codepad hidden" id="codePad">
       <div class="codepad-bar">
-        <span class="codepad-lbl">📝 CodePad</span>
+        <!-- Mode tabs -->
+        <div class="pad-modes">
+          <button class="pm active" data-mode="code" onclick="switchPadMode('code')">Code</button>
+          <button class="pm" data-mode="arduino" onclick="switchPadMode('arduino')">Arduino</button>
+          <button class="pm" data-mode="bom" onclick="switchPadMode('bom')">BOM</button>
+        </div>
+        <span class="codepad-lbl" id="padLabel">📝 CodePad</span>
         <span class="codepad-who" id="padWho">shared · real-time P2P sync</span>
         <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padCopy">Copy</button>
         <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClear">Clear</button>
         <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClose">Close</button>
       </div>
-      <textarea class="codepad-area" id="padArea" spellcheck="false"
-        placeholder="// Shared code pad — everyone in this room sees your changes in real-time&#10;// Paste a snippet, draft a function, or drop a CID for review&#10;// No server — synced via Gun.js P2P"></textarea>
+
+      <!-- Code pane -->
+      <div class="pad-pane" id="pane-code">
+        <textarea class="codepad-area" id="padArea" spellcheck="false"
+          placeholder="// Shared code pad — everyone in this room sees your changes in real-time&#10;// Paste a snippet, draft a function, or drop a CID for review&#10;// No server — synced via Gun.js P2P"></textarea>
+      </div>
+
+      <!-- Arduino pane -->
+      <div class="pad-pane hidden" id="pane-arduino">
+        <div class="ard-split">
+          <div class="ard-editor">
+            <textarea class="codepad-area" id="ardArea" spellcheck="false"
+              placeholder="// Arduino / Embedded sketch&#10;// Shared in real-time with this room&#10;&#10;void setup() {&#10;&#10;}&#10;&#10;void loop() {&#10;&#10;}"></textarea>
+          </div>
+          <div class="ard-snippets" id="ardSnippets"></div>
+        </div>
+      </div>
+
+      <!-- BOM pane -->
+      <div class="pad-pane hidden" id="pane-bom">
+        <div class="bom-wrap">
+          <div class="bom-toolbar">
+            <span style="font:bold 10px Tahoma">📋 Bill of Materials</span>
+            <button class="w98-btn" onclick="addBomRow()">+ Add Part</button>
+            <button class="w98-btn" onclick="exportBomCsv()">Export CSV</button>
+            <button class="w98-btn" onclick="clearBom()">Clear</button>
+          </div>
+          <div class="bom-scroll">
+            <table class="bom-table" id="bomTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Component</th>
+                  <th>Qty</th>
+                  <th>Value / Spec</th>
+                  <th>Package</th>
+                  <th>Source</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bomBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- Typing indicator -->
     <div class="typing-row" id="typingRow"></div>
 
     <!-- Format bar -->
     <div class="fmt-bar">
-      <button class="fmt-btn" title="Bold"><b>A</b></button>
-      <button class="fmt-btn" title="Color" style="color:#0000cc">A</button>
+      <button class="fmt-btn" title="Bold" onclick="wrapInput('**','**')"><b>A</b></button>
+      <button class="fmt-btn" title="Color A" style="color:#0000cc">A</button>
       <div class="fmt-sep"></div>
-      <button class="fmt-btn" title="Sounds" id="sndToggle" title="Toggle sounds">🔈</button>
-      <button class="fmt-btn" id="padToggleBtn" style="min-width:56px;font-size:10px;letter-spacing:0" title="Toggle shared code pad">📝 CodePad</button>
+      <button class="fmt-btn" id="sndToggle" title="Toggle sounds">🔈</button>
+      <button class="fmt-btn" id="padToggleBtn" style="min-width:56px;font-size:10px" title="Toggle shared pad">📝 Pad</button>
       <div class="fmt-sep"></div>
       <span class="fmt-spacer"></span>
-      <span class="warn-lv">Warning Level: <span id="warnLv">0%</span></span>
+      <span class="warn-lv">Warn: <span id="warnLv">0%</span></span>
     </div>
 
     <!-- Input -->
     <div class="input-row">
       <input class="chat-input" id="chatInput" placeholder="Type a message here…" autocomplete="off" spellcheck="false">
-      <button class="w98-btn def" id="sendBtn" style="padding:3px 16px">Send</button>
+      <button class="w98-btn def" id="sendBtn">Send</button>
       <button class="w98-btn" id="warnBtn" title="Warn (classic AOL feature)">Warn</button>
     </div>
 
@@ -322,20 +503,20 @@
       <div class="sb-sep"></div>
       <span>Msgs: <b id="sbMsgs">0</b></span>
       <div class="sb-sep" style="margin-left:auto"></div>
-      <span style="color:#808080">P2P · No server · <a href="guardian-globe.html" style="color:var(--aim-link)">Globe ↗</a></span>
+      <span style="color:#808080">P2P · <a href="guardian-globe.html" style="color:var(--aim-link)">Globe ↗</a> · <a href="chain.html" style="color:var(--aim-link)">Chain ↗</a></span>
     </div>
   </div>
-
 </div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const ROOMS = [
-  { id:'general',       label:'#general',         icon:'💬', desc:'Open channel' },
-  { id:'investigation', label:'#investigation',    icon:'🔍', desc:'Evidence & analysis' },
-  { id:'collab',        label:'#collab-coding',    icon:'💻', desc:'Build together' },
-  { id:'guardian-net',  label:'#guardian-net',     icon:'🌐', desc:'Network ops' },
-  { id:'deadmans',      label:'#dead-mans-chain',  icon:'⛓', desc:'Relay chain' },
+  { id:'general',      label:'#general',        icon:'💬', desc:'Open channel' },
+  { id:'investigation',label:'#investigation',  icon:'🔍', desc:'Evidence & analysis' },
+  { id:'collab',       label:'#collab-coding',  icon:'💻', desc:'Build together' },
+  { id:'hardware',     label:'#hardware-lab',   icon:'⚡', desc:'Circuits & embedded' },
+  { id:'guardian-net', label:'#guardian-net',   icon:'🌐', desc:'Network ops' },
+  { id:'deadmans',     label:'#dead-mans-chain',icon:'⛓',  desc:'Relay chain' },
 ];
 const IPFS_GW   = 'https://ipfs.io/ipfs/';
 const GUN_PEERS = ['https://gun-manhattan.herokuapp.com/gun','https://gun-us.herokuapp.com/gun'];
@@ -349,6 +530,11 @@ let gun, screenName = '', currentRoom = ROOMS[0].id;
 let onlinePeers = {}, unread = {}, seenMsgs = new Set(), msgCount = 0;
 let typingTimers = {}, myTypingTimer = null;
 let soundsOn = true;
+let openMenu = null;
+let curPadMode = 'code';
+let bomRows = [];
+let padDebounce = null, padEditing = false;
+let ardDebounce = null, ardEditing = false;
 
 // ── AUDIO ─────────────────────────────────────────────────────────────────────
 let ac;
@@ -358,32 +544,43 @@ const sndOpen  = () => { if(!soundsOn)return; tone(880,'sine',.25,.1); setTimeou
 const sndClose = () => { if(!soundsOn)return; tone(440,'sine',.18,.09); setTimeout(()=>tone(330,'sine',.25,.05),75); };
 const sndMsg   = () => { if(!soundsOn)return; tone(1318,'sine',.08,.07); setTimeout(()=>tone(1047,'sine',.12,.05),55); };
 const sndJoin  = () => { if(!soundsOn)return; tone(523,'triangle',.12,.05); setTimeout(()=>tone(659,'triangle',.12,.05),75); };
-document.getElementById('sndToggle').addEventListener('click', () => {
-  soundsOn = !soundsOn;
-  document.getElementById('sndToggle').textContent = soundsOn ? '🔈' : '🔇';
-});
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function rndHex(n){return[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()}
 function rndInt(max){const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]%max}
-function ts(){const d=new Date(),h=String(d.getHours()%12||12).padStart(2,' '),m=String(d.getMinutes()).padStart(2,'0');return`${h}:${m} ${d.getHours()<12?'AM':'PM'}`}
+function ts(){const d=new Date(),h=String(d.getHours()%12||12),m=String(d.getMinutes()).padStart(2,'0');return`${h}:${m} ${d.getHours()<12?'AM':'PM'}`}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-
 function linkify(raw) {
   return esc(raw)
     .replace(/(baf[ybz][a-z2-7]{40,})/gi, c =>
-      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener" title="${c}">${c.slice(0,14)}&#x2026;${c.slice(-4)} &#x2197;</a>`)
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener">${c.slice(0,14)}…${c.slice(-4)} ↗</a>`)
     .replace(/(Qm[1-9A-HJ-NP-Za-km-z]{44,})/g, c =>
-      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener">${c.slice(0,12)}&#x2026; &#x2197;</a>`);
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener">${c.slice(0,12)}… ↗</a>`);
 }
-
 function toast(msg, ms=3500) {
   const el = document.createElement('div');
   el.className = 'aol-toast';
-  el.innerHTML = `<b>Guardian Chat:</b><br>${esc(msg)}`;
+  el.innerHTML = `<b>Guardian:</b> ${esc(msg)}`;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), ms);
 }
+
+// ── DROPDOWN MENUS ────────────────────────────────────────────────────────────
+function toggleMenu(name) {
+  const el = document.getElementById('mdrop-'+name);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  closeAllMenus();
+  if (!isOpen) { el.classList.add('open'); openMenu = name; }
+}
+function closeAllMenus() {
+  document.querySelectorAll('.mdrop.open').forEach(m => m.classList.remove('open'));
+  openMenu = null;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.mitem-wrap')) closeAllMenus();
+});
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeAllMenus(); });
 
 // ── BUDDY LIST ────────────────────────────────────────────────────────────────
 function toggleCat(id) {
@@ -400,7 +597,6 @@ function buildRoomList() {
     const cnt = unread[r.id] || 0;
     const el  = document.createElement('div');
     el.className = 'bitem' + (r.id === currentRoom ? ' cur' : '');
-    el.dataset.room = r.id;
     el.innerHTML =
       `<span class="bitem-ico">${r.icon}</span>` +
       `<span class="bitem-name">${esc(r.label)}</span>` +
@@ -415,8 +611,7 @@ function buildBuddyList() {
   const now    = Date.now();
   const online = Object.entries(onlinePeers)
     .filter(([n,t]) => n !== screenName && now - t < AWAY_MS)
-    .map(([n])=>n);
-
+    .map(([n]) => n);
   const body = document.getElementById('body-catOnline');
   body.innerHTML = '';
   if (!online.length) {
@@ -437,9 +632,10 @@ function buildTabs() {
   const strip = document.getElementById('tabStrip');
   strip.innerHTML = '';
   ROOMS.forEach(r => {
+    const cnt = unread[r.id] || 0;
     const t = document.createElement('div');
     t.className = 'ctab' + (r.id === currentRoom ? ' active' : '');
-    t.textContent = r.label;
+    t.textContent = r.label + (cnt > 0 && r.id !== currentRoom ? ` (${cnt})` : '');
     t.onclick = () => switchRoom(r.id);
     strip.appendChild(t);
   });
@@ -449,19 +645,16 @@ function buildTabs() {
 function renderMsg(roomId, key, data) {
   if (seenMsgs.has(key)) return;
   seenMsgs.add(key);
-
   if (roomId !== currentRoom) {
     unread[roomId] = (unread[roomId]||0) + 1;
     buildRoomList(); buildTabs();
     return;
   }
-
   const area  = document.getElementById('msgArea');
   const isMe  = data.from === screenName;
   const isSys = data.type === 'system';
   const div   = document.createElement('div');
   div.className = 'aim-msg';
-
   if (isSys) {
     div.innerHTML = `<span class="aim-who sys">-- ${linkify(data.text)} --</span>`;
   } else {
@@ -470,7 +663,6 @@ function renderMsg(roomId, key, data) {
       `<span class="aim-ts">(${data.time||'--:--'}):</span>` +
       `<span class="aim-body">${linkify(data.text)}</span>`;
   }
-
   area.appendChild(div);
   while (area.children.length > MAX_MSGS) area.removeChild(area.firstChild);
   area.scrollTop = area.scrollHeight;
@@ -493,16 +685,14 @@ function switchRoom(roomId) {
   document.getElementById('winTitle').textContent = `Guardian Chat — ${r.label}`;
   document.getElementById('sbRoom').textContent   = r.label;
   document.getElementById('msgArea').innerHTML    = '';
-  sysMsg(`You have entered ${r.label} — ${r.desc}`);
-  sysMsg(`Welcome! ${r.label} is a P2P room. No central server.`);
+  sysMsg(`You entered ${r.label} — ${r.desc}`);
   if (gun) {
     subscribeRoom(roomId);
-    // Re-sync pad for new room if pad is open
     const pad = document.getElementById('codePad');
     if (!pad.classList.contains('hidden')) {
-      document.getElementById('padArea').value = '';
-      document.getElementById('padWho').textContent = 'loading room pad…';
-      subscribePad(roomId);
+      if (curPadMode === 'code')    { document.getElementById('padArea').value = ''; subscribePad(roomId); }
+      if (curPadMode === 'arduino') { document.getElementById('ardArea').value = ''; subscribeArd(roomId); }
+      if (curPadMode === 'bom')     { subscribeBom(roomId); }
     }
   }
 }
@@ -519,7 +709,7 @@ function sendMsg(text) {
   text = text.trim();
   if (!text) return;
   if (text.startsWith('/')) { handleCmd(text); return; }
-  const key  = `m${Date.now()}_${rndHex(2)}`;
+  const key = `m${Date.now()}_${rndHex(2)}`;
   gun.get(NS).get('rooms').get(currentRoom).get('msgs').get(key).put(
     { from:screenName, text, time:ts(), room:currentRoom, t:Date.now() }
   );
@@ -528,20 +718,22 @@ function sendMsg(text) {
 function handleCmd(raw) {
   const parts = raw.trim().toLowerCase().split(/\s+/);
   switch(parts[0]) {
-    case '/help':  sysMsg('/rooms · /name [new] · /clear · /asl · /cid [hash] · /help'); break;
+    case '/help':  sysMsg('/rooms · /name [new] · /clear · /asl · /cid [hash] · /bom · /hw · /help'); break;
     case '/rooms': sysMsg('Rooms: ' + ROOMS.map(r=>r.label).join(' · ')); break;
     case '/name':  if(parts[1]){setScreenName(parts.slice(1).join('_'));sysMsg('Screen name updated.');}else sysMsg('Name: '+screenName); break;
-    case '/clear': document.getElementById('msgArea').innerHTML=''; sysMsg('Cleared.'); break;
+    case '/clear': clearChat(); break;
     case '/asl':   sysMsg('a/s/l? This is Web3. Age = block height. Sex = public key. Location = your IPFS node.'); break;
     case '/cid':   if(parts[1])sendMsg(parts[1]); break;
-    default: sysMsg(`Unknown command: ${parts[0]}  Try /help`);
+    case '/bom':   openPadMode('bom'); sysMsg('BOM editor opened.'); break;
+    case '/hw':    switchRoom('hardware'); break;
+    default: sysMsg(`Unknown: ${parts[0]} — try /help`);
   }
 }
 
 function emitTyping() {
   clearTimeout(myTypingTimer);
-  gun.get(NS).get('typing').get(screenName).put({ ts:Date.now(), room:currentRoom });
-  myTypingTimer = setTimeout(()=>gun.get(NS).get('typing').get(screenName).put({ts:0,room:currentRoom}), 3000);
+  if (gun) gun.get(NS).get('typing').get(screenName).put({ ts:Date.now(), room:currentRoom });
+  myTypingTimer = setTimeout(()=>{ if(gun) gun.get(NS).get('typing').get(screenName).put({ts:0,room:currentRoom}); }, 3000);
 }
 
 function showTyping(name) {
@@ -550,14 +742,22 @@ function showTyping(name) {
   if (!row.querySelector(`[data-typer="${name}"]`)) {
     const sp = document.createElement('span');
     sp.dataset.typer = name;
-    sp.textContent = `${name} is typing... `;
+    sp.textContent = `${name} is typing… `;
     row.appendChild(sp);
   }
   typingTimers[name] = setTimeout(()=>row.querySelector(`[data-typer="${name}"]`)?.remove(), 4500);
 }
 
 function initGun() {
-  gun = Gun(GUN_PEERS);
+  try {
+    gun = Gun(GUN_PEERS);
+  } catch(e) {
+    const conn = document.getElementById('tbConn');
+    conn.textContent = '● Offline (Gun unavailable)';
+    conn.style.color = '#cc0000';
+    sysMsg('Warning: P2P relay unavailable. Chat is local-only.');
+    return;
+  }
   const pref = gun.get(NS).get('presence');
   const beat = () => pref.get(screenName).put({ t:Date.now(), n:screenName });
   beat(); setInterval(beat, HB_MS);
@@ -581,8 +781,9 @@ function initGun() {
     if(d.ts&&Date.now()-d.ts<4000)showTyping(k);
   });
 
-  document.getElementById('tbConn').textContent='● Connected (P2P)';
-  document.getElementById('tbConn').style.color='green';
+  const conn = document.getElementById('tbConn');
+  conn.textContent = '● Connected (P2P)';
+  conn.style.color = 'green';
   ROOMS.forEach(r => subscribeRoom(r.id));
 }
 
@@ -594,11 +795,501 @@ function setScreenName(raw) {
   document.title = `${screenName} — Guardian Chat`;
 }
 
+function changeScreenName() {
+  closeAllMenus();
+  const n = prompt('New screen name (max 16 chars):', screenName);
+  if (n && n.trim()) { setScreenName(n.trim()); sysMsg(`You are now known as ${screenName}`); }
+}
+
+function clearSaved() {
+  closeAllMenus();
+  if (confirm('Forget your screen name? You will be asked to pick one next time.')) {
+    localStorage.removeItem('gchat_name');
+    toast('Name cleared. Reload to pick a new one.');
+  }
+}
+
+function signOff() {
+  closeAllMenus();
+  if (confirm('Sign off from Guardian Chat?')) {
+    localStorage.removeItem('gchat_name');
+    window.location.reload();
+  }
+}
+
 // ── NAME GENERATION ───────────────────────────────────────────────────────────
 const ADJ  = ['Cyber','Neon','Ghost','Dark','Shadow','Rogue','Crypto','Binary','Quantum','Static','Pixel','Stealth','Cipher','Null','Vector','Chrome','Echo','Phantom','Turbo','Hyper','Proxy','Relay','Anon','Void','Pulse','Flux','Glitch','Node','Packet','Signal'];
 const NOUN = ['Hawk','Wolf','Fox','Ghost','Recon','Watch','Guard','Node','Relay','Vault','Sentinel','Runner','Coder','Hacker','Pilgrim','Nomad','Keeper','Warden','Wraith','Drifter','Witness','Oracle','Sage','Scout','Ranger','Rider','Monk','Archivist','Courier','Specter'];
-function genName()    { return ADJ[rndInt(ADJ.length)]+NOUN[rndInt(NOUN.length)]+String(rndInt(99)+1).padStart(2,'0'); }
-function genNames(n)  { return Array.from({length:n},genName); }
+function genName()   { return ADJ[rndInt(ADJ.length)]+NOUN[rndInt(NOUN.length)]+String(rndInt(99)+1).padStart(2,'0'); }
+function genNames(n) { return Array.from({length:n}, genName); }
+
+// ── CODE PAD ──────────────────────────────────────────────────────────────────
+function initPad() {
+  const area = document.getElementById('padArea');
+  area.addEventListener('input', () => {
+    padEditing = true;
+    clearTimeout(padDebounce);
+    padDebounce = setTimeout(() => {
+      if(gun) gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
+        content:area.value, author:screenName, time:ts(), room:currentRoom, t:Date.now()
+      });
+      padEditing = false;
+    }, 400);
+  });
+  area.addEventListener('keydown', e => {
+    if (e.key==='Tab') { e.preventDefault(); const s=area.selectionStart,end=area.selectionEnd; area.value=area.value.slice(0,s)+'  '+area.value.slice(end); area.selectionStart=area.selectionEnd=s+2; area.dispatchEvent(new Event('input')); }
+  });
+
+  // Arduino pad
+  const ard = document.getElementById('ardArea');
+  ard.addEventListener('input', () => {
+    ardEditing = true;
+    clearTimeout(ardDebounce);
+    ardDebounce = setTimeout(() => {
+      if(gun) gun.get(NS).get('rooms').get(currentRoom).get('ard').put({
+        content:ard.value, author:screenName, time:ts(), room:currentRoom, t:Date.now()
+      });
+      ardEditing = false;
+    }, 400);
+  });
+  ard.addEventListener('keydown', e => {
+    if (e.key==='Tab') { e.preventDefault(); const s=ard.selectionStart,end=ard.selectionEnd; ard.value=ard.value.slice(0,s)+'  '+ard.value.slice(end); ard.selectionStart=ard.selectionEnd=s+2; ard.dispatchEvent(new Event('input')); }
+  });
+
+  document.getElementById('padCopy').onclick = () => {
+    const content = curPadMode==='bom' ? getBomCsv() : curPadMode==='arduino' ? ard.value : area.value;
+    navigator.clipboard.writeText(content).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
+  };
+  document.getElementById('padClear').onclick = () => {
+    if (curPadMode === 'bom') { if(confirm('Clear BOM?')) clearBom(); return; }
+    const ta = curPadMode==='arduino' ? ard : area;
+    if (!confirm('Clear shared pad? All room members will see this.')) return;
+    ta.value = '';
+    const key = curPadMode==='arduino' ? 'ard' : 'pad';
+    if(gun) gun.get(NS).get('rooms').get(currentRoom).get(key).put({content:'',author:screenName,time:ts(),room:currentRoom,t:Date.now()});
+    document.getElementById('padWho').textContent = 'cleared by '+screenName;
+  };
+  document.getElementById('padClose').onclick = togglePad;
+  document.getElementById('padToggleBtn').onclick = togglePad;
+
+  buildArduinoSnippets();
+}
+
+function subscribePad(roomId) {
+  if(!gun)return;
+  gun.get(NS).get('rooms').get(roomId).get('pad').on(data => {
+    if (!data||data.room!==roomId||padEditing) return;
+    const area = document.getElementById('padArea');
+    if (data.content!==undefined) area.value = data.content;
+    if (data.author) document.getElementById('padWho').textContent = `last edit: ${esc(data.author)} at ${data.time||''}`;
+  });
+}
+
+function subscribeArd(roomId) {
+  if(!gun)return;
+  gun.get(NS).get('rooms').get(roomId).get('ard').on(data => {
+    if (!data||data.room!==roomId||ardEditing) return;
+    const ard = document.getElementById('ardArea');
+    if (data.content!==undefined) ard.value = data.content;
+    if (data.author) document.getElementById('padWho').textContent = `last edit: ${esc(data.author)} at ${data.time||''}`;
+  });
+}
+
+function subscribeBom(roomId) {
+  if(!gun)return;
+  gun.get(NS).get('rooms').get(roomId).get('bom').map().on((data, key) => {
+    if (!data||data.room!==roomId) return;
+    updateBomRowFromGun(key, data);
+  });
+}
+
+function togglePad() {
+  const panel = document.getElementById('codePad');
+  const isHidden = panel.classList.toggle('hidden');
+  document.getElementById('padToggleBtn').classList.toggle('active', !isHidden);
+  if (!isHidden) {
+    if (curPadMode==='code')    { subscribePad(currentRoom); document.getElementById('padArea').focus(); }
+    if (curPadMode==='arduino') { subscribeArd(currentRoom); document.getElementById('ardArea').focus(); }
+    if (curPadMode==='bom')     { subscribeBom(currentRoom); }
+    sysMsg('Shared pad open — real-time P2P sync active.');
+  }
+}
+
+function openPadMode(mode) {
+  closeAllMenus();
+  const panel = document.getElementById('codePad');
+  if (panel.classList.contains('hidden')) panel.classList.remove('hidden');
+  document.getElementById('padToggleBtn').classList.add('active');
+  switchPadMode(mode);
+}
+
+function switchPadMode(mode) {
+  curPadMode = mode;
+  ['code','arduino','bom'].forEach(m => {
+    document.getElementById('pane-'+m).classList.toggle('hidden', m!==mode);
+    document.querySelector(`.pm[data-mode="${m}"]`).classList.toggle('active', m===mode);
+  });
+  const labels = {code:'📝 CodePad', arduino:'🔧 Arduino', bom:'📋 BOM'};
+  document.getElementById('padLabel').textContent = labels[mode];
+  document.getElementById('padWho').textContent = 'shared · real-time P2P sync';
+  if (mode==='code')    { subscribePad(currentRoom); }
+  if (mode==='arduino') { subscribeArd(currentRoom); buildArduinoSnippets(); }
+  if (mode==='bom')     { subscribeBom(currentRoom); if(!bomRows.length) addBomRow(); }
+}
+
+// ── ARDUINO SNIPPETS ──────────────────────────────────────────────────────────
+const SNIPPETS = [
+  { title:'Setup/Loop', prev:'void setup() {…',
+    code:`void setup() {\n  Serial.begin(9600);\n  pinMode(LED_BUILTIN, OUTPUT);\n}\n\nvoid loop() {\n  // main code\n}` },
+  { title:'Digital Write', prev:'digitalWrite(pin,…',
+    code:`int pin = 13;\npinMode(pin, OUTPUT);\ndigitalWrite(pin, HIGH); // or LOW` },
+  { title:'Analog Read', prev:'analogRead(A0)',
+    code:`int sensorPin = A0;\nint sensorVal = analogRead(sensorPin);\n// 0–1023 (10-bit ADC)\nfloat voltage = sensorVal * (5.0 / 1023.0);` },
+  { title:'PWM Fade', prev:'analogWrite(pin, val)',
+    code:`int ledPin = 9; // must be PWM pin (~)\nfor (int i=0; i<=255; i++) {\n  analogWrite(ledPin, i);\n  delay(10);\n}` },
+  { title:'Serial Print', prev:'Serial.println(…',
+    code:`Serial.begin(9600);\nSerial.print("Value: ");\nSerial.println(analogRead(A0));` },
+  { title:'I2C (Wire)', prev:'#include <Wire.h>',
+    code:`#include <Wire.h>\nvoid setup() {\n  Wire.begin(); // master\n  Serial.begin(9600);\n}\nvoid loop() {\n  Wire.beginTransmission(0x3C); // device addr\n  Wire.write(0x00);\n  Wire.endTransmission();\n}` },
+  { title:'Button Debounce', prev:'debounce read',
+    code:`const int BTN = 2;\nint lastState = LOW;\nunsigned long lastDebounce = 0;\nconst long DEBOUNCE = 50;\n\nvoid loop() {\n  int reading = digitalRead(BTN);\n  if (reading != lastState) lastDebounce = millis();\n  if (millis()-lastDebounce > DEBOUNCE) {\n    // stable — use reading here\n  }\n  lastState = reading;\n}` },
+  { title:'Servo', prev:'#include <Servo.h>',
+    code:`#include <Servo.h>\nServo myservo;\nvoid setup() {\n  myservo.attach(9);\n}\nvoid loop() {\n  myservo.write(0);   delay(1000);\n  myservo.write(180); delay(1000);\n}` },
+  { title:'DHT Temp', prev:'#include "DHT.h"',
+    code:`#include "DHT.h"\n#define DHTPIN 2\n#define DHTTYPE DHT22\nDHT dht(DHTPIN, DHTTYPE);\nvoid setup() { Serial.begin(9600); dht.begin(); }\nvoid loop() {\n  float h = dht.readHumidity();\n  float t = dht.readTemperature();\n  Serial.print("T: "); Serial.print(t);\n  Serial.print(" H: "); Serial.println(h);\n  delay(2000);\n}` },
+  { title:'Interrupt', prev:'attachInterrupt(…',
+    code:`volatile bool triggered = false;\nvoid isr() { triggered = true; }\nvoid setup() {\n  pinMode(2, INPUT_PULLUP);\n  attachInterrupt(digitalPinToInterrupt(2), isr, FALLING);\n}\nvoid loop() {\n  if (triggered) {\n    triggered = false;\n    // handle interrupt\n  }\n}` },
+];
+
+function buildArduinoSnippets() {
+  const container = document.getElementById('ardSnippets');
+  if (!container || container.children.length) return;
+  const hdr = document.createElement('div');
+  hdr.className='snip-hdr'; hdr.textContent='Snippets — click to insert';
+  container.appendChild(hdr);
+  SNIPPETS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'snip-card';
+    card.innerHTML = `<span class="snip-title">${esc(s.title)}</span><span class="snip-prev">${esc(s.prev)}</span>`;
+    card.onclick = () => {
+      const ta = document.getElementById('ardArea');
+      const pos = ta.selectionStart;
+      const before = ta.value.slice(0, pos);
+      const after  = ta.value.slice(ta.selectionEnd);
+      const insert = (before ? '\n\n' : '') + s.code;
+      ta.value = before + insert + after;
+      ta.selectionStart = ta.selectionEnd = pos + insert.length;
+      ta.dispatchEvent(new Event('input'));
+      ta.focus();
+    };
+    container.appendChild(card);
+  });
+}
+
+// ── BOM EDITOR ────────────────────────────────────────────────────────────────
+let bomSeq = 0;
+function addBomRow(data) {
+  bomSeq++;
+  const id = data?.id || `bom_${Date.now()}_${bomSeq}`;
+  const row = { id, name:'', qty:'1', value:'', pkg:'', source:'', note:'', room:currentRoom };
+  if (data) Object.assign(row, data);
+  bomRows.push(row);
+  renderBomRow(row);
+}
+
+function renderBomRow(row) {
+  const tbody = document.getElementById('bomBody');
+  const idx   = bomRows.indexOf(row) + 1;
+  const tr = document.createElement('tr');
+  tr.id = 'brow_' + row.id;
+  tr.innerHTML = `<td style="width:24px;text-align:center;color:#808080;font:10px Tahoma">${idx}</td>` +
+    ['name','qty','value','pkg','source','note'].map(f =>
+      `<td><input value="${esc(row[f])}" placeholder="${f}" data-field="${f}" data-id="${row.id}"></td>`
+    ).join('') +
+    `<td><button class="bom-del" data-id="${row.id}" title="Remove">✕</button></td>`;
+  tbody.appendChild(tr);
+
+  tr.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      row[inp.dataset.field] = inp.value;
+      if(gun) gun.get(NS).get('rooms').get(currentRoom).get('bom').get(row.id).put({...row});
+    });
+  });
+  tr.querySelector('.bom-del').addEventListener('click', () => {
+    bomRows = bomRows.filter(r=>r.id!==row.id);
+    tr.remove();
+    if(gun) gun.get(NS).get('rooms').get(currentRoom).get('bom').get(row.id).put(null);
+    renumberBom();
+  });
+}
+
+function renumberBom() {
+  document.querySelectorAll('#bomBody tr').forEach((tr,i) => {
+    const first = tr.querySelector('td');
+    if (first) first.textContent = i+1;
+  });
+}
+
+function updateBomRowFromGun(key, data) {
+  if (!data) { const r=bomRows.find(r=>r.id===key); if(r){bomRows=bomRows.filter(x=>x!==r);document.getElementById('brow_'+key)?.remove();} return; }
+  const existing = bomRows.find(r=>r.id===key);
+  if (existing) {
+    Object.assign(existing, data);
+    const tr = document.getElementById('brow_'+key);
+    if (tr) tr.querySelectorAll('input').forEach(inp => { if(inp!==document.activeElement) inp.value=existing[inp.dataset.field]||''; });
+  } else {
+    addBomRow({...data, id:key});
+  }
+}
+
+function clearBom() {
+  bomRows = [];
+  document.getElementById('bomBody').innerHTML = '';
+  if(gun) gun.get(NS).get('rooms').get(currentRoom).get('bom').map().once((d,k)=>{ if(d) gun.get(NS).get('rooms').get(currentRoom).get('bom').get(k).put(null); });
+}
+
+function getBomCsv() {
+  const header = 'Name,Qty,Value,Package,Source,Notes';
+  const rows   = bomRows.map(r=>[r.name,r.qty,r.value,r.pkg,r.source,r.note].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  return [header,...rows].join('\n');
+}
+
+function exportBomCsv() {
+  const csv  = getBomCsv();
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'guardian-bom.csv';
+  a.click(); URL.revokeObjectURL(url);
+  toast('BOM exported as guardian-bom.csv');
+}
+
+// ── EXPORT PROJECT (ZIP) ──────────────────────────────────────────────────────
+async function showExportModal() {
+  closeAllMenus();
+  showXModal('📦 Export Project ZIP', `
+    <p>Packages your current CodePad, Arduino sketch, and BOM into a downloadable ZIP — ready to <code>git init</code> and push anywhere.</p>
+    <h4>What's included</h4>
+    <pre>guardian-project/
+  code/pad.txt         ← CodePad contents
+  arduino/sketch.ino   ← Arduino pad
+  bom.csv              ← Bill of Materials
+  README.md            ← Auto-generated
+  git-init.sh          ← One-command git setup</pre>
+    <p>After exporting, run <code>git-init.sh</code> inside the folder to create a local git repo, then push to GitHub / GitLab / Gitea.</p>
+  `, [
+    { label:'⬇ Download ZIP', cls:'w98-btn def', fn:'exportProjectZip()' },
+    { label:'Close', cls:'w98-btn', fn:'closeXModal()' }
+  ]);
+}
+
+async function exportProjectZip() {
+  if (typeof JSZip === 'undefined') { toast('JSZip not loaded — check CDN'); return; }
+  closeXModal();
+  const zip  = new JSZip();
+  const proj = zip.folder('guardian-project');
+
+  const code = document.getElementById('padArea').value;
+  const ard  = document.getElementById('ardArea').value;
+  const bom  = getBomCsv();
+  const now  = new Date().toISOString().split('T')[0];
+
+  if (code.trim()) proj.folder('code').file('pad.txt', code);
+  if (ard.trim())  proj.folder('arduino').file('sketch.ino', ard);
+  if (bomRows.length) proj.file('bom.csv', bom);
+
+  proj.file('README.md',
+`# Guardian Chat — Project Export
+Exported: ${now}
+Room: #${currentRoom}
+Author: ${screenName}
+
+## Files
+- \`code/pad.txt\` — shared code pad
+- \`arduino/sketch.ino\` — Arduino sketch
+- \`bom.csv\` — bill of materials
+
+## Quick start
+\`\`\`bash
+bash git-init.sh   # init git + first commit
+\`\`\`
+
+## Publish to IPFS
+\`\`\`bash
+ipfs add -r . --cid-version=1
+# Share the CID in Guardian Chat
+\`\`\`
+`);
+
+  proj.file('git-init.sh',
+`#!/usr/bin/env bash
+# Guardian Chat — git init helper
+set -e
+git init
+git add -A
+git commit -m "Guardian project snapshot — ${now}"
+echo ""
+echo "Done! Next steps:"
+echo "  Push to GitHub:  git remote add origin <url> && git push -u origin main"
+echo "  Publish to IPFS: ipfs add -r . --cid-version=1"
+`);
+
+  const blob = await zip.generateAsync({type:'blob'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'guardian-project.zip';
+  a.click(); URL.revokeObjectURL(url);
+  toast('Exported guardian-project.zip');
+}
+
+// ── IPFS / GIT-ON-IPFS MODAL ──────────────────────────────────────────────────
+function showIpfsModal() {
+  closeAllMenus();
+  showXModal('🌐 Publish to IPFS / Web3 Git', `
+    <h4>Option A — Simple IPFS publish</h4>
+    <p>1. Export your project ZIP (File → Export Project ZIP)<br>
+    2. Extract the ZIP, then run:</p>
+    <pre>cd guardian-project/
+ipfs add -r . --cid-version=1
+# → CID: bafybei…  ← share this in #guardian-net</pre>
+    <p>Others can access your files with:</p>
+    <pre>ipfs get bafybei… -o ./project
+# or in browser: https://ipfs.io/ipfs/bafybei…</pre>
+
+    <h4>Option B — Full git history on IPFS</h4>
+    <p>Keep full git history — share the bundle CID, not just files:</p>
+    <pre>cd guardian-project/
+bash git-init.sh          # creates first commit
+git bundle create project.bundle HEAD
+ipfs add project.bundle --cid-version=1
+# → Bundle CID: bafybei…</pre>
+    <p>Clone from IPFS:</p>
+    <pre>ipfs get &lt;CID&gt; -o project.bundle
+git clone project.bundle ./my-project</pre>
+
+    <h4>Option C — Radicle (P2P git, no IPFS)</h4>
+    <pre>rad init          # inside your project
+rad push          # publish to Radicle network
+# Share: rad://&lt;project-id&gt;</pre>
+    <p>→ <a href="https://radicle.xyz" target="_blank" style="color:var(--aim-link)">radicle.xyz ↗</a></p>
+
+    <h4>Share the CID</h4>
+    <p>Paste any IPFS CID into Guardian Chat — it auto-links and becomes a clickable IPFS badge.</p>
+  `, [
+    { label:'⬇ Export ZIP first', cls:'w98-btn def', fn:'exportProjectZip()' },
+    { label:'Close', cls:'w98-btn', fn:'closeXModal()' }
+  ]);
+}
+
+function showSchematicHelp() {
+  closeAllMenus();
+  showXModal('📐 Hardware Files via IPFS', `
+    <h4>Share KiCad / Fritzing / Eagle files</h4>
+    <p>Any hardware design file can be shared via IPFS CID — paste the CID in chat and it becomes a clickable link.</p>
+
+    <h4>Add files to IPFS</h4>
+    <pre>ipfs add my-schematic.kicad_sch --cid-version=1
+ipfs add my-board.kicad_pcb --cid-version=1
+ipfs add fritzing-project.fzz --cid-version=1</pre>
+
+    <h4>Share entire project folder</h4>
+    <pre>ipfs add -r ./kicad-project/ --cid-version=1
+# Paste the folder CID in #hardware-lab</pre>
+
+    <h4>Necto / MikroElektronika</h4>
+    <p>Export your NECTO project → zip → <code>ipfs add project.zip</code> → share CID.</p>
+
+    <h4>Component Wikis</h4>
+    <p>Use the <b>Arduino pad</b> (Hardware → Arduino Pad) to collaborate on embedded code in real-time. Drop datasheets and component links as CIDs in the BOM notes column.</p>
+
+    <h4>Circuit flow visualization</h4>
+    <p><code>circuit.html</code> — coming soon. Will render D3 force graphs from component JSON.</p>
+  `, [
+    { label:'Open #hardware-lab', cls:'w98-btn def', fn:'switchRoom("hardware");closeXModal()' },
+    { label:'Close', cls:'w98-btn', fn:'closeXModal()' }
+  ]);
+}
+
+// ── GENERIC MODAL HELPER ──────────────────────────────────────────────────────
+function showXModal(title, bodyHtml, buttons) {
+  document.getElementById('xmodalTitle').textContent = title;
+  document.getElementById('xmodalBody').innerHTML   = bodyHtml;
+  const footer = document.getElementById('xmodalFooter');
+  footer.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className   = b.cls;
+    btn.textContent = b.label;
+    btn.onclick     = new Function(b.fn);
+    footer.appendChild(btn);
+  });
+  document.getElementById('xmodal').classList.remove('hidden');
+}
+function closeXModal() {
+  document.getElementById('xmodal').classList.add('hidden');
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeXModal(); });
+
+// ── MENU ACTIONS ──────────────────────────────────────────────────────────────
+function saveChatLog() {
+  closeAllMenus();
+  const msgs = document.getElementById('msgArea');
+  let text = `Guardian Chat — Room: #${currentRoom}\nExported: ${new Date().toLocaleString()}\n`;
+  text += '─'.repeat(60) + '\n';
+  msgs.querySelectorAll('.aim-msg').forEach(m => { text += m.textContent.trim() + '\n'; });
+  const blob = new Blob([text], {type:'text/plain'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `guardian-chat-${currentRoom}-${Date.now()}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Chat log saved.');
+}
+
+function clearChat() {
+  closeAllMenus();
+  document.getElementById('msgArea').innerHTML = '';
+  sysMsg('Chat cleared locally.');
+}
+
+function copyMsgs() {
+  closeAllMenus();
+  const text = Array.from(document.getElementById('msgArea').querySelectorAll('.aim-msg'))
+    .map(m=>m.textContent.trim()).join('\n');
+  navigator.clipboard.writeText(text).then(()=>toast('Messages copied.')).catch(()=>toast('Copy failed'));
+}
+
+function showAbout() {
+  closeAllMenus();
+  showXModal('ℹ About Guardian Chat', `
+    <h4>Guardian Chat v2.0</h4>
+    <p>A censorship-resistant P2P chat built on <b>Gun.js</b> — no central server, no accounts, no tracking.</p>
+    <h4>Tech stack</h4>
+    <pre>P2P mesh  : Gun.js (WebRTC + relay fallback)
+Storage   : Gun DHT (distributed)
+Export    : JSZip (client-side ZIP)
+Theme     : Windows 98 / AIM light</pre>
+    <h4>Commands</h4>
+    <pre>/help /rooms /name /clear /asl /cid /bom /hw</pre>
+    <h4>Guardian Network</h4>
+    <p>Part of the Guardian Network — a censorship-resistant investigation layer. <a href="index.html" style="color:var(--aim-link)">Back to portal ↗</a></p>
+  `, [{ label:'OK', cls:'w98-btn def', fn:'closeXModal()' }]);
+}
+
+function insertEmoji(e) {
+  closeAllMenus();
+  const inp = document.getElementById('chatInput');
+  inp.value += e;
+  inp.focus();
+}
+
+function wrapInput(before, after) {
+  const inp = document.getElementById('chatInput');
+  const s=inp.selectionStart, end=inp.selectionEnd;
+  inp.value = inp.value.slice(0,s)+before+inp.value.slice(s,end)+after+inp.value.slice(end);
+  inp.focus();
+}
+
+function focusInput() { document.getElementById('chatInput').focus(); }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 function boot(name) {
@@ -613,110 +1304,43 @@ function boot(name) {
 
   const inp = document.getElementById('chatInput');
   const btn = document.getElementById('sendBtn');
-
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} }
+    if (e.key==='Enter') { e.preventDefault(); const v=inp.value.trim(); if(v){sendMsg(v);inp.value='';} }
     else emitTyping();
   });
-  btn.addEventListener('click', () => { const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} inp.focus(); });
+  btn.addEventListener('click', () => { const v=inp.value.trim(); if(v){sendMsg(v);inp.value='';} inp.focus(); });
 
   document.getElementById('snDisplay').addEventListener('click', () => {
-    const n = prompt('New screen name:', screenName); if(n){setScreenName(n);sysMsg(`You are now known as ${screenName}`);}
+    const n=prompt('New screen name (max 16):', screenName); if(n&&n.trim()){setScreenName(n.trim());sysMsg('Screen name updated.');}
   });
+
+  document.getElementById('sndToggle').addEventListener('click', () => {
+    soundsOn=!soundsOn;
+    document.getElementById('sndToggle').textContent = soundsOn ? '🔈' : '🔇';
+  });
+
   document.getElementById('warnBtn').addEventListener('click', () => {
-    const wl = document.getElementById('warnLv');
-    const cur = parseInt(wl.textContent) || 0;
-    wl.textContent = Math.min(cur+5,100)+'%';
-    sysMsg(`You warned the room. Warning level increased. (Classic AOL feature — cosmetic only.)`);
+    const wl=document.getElementById('warnLv');
+    wl.textContent=Math.min((parseInt(wl.textContent)||0)+5,100)+'%';
+    sysMsg('Warning level increased. (Classic AOL feature — cosmetic only.)');
   });
-  document.getElementById('blChatBtn').onclick = () => focusInput();
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveChatLog(); }
+  });
+
   inp.focus();
 }
 
-function focusInput() { document.getElementById('chatInput').focus(); }
-
-// ── CODE PAD ──────────────────────────────────────────────────────────────────
-let padDebounce = null;
-let padEditing  = false;
-let padRoomSub  = null;
-
-function initPad() {
-  const area = document.getElementById('padArea');
-
-  area.addEventListener('input', () => {
-    padEditing = true;
-    clearTimeout(padDebounce);
-    padDebounce = setTimeout(() => {
-      gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
-        content: area.value,
-        author:  screenName,
-        time:    ts(),
-        room:    currentRoom,
-        t:       Date.now()
-      });
-      padEditing = false;
-    }, 400);
-  });
-
-  // Tab key inserts 2 spaces (standard for a code editor)
-  area.addEventListener('keydown', e => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const s = area.selectionStart, end = area.selectionEnd;
-      area.value = area.value.slice(0,s) + '  ' + area.value.slice(end);
-      area.selectionStart = area.selectionEnd = s + 2;
-      area.dispatchEvent(new Event('input'));
-    }
-  });
-
-  document.getElementById('padCopy').onclick = () => {
-    navigator.clipboard.writeText(area.value)
-      .then(() => toast('Code copied to clipboard'))
-      .catch(() => { area.select(); document.execCommand('copy'); toast('Copied'); });
-  };
-
-  document.getElementById('padClear').onclick = () => {
-    if (!confirm('Clear the shared pad? Everyone in the room will see it cleared.')) return;
-    area.value = '';
-    gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
-      content:'', author:screenName, time:ts(), room:currentRoom, t:Date.now()
-    });
-    document.getElementById('padWho').textContent = 'cleared by ' + screenName;
-  };
-
-  document.getElementById('padClose').onclick  = togglePad;
-  document.getElementById('padToggleBtn').onclick = togglePad;
-}
-
-function subscribePad(roomId) {
-  gun.get(NS).get('rooms').get(roomId).get('pad').on((data) => {
-    if (!data || data.room !== roomId) return;
-    if (padEditing) return;   // don't overwrite while I'm typing
-    const area = document.getElementById('padArea');
-    if (data.content !== undefined) area.value = data.content;
-    if (data.author) {
-      document.getElementById('padWho').textContent =
-        `last edit: ${esc(data.author)} at ${data.time||''}`;
-    }
-  });
-}
-
-function togglePad() {
-  const panel = document.getElementById('codePad');
-  const isHidden = panel.classList.toggle('hidden');
-  document.getElementById('padToggleBtn').style.fontWeight = isHidden ? '' : 'bold';
-  if (!isHidden) {
-    subscribePad(currentRoom);
-    document.getElementById('padArea').focus();
-    sysMsg('CodePad open — shared in real-time with everyone in this room.');
-  }
-}
-
 // ── STARTUP ───────────────────────────────────────────────────────────────────
-const saved = localStorage.getItem('gchat_name');
-if (saved) {
-  boot(saved);
-} else {
+(function() {
+  const saved = localStorage.getItem('gchat_name');
+  if (saved && saved.trim()) {
+    boot(saved.trim());
+    return;
+  }
+
+  // Show modal — set up name picker
   const ni   = document.getElementById('nameInput');
   const nb   = document.getElementById('nameBtn');
   const grid = document.getElementById('nameGrid');
@@ -727,20 +1351,36 @@ if (saved) {
     grid.innerHTML = '';
     genNames(4).forEach(name => {
       const btn = document.createElement('button');
-      btn.className='name-opt'; btn.textContent=name;
-      btn.onclick=()=>{ grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); btn.classList.add('picked'); ni.value=name; chosen=name; };
+      btn.className = 'name-opt';
+      btn.textContent = name;
+      btn.type = 'button';
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked'));
+        btn.classList.add('picked');
+        ni.value = name;
+        chosen   = name;
+      });
       grid.appendChild(btn);
     });
   }
 
   buildGrid();
-  shuf.addEventListener('click', ()=>{ chosen=''; ni.value=''; buildGrid(); });
 
-  const go = () => boot(ni.value.trim()||chosen||genName());
+  shuf.addEventListener('click', e => { e.preventDefault(); chosen=''; ni.value=''; buildGrid(); });
+
+  const go = () => {
+    const n = ni.value.trim() || chosen;
+    boot(n || genName());
+  };
+
   nb.addEventListener('click', go);
-  ni.addEventListener('keydown', e=>{ if(e.key==='Enter')go(); if(e.key.length===1)grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); });
-  requestAnimationFrame(()=>ni.focus());
-}
+  ni.addEventListener('keydown', e => {
+    if (e.key==='Enter') go();
+    if (e.key.length===1) { grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); chosen=''; }
+  });
+
+  requestAnimationFrame(() => ni.focus());
+})();
 </script>
 </body>
 </html>

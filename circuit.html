@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIRCUIT LAB — Guardian Network</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060916; --panel:#0b1120; --deep:#030810;
+      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
+      --amber:#ffaa00; --red:#ff3344; --lora:#ff66ff; --edge:#152035;
+      --font:'Share Tech Mono','Courier New',monospace;
+      --glow-g:0 0 10px rgba(0,255,65,0.5);
+      --glow-c:0 0 10px rgba(0,204,255,0.5);
+      --glow-a:0 0 10px rgba(255,170,0,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px;overflow:hidden}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+
+    /* ── Toolbar ── */
+    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:0 14px;display:flex;align-items:center;gap:10px;height:40px;flex-shrink:0}
+    .logo{font-size:13px;color:var(--amber);text-shadow:var(--glow-a);letter-spacing:2px;white-space:nowrap}
+    .tb-title{flex:1;font-size:11px;color:var(--cyan);letter-spacing:1px;cursor:pointer;border:none;background:transparent;font-family:var(--font);outline:none;min-width:0}
+    .tb-title:focus{border-bottom:1px solid var(--cyan)}
+    .tb-btn{background:rgba(0,204,255,0.06);border:1px solid var(--cyan-d);color:var(--cyan-d);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
+    .tb-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow-c)}
+    .tb-btn.active{background:rgba(0,204,255,0.15);border-color:var(--cyan);color:var(--cyan)}
+    .tb-sep{width:1px;height:20px;background:var(--edge)}
+    .tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .tb-right a{color:var(--cyan-d);text-decoration:none;font-size:9px}
+    .tb-right a:hover{color:var(--cyan)}
+    .cid-pill{background:rgba(0,255,65,0.07);border:1px solid var(--green-d);color:var(--green-d);font-size:8px;padding:2px 7px;letter-spacing:.5px;white-space:nowrap;cursor:pointer}
+    .cid-pill:hover{border-color:var(--green);color:var(--green)}
+
+    /* ── Layout ── */
+    .layout{display:flex;height:calc(100vh - 40px);overflow:hidden}
+
+    /* ── Sidebar ── */
+    .sidebar{width:200px;min-width:200px;border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
+    .sidebar-tabs{display:flex;border-bottom:1px solid var(--edge);flex-shrink:0}
+    .stab{flex:1;padding:5px 4px;font-size:9px;color:var(--cyan-d);cursor:pointer;text-align:center;letter-spacing:.5px;border-bottom:2px solid transparent}
+    .stab:hover{color:var(--cyan)}
+    .stab.active{color:var(--amber);border-bottom-color:var(--amber)}
+    .sidebar-pane{flex:1;overflow-y:auto;display:none;flex-direction:column}
+    .sidebar-pane.active{display:flex}
+
+    /* Catalog */
+    .cat-hdr{padding:5px 9px;font-size:8px;color:var(--cyan-d);letter-spacing:2px;background:rgba(0,0,0,0.2);cursor:pointer;display:flex;justify-content:space-between;user-select:none;flex-shrink:0}
+    .cat-hdr:hover{color:var(--cyan)}
+    .cat-body{display:flex;flex-direction:column}
+    .comp-entry{padding:5px 12px;font-size:10px;color:var(--cyan-d);cursor:pointer;display:flex;align-items:center;gap:7px;border-left:2px solid transparent}
+    .comp-entry:hover{color:var(--green);border-left-color:var(--green);background:rgba(0,255,65,0.04)}
+    .comp-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
+    .comp-name{flex:1;font-size:9px;letter-spacing:.5px}
+
+    /* Properties */
+    .prop-section{padding:10px 10px 4px}
+    .prop-title{font-size:8px;color:var(--cyan-d);letter-spacing:2px;margin-bottom:8px;border-bottom:1px solid var(--edge);padding-bottom:4px}
+    .prop-row{margin-bottom:6px}
+    .prop-label{font-size:8px;color:var(--cyan-d);margin-bottom:2px}
+    .prop-val{font-size:10px;color:var(--amber);letter-spacing:.5px}
+    .prop-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--green);font-family:var(--font);font-size:10px;padding:3px 5px;outline:none}
+    .prop-input:focus{border-color:var(--cyan)}
+    .pin-list{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+    .pin-chip{background:rgba(0,204,255,0.08);border:1px solid var(--cyan-d);color:var(--cyan-d);font-size:8px;padding:1px 5px;letter-spacing:.5px}
+    .no-sel{padding:16px 10px;text-align:center;font-size:9px;color:var(--cyan-d);line-height:2;opacity:0.6}
+
+    /* ── Canvas ── */
+    .canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+    .canvas-toolbar{padding:3px 8px;background:var(--panel);border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:9px;color:var(--cyan-d)}
+    .canvas-toolbar span{white-space:nowrap}
+    .canvas-spacer{flex:1}
+    .legend-item{display:flex;align-items:center;gap:3px}
+    .legend-dot{width:8px;height:2px;flex-shrink:0}
+    #circuitSvg{flex:1;width:100%;cursor:default}
+
+    /* ── JSON panel ── */
+    .json-panel{background:var(--panel);border-top:1px solid var(--edge);flex-shrink:0;display:flex;flex-direction:column;transition:height .2s}
+    .json-panel.collapsed{height:26px}
+    .json-panel.expanded{height:200px}
+    .json-bar{height:26px;padding:0 8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--edge);flex-shrink:0;font-size:9px;color:var(--cyan-d)}
+    .json-bar .tb-btn{padding:1px 6px;font-size:8px}
+    .json-editor{flex:1;background:var(--deep);border:none;color:var(--green);font-family:var(--font);font-size:10px;padding:6px 10px;outline:none;resize:none;tab-size:2;display:none}
+    .json-panel.expanded .json-editor{display:block}
+
+    /* ── Status bar ── */
+    .statusbar{height:22px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 14px;gap:16px;font-size:8px;color:var(--cyan-d);flex-shrink:0}
+    .sv{color:var(--green)}
+
+    /* ── D3 node styles (set on SVG elements) ── */
+    .node-group{cursor:pointer}
+    .node-group:hover .node-rect{filter:brightness(1.3)}
+    .link-line{stroke-width:1.5;fill:none;opacity:0.8}
+    .link-label{font-size:8px;font-family:var(--font);fill:rgba(0,204,255,0.6);pointer-events:none}
+    .node-rect{rx:3;ry:3;stroke-width:1}
+    .node-label-id{font-family:var(--font);font-weight:bold;pointer-events:none}
+    .node-label-name{font-family:var(--font);pointer-events:none;fill:#8aaecc}
+
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+    @keyframes blink{50%{opacity:0}}
+    .blink{animation:blink 1.1s step-end infinite}
+  </style>
+</head>
+<body style="display:flex;flex-direction:column;height:100vh">
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="logo">⚡ CIRCUIT LAB <span class="blink">_</span></span>
+  <div class="tb-sep"></div>
+  <input class="tb-title" id="circuitTitle" value="Untitled Circuit" maxlength="48" spellcheck="false">
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="loadExample('guardian-node')">Guardian Node</button>
+  <button class="tb-btn" onclick="loadExample('lora-node')">LoRa Node</button>
+  <button class="tb-btn" onclick="loadExample('temp-monitor')">Temp Monitor</button>
+  <button class="tb-btn" onclick="clearCanvas()">Clear</button>
+  <button class="tb-btn" onclick="autoLayout()">Auto Layout</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="shareCircuit()">Share via IPFS…</button>
+  <div class="tb-sep"></div>
+  <span class="cid-pill" id="cidPill" title="Circuit CID">CID: none</span>
+  <div class="tb-right">
+    <a href="chat.html">CHAT ↗</a>
+    <a href="chain.html">CHAIN ↗</a>
+    <a href="index.html">NET ↗</a>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <div class="stab active" id="stab-catalog" onclick="switchSTab('catalog')">CATALOG</div>
+      <div class="stab" id="stab-props" onclick="switchSTab('props')">PROPS</div>
+      <div class="stab" id="stab-wiki" onclick="switchSTab('wiki')">WIKI</div>
+    </div>
+
+    <!-- Catalog pane -->
+    <div class="sidebar-pane active" id="spane-catalog" id="catalogPane"></div>
+
+    <!-- Properties pane -->
+    <div class="sidebar-pane" id="spane-props">
+      <div class="no-sel" id="propsNoSel">
+        <div style="font-size:24px;margin-bottom:8px;opacity:.4">⚙</div>
+        Click a component<br>to see its properties
+      </div>
+      <div style="display:none" id="propsPanel">
+        <div class="prop-section">
+          <div class="prop-title">COMPONENT</div>
+          <div class="prop-row"><div class="prop-label">ID</div><input class="prop-input" id="propId"></div>
+          <div class="prop-row"><div class="prop-label">LABEL</div><input class="prop-input" id="propLabel"></div>
+          <div class="prop-row"><div class="prop-label">TYPE</div><div class="prop-val" id="propType">—</div></div>
+          <div class="prop-row"><div class="prop-label">CATEGORY</div><div class="prop-val" id="propCat">—</div></div>
+        </div>
+        <div class="prop-section">
+          <div class="prop-title">PINS</div>
+          <div class="pin-list" id="propPins"></div>
+        </div>
+        <div class="prop-section" style="margin-top:8px;display:flex;gap:6px">
+          <button class="tb-btn" onclick="applyProps()">Apply</button>
+          <button class="tb-btn" onclick="deleteSelected()" style="border-color:#ff3344;color:#ff3344">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wiki pane -->
+    <div class="sidebar-pane" id="spane-wiki">
+      <div id="wikiContent" style="padding:10px;font-size:9px;color:var(--cyan-d);line-height:2">
+        <div style="color:var(--amber);margin-bottom:8px;font-size:10px">📚 COMPONENT WIKI</div>
+        <div>Click a component in the catalog to see its datasheet links and usage notes.</div>
+        <div style="margin-top:12px;color:var(--cyan-d)">Or paste an IPFS CID in chat to share a schematic file.</div>
+        <div style="margin-top:12px;border-top:1px solid var(--edge);padding-top:8px">
+          <div style="color:var(--green);margin-bottom:4px">QUICK LINKS</div>
+          <div>• Arduino pinout: <span style="color:var(--amber)">ipfs add pinout.pdf</span></div>
+          <div>• DHT22 datasheet</div>
+          <div>• ESP32 dev board</div>
+          <div>• KiCad files via IPFS</div>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--edge);padding-top:8px">
+          <div style="color:var(--lora);margin-bottom:4px">NECTO / MIKROC</div>
+          <div>Export NECTO project → zip → ipfs add → share CID in #hardware-lab</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Canvas area ── -->
+  <div class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <span>COMPONENTS: <span class="sv" id="sbComps">0</span></span>
+      <span>CONNECTIONS: <span class="sv" id="sbConns">0</span></span>
+      <span>SIGNALS:</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff4455"></div>PWR</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#808080"></div>GND</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#00ccff"></div>I2C</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ffaa00"></div>SPI</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#00ff41"></div>GPIO</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff66ff"></div>UART</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#cc44ff"></div>LoRa</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#44ffaa"></div>GPS</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff6633"></div>GSM</span>
+      <span class="canvas-spacer"></span>
+      <span id="simStatus" style="color:var(--green)">● sim running</span>
+    </div>
+    <svg id="circuitSvg"></svg>
+
+    <!-- JSON panel -->
+    <div class="json-panel collapsed" id="jsonPanel">
+      <div class="json-bar">
+        <span style="color:var(--amber)">▾ CIRCUIT JSON</span>
+        <button class="tb-btn" id="jsonToggleBtn" onclick="toggleJson()">EXPAND</button>
+        <button class="tb-btn" onclick="renderFromJson()">▶ RENDER</button>
+        <button class="tb-btn" onclick="loadExample('temp-monitor')">EXAMPLE</button>
+        <button class="tb-btn" onclick="exportJson()">EXPORT</button>
+        <span style="margin-left:auto;color:var(--cyan-d)">edit JSON below to modify circuit</span>
+      </div>
+      <textarea class="json-editor" id="jsonEditor" spellcheck="false"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── Status bar ── -->
+<div class="statusbar">
+  <span>CIRCUIT LAB v1</span>
+  <span>|</span>
+  <span>D3 FORCE GRAPH</span>
+  <span>|</span>
+  <span>P2P SHARE: GUN.JS + IPFS</span>
+  <span style="margin-left:auto" id="sbMsg">drag components · click to select · scroll to zoom</span>
+</div>
+
+<script>
+// ── COMPONENT CATALOG ─────────────────────────────────────────────────────────
+const CATALOG = {
+  MCU: [
+    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#00ccff', pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
+    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#00ccff', pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
+    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#00ccff', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
+    { type:'esp32',         label:'ESP32',          icon:'📡', color:'#00bbff', pins:['GPIO0-39','3V3','GND','EN','VIN'] },
+    { type:'esp8266',       label:'ESP8266',        icon:'📡', color:'#00bbff', pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
+    { type:'attiny85',      label:'ATtiny85',       icon:'▪',  color:'#0088aa', pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
+    { type:'stm32f103',     label:'STM32F103',      icon:'🔲', color:'#4488ff', pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
+    { type:'raspberry_pi',  label:'Raspberry Pi',   icon:'🍓', color:'#cc3377', pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
+  ],
+  SENSOR: [
+    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#00ff41', pins:['VCC','DATA','NC','GND'] },
+    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#00ff41', pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
+    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#00ff41', pins:['VCC','TRIG','ECHO','GND'] },
+    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#00cc44', pins:['VCC','OUT','GND'] },
+    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#00cc44', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
+    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#00ff41', pins:['GND','DQ','VDD'] },
+    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#00cc44', pins:['VCC','GND','SCL','SDA','INT'] },
+    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#88cc00', pins:['1','2'] },
+  ],
+  DISPLAY: [
+    { type:'oled_128x64', label:'OLED 128×64',    icon:'🖥', color:'#ffaa00', pins:['VCC','GND','SCL','SDA'] },
+    { type:'lcd_16x2',    label:'LCD 16×2 I2C',   icon:'🖥', color:'#ffaa00', pins:['VCC','GND','SDA','SCL'] },
+    { type:'tft_240x320', label:'TFT 240×320',     icon:'🖥', color:'#ff8800', pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
+    { type:'neopixel',    label:'NeoPixel Strip',  icon:'💡', color:'#ff6644', pins:['5V','DIN','GND'] },
+    { type:'max7219',     label:'LED Matrix',      icon:'⊞',  color:'#ff6644', pins:['VCC','GND','DIN','CS','CLK'] },
+    { type:'sevenseg',    label:'7-Segment',       icon:'7️⃣', color:'#ff8800', pins:['a','b','c','d','e','f','g','dp','GND'] },
+  ],
+  POWER: [
+    { type:'battery_9v',  label:'9V Battery',     icon:'🔋', color:'#ffcc00', pins:['+','-'] },
+    { type:'lm7805',      label:'LM7805 5V Reg',  icon:'⚡', color:'#ffcc00', pins:['IN','GND','OUT'] },
+    { type:'lipo_3v7',    label:'LiPo 3.7V',      icon:'🔋', color:'#ffcc00', pins:['+','-'] },
+    { type:'tp4056',      label:'TP4056 Charger',  icon:'⚡', color:'#ffcc00', pins:['IN+','IN-','BAT+','BAT-','OUT+','OUT-'] },
+    { type:'usb_power',   label:'USB Power',       icon:'🔌', color:'#ffcc00', pins:['5V','GND'] },
+  ],
+  PASSIVE: [
+    { type:'resistor',    label:'Resistor',        icon:'▭', color:'#888888', pins:['1','2'] },
+    { type:'capacitor',   label:'Capacitor',       icon:'⊢', color:'#888888', pins:['+','-'] },
+    { type:'led',         label:'LED',             icon:'●', color:'#ff6666', pins:['+','-'] },
+    { type:'button',      label:'Push Button',     icon:'⊙', color:'#aaaaaa', pins:['1','2'] },
+    { type:'pot',         label:'Potentiometer',   icon:'↻', color:'#888888', pins:['1','WIPER','2'] },
+    { type:'relay_5v',    label:'5V Relay',        icon:'⏻', color:'#888888', pins:['VCC','GND','IN','NO','COM','NC'] },
+  ],
+  CELLULAR: [
+    { type:'sim800l',  label:'SIM800L GSM/GPRS', icon:'📱', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
+    { type:'sim7600e', label:'SIM7600E 4G LTE',  icon:'📱', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
+    { type:'a9g',      label:'A9G GSM+GPS Combo',icon:'🛰',  color:'#ff8844', pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
+    { type:'sim7000g', label:'SIM7000G NB-IoT',  icon:'📡', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
+    { type:'ec21',     label:'EC21 LTE Cat-1',   icon:'📱', color:'#ff5522', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
+  ],
+  GPS: [
+    { type:'neo6m',    label:'NEO-6M GPS',       icon:'🛰',  color:'#44ffaa', pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'neo8m',    label:'NEO-8M GPS',        icon:'🛰',  color:'#44ffaa', pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
+    { type:'l76k',     label:'L76K GPS',          icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
+    { type:'gtu7',     label:'GT-U7 GPS',         icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'atgm336h', label:'ATGM336H GPS/BDS',  icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
+  ],
+  LORA: [
+    { type:'sx1276',        label:'SX1276 LoRa 868',   icon:'📻', color:'#cc44ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'sx1278',        label:'SX1278 LoRa 433',   icon:'📻', color:'#cc44ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'rfm95w',        label:'RFM95W LoRa',        icon:'📻', color:'#aa33ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
+    { type:'ra02',          label:'Ra-02 LoRa 433',     icon:'📻', color:'#cc44ff', pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
+    { type:'rylr896',       label:'RYLR896 LoRa UART',  icon:'📻', color:'#dd55ff', pins:['VCC','GND','TXD','RXD','RST'] },
+    { type:'e32_433',       label:'E32-433T LoRa',      icon:'📻', color:'#bb33ee', pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
+    { type:'heltec_lora32', label:'Heltec LoRa32 V2',   icon:'📟', color:'#9922dd', pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
+  ],
+  RADIO: [
+    { type:'hc05',     label:'HC-05 Bluetooth', icon:'📶', color:'#4488ff', pins:['VCC','GND','TXD','RXD','KEY','STATE'] },
+    { type:'nrf24l01', label:'nRF24L01 2.4GHz', icon:'📶', color:'#4488ff', pins:['GND','VCC','CE','CSN','SCK','MOSI','MISO','IRQ'] },
+    { type:'hc12',     label:'HC-12 433MHz',    icon:'📶', color:'#6699ff', pins:['VCC','GND','TXD','RXD','SET'] },
+  ],
+};
+
+// Connection signal type → color
+const SIG_COLOR = {
+  power:'#ff4455', pwr:'#ff4455', vcc:'#ff4455', vin:'#ff4455', '5v':'#ff4455', '3v3':'#ff4455',
+  gnd:'#606060', ground:'#606060',
+  i2c:'#00ccff', sda:'#00ccff', scl:'#00ccff',
+  spi:'#ffaa00', mosi:'#ffaa00', miso:'#ffaa00', sck:'#ffaa00', cs:'#ffaa00', nss:'#ffaa00',
+  uart:'#ff66ff', tx:'#ff66ff', rx:'#ff66ff', txd:'#ff66ff', rxd:'#ff66ff',
+  gpio:'#00ff41', data:'#00ff41', sig:'#00ff41',
+  pwm:'#88ffaa',
+  lora:'#cc44ff', dio:'#cc44ff', rst:'#cc44ff',
+  gps:'#44ffaa', pps:'#44ffaa',
+  gsm:'#ff6633', cell:'#ff6633', pwrkey:'#ff6633',
+};
+function sigColor(label) {
+  const key = (label||'').toLowerCase().replace(/[\s\-_]/g,'');
+  for (const [k,v] of Object.entries(SIG_COLOR)) { if (key.includes(k)) return v; }
+  return '#4488aa';
+}
+
+function getCatColor(cat) {
+  return {
+    MCU:'#00ccff', SENSOR:'#00ff41', DISPLAY:'#ffaa00', POWER:'#ffcc00',
+    PASSIVE:'#888888', CELLULAR:'#ff6633', GPS:'#44ffaa', LORA:'#cc44ff', RADIO:'#4488ff',
+  }[cat] || '#00ccff';
+}
+function getCatForType(type) {
+  for (const [cat, items] of Object.entries(CATALOG)) {
+    if (items.find(i=>i.type===type)) return cat;
+  }
+  return 'MCU';
+}
+function getCompDef(type) {
+  for (const items of Object.values(CATALOG)) { const f=items.find(i=>i.type===type); if(f)return f; }
+  return null;
+}
+
+// ── CIRCUIT STATE ─────────────────────────────────────────────────────────────
+let circuit = { title:'Untitled Circuit', components:[], connections:[] };
+let selectedId = null;
+let simulation = null;
+let gun;
+
+// ── D3 SETUP ──────────────────────────────────────────────────────────────────
+const svgEl = document.getElementById('circuitSvg');
+const svg   = d3.select(svgEl);
+let W = 0, H = 0;
+
+function getSvgSize() {
+  const r = svgEl.getBoundingClientRect();
+  W = r.width; H = r.height;
+}
+
+// Zoom
+const zoom = d3.zoom().scaleExtent([0.2,4]).on('zoom', e => {
+  mainG.attr('transform', e.transform);
+});
+svg.call(zoom);
+
+const defs = svg.append('defs');
+// Arrowhead markers
+['gpio','i2c','spi','uart','pwr','gnd','def'].forEach(sig => {
+  const cols = {gpio:'#00ff41',i2c:'#00ccff',spi:'#ffaa00',uart:'#ff66ff',pwr:'#ff4455',gnd:'#606060',def:'#4488aa'};
+  defs.append('marker').attr('id','arr-'+sig).attr('viewBox','0 0 8 8').attr('refX',7).attr('refY',4)
+    .attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto')
+    .append('path').attr('d','M0,0 L8,4 L0,8 Z').attr('fill',cols[sig]);
+});
+
+const mainG  = svg.append('g').attr('class','main-g');
+const linksG = mainG.append('g').attr('class','links-g');
+const nodesG = mainG.append('g').attr('class','nodes-g');
+
+const NODE_W = 130, NODE_H = 48;
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderCircuit(circ) {
+  circuit = circ;
+  document.getElementById('circuitTitle').value = circ.title || 'Untitled';
+  document.getElementById('sbComps').textContent = circ.components.length;
+  document.getElementById('sbConns').textContent = circ.connections.length;
+  updateJson();
+
+  getSvgSize();
+  if (simulation) simulation.stop();
+
+  const nodes = circ.components.map(c => ({
+    ...c,
+    id: c.id,
+    x: c.x != null ? c.x : W/2 + (Math.random()-0.5)*200,
+    y: c.y != null ? c.y : H/2 + (Math.random()-0.5)*200,
+  }));
+
+  const nodeMap = Object.fromEntries(nodes.map(n=>[n.id,n]));
+
+  const links = circ.connections.map((conn,i) => ({
+    ...conn, index:i,
+    source: nodeMap[conn.from?.split('.')[0]] || conn.from?.split('.')[0],
+    target: nodeMap[conn.to?.split('.')[0]]   || conn.to?.split('.')[0],
+    fromPin: conn.from?.split('.')[1]||'',
+    toPin:   conn.to?.split('.')[1]||'',
+    color:   sigColor(conn.label||conn.fromPin||conn.toPin),
+  })).filter(l => l.source && l.target && typeof l.source==='object' && typeof l.target==='object');
+
+  // Draw links
+  const link = linksG.selectAll('.link-group').data(links, (_,i)=>i);
+  link.exit().remove();
+  const linkEnter = link.enter().append('g').attr('class','link-group');
+  linkEnter.append('path').attr('class','link-line');
+  linkEnter.append('text').attr('class','link-label');
+  const linkAll = linkEnter.merge(link);
+  linkAll.select('path').attr('stroke', d=>d.color).attr('marker-end', d=>'url(#arr-def)');
+  linkAll.select('text').text(d => [d.fromPin,d.toPin].filter(Boolean).join('→')||d.label||'');
+
+  // Draw nodes
+  const node = nodesG.selectAll('.node-group').data(nodes, d=>d.id);
+  node.exit().remove();
+  const nodeEnter = node.enter().append('g').attr('class','node-group')
+    .call(d3.drag().on('start', dragStart).on('drag', dragged).on('end', dragEnd))
+    .on('click', (event, d) => { event.stopPropagation(); selectComp(d.id); });
+
+  nodeEnter.append('rect').attr('class','node-rect').attr('width',NODE_W).attr('height',NODE_H).attr('x',-NODE_W/2).attr('y',-NODE_H/2);
+  nodeEnter.append('text').attr('class','node-label-id').attr('y',-5).attr('text-anchor','middle').attr('font-size',11);
+  nodeEnter.append('text').attr('class','node-label-name').attr('y',12).attr('text-anchor','middle').attr('font-size',9);
+  nodeEnter.append('text').attr('class','node-label-cat').attr('y',24).attr('text-anchor','middle').attr('font-size',8).attr('opacity',0.5);
+
+  const nodeAll = nodeEnter.merge(node);
+  nodeAll.select('.node-rect').attr('fill', d=>{const cat=getCatForType(d.type);const col=getCatColor(cat);return col+'18';}).attr('stroke',d=>{const cat=getCatForType(d.type);return getCatColor(cat);});
+  nodeAll.select('.node-label-id').text(d=>d.id).attr('fill',d=>getCatColor(getCatForType(d.type)));
+  nodeAll.select('.node-label-name').text(d=>d.label||d.type);
+  nodeAll.select('.node-label-cat').text(d=>getCatForType(d.type)).attr('fill',d=>getCatColor(getCatForType(d.type)));
+
+  svg.on('click', () => deselect());
+
+  // Force sim
+  simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(180).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(-500))
+    .force('collision', d3.forceCollide(90))
+    .force('center', d3.forceCenter(W/2, H/2).strength(0.03))
+    .on('tick', ticked);
+
+  simulation.alphaTarget(0.05).restart();
+
+  function ticked() {
+    nodeAll.attr('transform', d=>`translate(${d.x},${d.y})`);
+    linkAll.select('path').attr('d', d => {
+      const dx = d.target.x - d.source.x;
+      const dy = d.target.y - d.source.y;
+      const len = Math.sqrt(dx*dx+dy*dy) || 1;
+      const sx  = d.source.x + dx/len*(NODE_W/2+2);
+      const sy  = d.source.y + dy/len*(NODE_H/2+2);
+      const tx  = d.target.x - dx/len*(NODE_W/2+8);
+      const ty  = d.target.y - dy/len*(NODE_H/2+8);
+      const mx  = (sx+tx)/2 - dy/len*20;
+      const my  = (sy+ty)/2 + dx/len*20;
+      return `M${sx},${sy} Q${mx},${my} ${tx},${ty}`;
+    });
+    linkAll.select('text').attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-8);
+    // Save positions back
+    nodes.forEach(n => { const orig=circuit.components.find(c=>c.id===n.id); if(orig){orig.x=Math.round(n.x);orig.y=Math.round(n.y);} });
+  }
+}
+
+function dragStart(event, d) { if(!event.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; }
+function dragged(event, d)   { d.fx=event.x; d.fy=event.y; }
+function dragEnd(event, d)   { if(!event.active) simulation.alphaTarget(0.05); d.fx=null; d.fy=null; }
+
+// ── SELECTION ─────────────────────────────────────────────────────────────────
+function selectComp(id) {
+  selectedId = id;
+  nodesG.selectAll('.node-group').select('.node-rect').attr('stroke-width', d => d.id===id ? 2 : 1).attr('filter', d => d.id===id ? 'brightness(1.5)' : null);
+  const comp = circuit.components.find(c=>c.id===id);
+  if (comp) {
+    const def = getCompDef(comp.type);
+    document.getElementById('propsNoSel').style.display='none';
+    document.getElementById('propsPanel').style.display='';
+    document.getElementById('propId').value    = comp.id;
+    document.getElementById('propLabel').value = comp.label||'';
+    document.getElementById('propType').textContent = comp.type;
+    document.getElementById('propCat').textContent  = getCatForType(comp.type);
+    const pinList = document.getElementById('propPins');
+    pinList.innerHTML = (def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('');
+    switchSTab('props');
+    showWiki(comp.type);
+  }
+}
+
+function deselect() {
+  selectedId = null;
+  nodesG.selectAll('.node-group').select('.node-rect').attr('stroke-width',1).attr('filter',null);
+  document.getElementById('propsNoSel').style.display='';
+  document.getElementById('propsPanel').style.display='none';
+}
+
+function applyProps() {
+  const comp = circuit.components.find(c=>c.id===selectedId);
+  if (!comp) return;
+  comp.id    = document.getElementById('propId').value.trim() || comp.id;
+  comp.label = document.getElementById('propLabel').value.trim();
+  selectedId = comp.id;
+  renderCircuit(circuit);
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  if (!confirm(`Delete component ${selectedId}?`)) return;
+  circuit.components  = circuit.components.filter(c=>c.id!==selectedId);
+  circuit.connections = circuit.connections.filter(c=>!c.from?.startsWith(selectedId)&&!c.to?.startsWith(selectedId));
+  deselect();
+  renderCircuit(circuit);
+}
+
+// ── CATALOG ───────────────────────────────────────────────────────────────────
+function buildCatalog() {
+  const pane = document.getElementById('spane-catalog');
+  pane.innerHTML = '';
+  Object.entries(CATALOG).forEach(([cat, items]) => {
+    const hdr = document.createElement('div');
+    hdr.className = 'cat-hdr';
+    hdr.innerHTML = `<span>▼ ${cat}</span><span style="color:var(--cyan-d)">${items.length}</span>`;
+    let bodyVisible = true;
+    const body = document.createElement('div');
+    body.className = 'cat-body';
+    hdr.addEventListener('click', () => { bodyVisible=!bodyVisible; body.style.display=bodyVisible?'':'none'; hdr.querySelector('span').textContent=(bodyVisible?'▼':'▶')+' '+cat; });
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'comp-entry';
+      el.innerHTML = `<span class="comp-icon">${item.icon}</span><span class="comp-name" style="color:${item.color}">${item.label}</span>`;
+      el.title = `${item.type} — click to add`;
+      el.addEventListener('click', () => addComponent(item));
+      body.appendChild(el);
+    });
+    pane.appendChild(hdr);
+    pane.appendChild(body);
+  });
+}
+
+function addComponent(def) {
+  getSvgSize();
+  const used = circuit.components.filter(c=>c.type===def.type).length;
+  const prefix = def.type.toUpperCase().slice(0,1);
+  const id = prefix + (circuit.components.length+1);
+  const comp = { id, type:def.type, label:def.label, x:W/2+(Math.random()-0.5)*160, y:H/2+(Math.random()-0.5)*100 };
+  circuit.components.push(comp);
+  renderCircuit(circuit);
+  selectComp(id);
+  setStatus(`Added ${id}: ${def.label}`);
+}
+
+// ── WIKI ──────────────────────────────────────────────────────────────────────
+const WIKI = {
+  arduino_uno:    'Arduino Uno — 14 digital I/O (6 PWM), 6 analog inputs, 32KB flash, 16MHz. I2C on A4/A5, SPI on D10-13, UART on D0/D1.',
+  esp32:          'ESP32 — Dual-core 240MHz, WiFi+BT. 34 GPIO, 12-bit ADC, I2C/SPI/UART/I2S. 3.3V logic. GPIO16/17 good for GPS UART. EN pin for deep sleep wake.',
+  dht22:          'DHT22 — Temp: -40~80°C ±0.5°C, Humidity: 0~100% ±2-5%. Single-wire protocol. 10kΩ pullup on DATA. 3.3-5V. Min 2s sample interval.',
+  bmp280:         'BMP280 — Pressure: 300-1100hPa, Temp: -40~85°C. I2C addr: 0x76 (SDO→GND) or 0x77 (SDO→VCC). SPI also supported.',
+  oled_128x64:    'OLED 128×64 — SSD1306 controller. I2C addr: 0x3C or 0x3D. 3.3-5V. Use Adafruit SSD1306 library. Very low power.',
+  hcsr04:         'HC-SR04 — Ultrasonic range 2cm-400cm. TRIG: 10µs pulse. ECHO: pulse width = distance×58µs. Operates at 5V.',
+  nrf24l01:       'nRF24L01 — 2.4GHz SPI transceiver. CE=chip enable, CSN=chip select. 1.9-3.6V (use 3.3V). Add 100µF decoupling cap near VCC.',
+  // LoRa
+  sx1276:         'SX1276 LoRa — 868/915MHz. SPI. Range 5-15km LoS. 3.3V logic. Use with LMIC, RadioHead, or arduino-LoRa library. DIO0=TX/RX done interrupt.',
+  sx1278:         'SX1278 LoRa — 433MHz variant of SX1276. SPI. Range 2-8km LoS. 3.3V. Spreading factor SF7-SF12; higher SF = longer range, slower data.',
+  rfm95w:         'RFM95W — Hope RF LoRa module (SX1276 based). 868/915MHz. 3.3V SPI. Has DIO0-5. Popular on Feather boards. Use with LMIC for LoRaWAN.',
+  ra02:           'Ra-02 (AI-Thinker) — SX1278 module, 433MHz. SPI. 3.3V only — use level shifter with 5V MCUs. Comes with PCB antenna.',
+  rylr896:        'RYLR896 — UART LoRa module. AT command interface. No SPI needed. 3.3V. Set freq/SF/BW via AT+PARAMETER. Very easy to prototype with.',
+  e32_433:        'E32-433T — UART LoRa module (SX1278). M0/M1 pins set mode: 00=normal, 01=wake-up, 10=power-save, 11=sleep/config. AUX=busy indicator.',
+  heltec_lora32:  'Heltec LoRa32 V2 — ESP32 + SX1276/SX1278 + OLED 0.96" on one board. WiFi+BT+LoRa. USB-C. Good for guardian nodes. Arduino + LoRaWAN ready.',
+  // GPS
+  neo6m:          'NEO-6M GPS — u-blox, UART 9600 baud, NMEA sentences. 3.3-5V. Cold fix ~30s, hot fix <1s. PPS pin = 1Hz pulse when locked. Use TinyGPS++ library.',
+  neo8m:          'NEO-8M GPS — u-blox Gen 8. Multi-constellation (GPS+GLONASS+BeiDou). UART. Faster fix, better accuracy than NEO-6M. Same wiring.',
+  l76k:           'L76K GPS — Quectel, 3.3V UART. Ultra-low power. AlwaysLocate™ adaptive algorithm. FORCE_ON pin overrides power-save. Tiny package.',
+  gtu7:           'GT-U7 — Compatible NEO-6M clone. UART 9600. Built-in antenna socket. 3.3-5V. Works with TinyGPS++. Cheap and reliable for prototyping.',
+  atgm336h:       'ATGM336H — GPS+BeiDou, UART 9600. 3.3V. China-made, low cost. Similar to NEO-6M pinout. Includes PPS and NRESET. Ceramic patch antenna.',
+  // Cellular
+  sim800l:        'SIM800L — GSM/GPRS quad-band. UART. 3.4-4.4V (NOT 5V — use LiPo direct or 4V reg). Needs 2A peak current. AT commands. HTTP/TCP/SMS/Call.',
+  sim7600e:       'SIM7600E — 4G LTE Cat-4 + 3G + 2G. UART. 3.3-4.2V. AT command compatible with SIM800. LTE upload 50Mbps, download 150Mbps. USB also available.',
+  a9g:            'A9G (AI-Thinker) — GSM+GPRS+GPS combo module. Two UARTs (one for GSM, one for GPS). 3.8V. Good for single-module guardian nodes: location+comms in one chip.',
+  sim7000g:       'SIM7000G — NB-IoT + eMTC + GPRS global. UART. 3.3-4.2V. Multi-band NB-IoT. Very low power sleep mode (1µA). Good for battery-powered field nodes.',
+  ec21:           'EC21 — Quectel LTE Cat-1. 10Mbps down / 5Mbps up. UART + USB. 3.3V. QuecOpen platform for embedded apps. EC21-G global variant covers all bands.',
+};
+
+function showWiki(type) {
+  const wiki = WIKI[type];
+  if (!wiki) return;
+  const def = getCompDef(type);
+  document.getElementById('wikiContent').innerHTML = `
+    <div style="color:var(--amber);margin-bottom:8px;font-size:11px">${def?.icon||'⚙'} ${def?.label||type}</div>
+    <div style="color:var(--green);margin-bottom:10px;line-height:2">${wiki}</div>
+    <div style="color:var(--cyan-d);margin-top:6px;font-size:9px">PINS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${(def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('')}</div>
+    <div style="margin-top:10px;border-top:1px solid var(--edge);padding-top:6px;font-size:9px;color:var(--cyan-d)">
+      Share datasheets via IPFS CID in <a href="chat.html" style="color:var(--amber)">#hardware-lab ↗</a>
+    </div>
+  `;
+  switchSTab('wiki');
+}
+
+function switchSTab(tab) {
+  document.querySelectorAll('.stab').forEach(t => t.classList.toggle('active', t.id==='stab-'+tab));
+  document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.toggle('active', p.id==='spane-'+tab));
+}
+
+// ── JSON EDITOR ───────────────────────────────────────────────────────────────
+function updateJson() {
+  const snap = JSON.parse(JSON.stringify(circuit));
+  snap.components.forEach(c => { delete c.vx; delete c.vy; delete c.index; });
+  document.getElementById('jsonEditor').value = JSON.stringify(snap, null, 2);
+}
+
+function renderFromJson() {
+  try {
+    const circ = JSON.parse(document.getElementById('jsonEditor').value);
+    renderCircuit(circ);
+    setStatus('Circuit rendered from JSON.');
+  } catch(e) {
+    setStatus('JSON parse error: '+e.message);
+  }
+}
+
+function toggleJson() {
+  const panel = document.getElementById('jsonPanel');
+  const btn   = document.getElementById('jsonToggleBtn');
+  const open  = panel.classList.contains('expanded');
+  panel.classList.toggle('expanded', !open);
+  panel.classList.toggle('collapsed', open);
+  btn.textContent = open ? 'EXPAND' : 'COLLAPSE';
+  if (!open) updateJson();
+}
+
+function exportJson() {
+  updateJson();
+  const blob = new Blob([document.getElementById('jsonEditor').value], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`circuit-${circuit.title.replace(/\s+/g,'-').toLowerCase()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  setStatus('Exported circuit JSON.');
+}
+
+// ── IPFS SHARE ────────────────────────────────────────────────────────────────
+function shareCircuit() {
+  updateJson();
+  const json = document.getElementById('jsonEditor').value;
+  const info = `To share this circuit via IPFS:\n\n1. Save the JSON:\n   circuit.json\n\n2. Add to IPFS:\n   ipfs add circuit.json --cid-version=1\n\n3. Share the CID in #hardware-lab\n   It will auto-link as a clickable IPFS badge.\n\n── Current circuit: ${circuit.title}\n   Components: ${circuit.components.length}  Connections: ${circuit.connections.length}`;
+  alert(info);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function clearCanvas() {
+  if (!confirm('Clear the circuit? This cannot be undone.')) return;
+  renderCircuit({ title: document.getElementById('circuitTitle').value, components:[], connections:[] });
+  setStatus('Canvas cleared.');
+}
+
+function autoLayout() {
+  if (simulation) { simulation.alpha(0.5).restart(); setStatus('Layout running…'); }
+}
+
+function setStatus(msg) {
+  document.getElementById('sbMsg').textContent = msg;
+}
+
+// ── EXAMPLE CIRCUITS ──────────────────────────────────────────────────────────
+const EXAMPLES = {
+  'temp-monitor': {
+    title: 'Temperature Monitor (Arduino + DHT22 + OLED)',
+    components: [
+      { id:'U1', type:'arduino_uno',   label:'Arduino Uno',    x:400, y:300 },
+      { id:'S1', type:'dht22',         label:'DHT22 Sensor',   x:650, y:180 },
+      { id:'D1', type:'oled_128x64',   label:'OLED 128×64',    x:150, y:180 },
+      { id:'R1', type:'resistor',      label:'10kΩ pullup',    x:650, y:380 },
+      { id:'P1', type:'usb_power',     label:'USB 5V',         x:400, y:500 },
+    ],
+    connections: [
+      { from:'U1.A4',  to:'D1.SDA',   label:'SDA' },
+      { from:'U1.A5',  to:'D1.SCL',   label:'SCL' },
+      { from:'U1.D2',  to:'R1.2',     label:'DATA' },
+      { from:'R1.2',   to:'S1.DATA',  label:'DATA' },
+      { from:'U1.5V',  to:'S1.VCC',   label:'5V' },
+      { from:'U1.5V',  to:'D1.VCC',   label:'5V' },
+      { from:'U1.5V',  to:'R1.1',     label:'5V pullup' },
+      { from:'U1.GND', to:'S1.GND',   label:'GND' },
+      { from:'U1.GND', to:'D1.GND',   label:'GND' },
+      { from:'P1.5V',  to:'U1.VIN',   label:'5V' },
+      { from:'P1.GND', to:'U1.GND',   label:'GND' },
+    ],
+  },
+  'guardian-node': {
+    title: 'Guardian Field Node (ESP32 + GPS + SIM800L + LoRa)',
+    components: [
+      { id:'U1', type:'esp32',    label:'ESP32 DevKit',    x:400, y:280 },
+      { id:'G1', type:'neo6m',    label:'NEO-6M GPS',      x:160, y:150 },
+      { id:'C1', type:'sim800l',  label:'SIM800L GSM',     x:640, y:150 },
+      { id:'L1', type:'sx1278',   label:'LoRa SX1278 433', x:640, y:400 },
+      { id:'P1', type:'lipo_3v7', label:'LiPo 3.7V',       x:160, y:420 },
+      { id:'P2', type:'tp4056',   label:'TP4056 Charger',  x:160, y:280 },
+    ],
+    connections: [
+      { from:'U1.GPIO16', to:'G1.TX',    label:'GPS RX' },
+      { from:'U1.GPIO17', to:'G1.RX',    label:'GPS TX' },
+      { from:'U1.GPIO2',  to:'C1.TXD',   label:'GSM RX' },
+      { from:'U1.GPIO3',  to:'C1.RXD',   label:'GSM TX' },
+      { from:'U1.GPIO5',  to:'L1.NSS',   label:'CS' },
+      { from:'U1.GPIO18', to:'L1.SCK',   label:'SCK' },
+      { from:'U1.GPIO19', to:'L1.MISO',  label:'MISO' },
+      { from:'U1.GPIO23', to:'L1.MOSI',  label:'MOSI' },
+      { from:'U1.GPIO4',  to:'L1.RST',   label:'RST' },
+      { from:'U1.GPIO26', to:'L1.DIO0',  label:'IRQ' },
+      { from:'P1.+',      to:'P2.BAT+',  label:'+' },
+      { from:'P1.+',      to:'C1.VCC',   label:'3.7V' },
+      { from:'P2.OUT+',   to:'U1.VIN',   label:'3.7V' },
+      { from:'U1.3V3',    to:'G1.VCC',   label:'3.3V' },
+      { from:'U1.3V3',    to:'L1.VCC',   label:'3.3V' },
+      { from:'U1.GND',    to:'G1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'C1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'L1.GND',   label:'GND' },
+    ],
+  },
+  'lora-node': {
+    title: 'LoRa Guardian Node (ESP32 + SX1278)',
+    components: [
+      { id:'U1', type:'esp32',    label:'ESP32 DevKit',  x:400, y:300 },
+      { id:'L1', type:'sx1278',   label:'LoRa SX1278',   x:650, y:200 },
+      { id:'S1', type:'bmp280',   label:'BMP280',        x:150, y:200 },
+      { id:'P1', type:'lipo_3v7', label:'LiPo 3.7V',     x:400, y:480 },
+      { id:'C1', type:'tp4056',   label:'TP4056',        x:650, y:420 },
+    ],
+    connections: [
+      { from:'U1.GPIO5',  to:'L1.NSS',   label:'CS' },
+      { from:'U1.GPIO18', to:'L1.SCK',   label:'SCK' },
+      { from:'U1.GPIO19', to:'L1.MISO',  label:'MISO' },
+      { from:'U1.GPIO23', to:'L1.MOSI',  label:'MOSI' },
+      { from:'U1.GPIO4',  to:'L1.RST',   label:'RST' },
+      { from:'U1.GPIO2',  to:'L1.DIO0',  label:'IRQ' },
+      { from:'U1.GPIO21', to:'S1.SDA',   label:'SDA' },
+      { from:'U1.GPIO22', to:'S1.SCL',   label:'SCL' },
+      { from:'P1.+',      to:'C1.BAT+',  label:'+' },
+      { from:'C1.OUT+',   to:'U1.VIN',   label:'3.7V' },
+      { from:'U1.3V3',    to:'L1.VCC',   label:'3.3V' },
+      { from:'U1.3V3',    to:'S1.VIN',   label:'3.3V' },
+      { from:'U1.GND',    to:'L1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'S1.GND',   label:'GND' },
+    ],
+  },
+};
+
+function loadExample(key) {
+  const ex = EXAMPLES[key];
+  if (!ex) return;
+  renderCircuit(JSON.parse(JSON.stringify(ex)));
+  setStatus(`Loaded example: ${ex.title}`);
+}
+
+// ── STARTUP ───────────────────────────────────────────────────────────────────
+buildCatalog();
+loadExample('guardian-node');
+
+document.getElementById('circuitTitle').addEventListener('input', e => {
+  circuit.title = e.target.value;
+});
+
+window.addEventListener('resize', () => {
+  getSvgSize();
+  if (simulation) simulation.force('center', d3.forceCenter(W/2, H/2)).alpha(0.1).restart();
+});
+</script>
+</body>
+</html>

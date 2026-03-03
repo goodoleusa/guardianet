@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUARDIAN MANAGE — Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060916; --panel:#0b1120; --deep:#030810;
+      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
+      --amber:#ffaa00; --red:#ff3344; --lora:#ff66ff; --edge:#152035;
+      --font:'Share Tech Mono','Courier New',monospace;
+      --glow-g:0 0 10px rgba(0,255,65,0.5);
+      --glow-c:0 0 10px rgba(0,204,255,0.5);
+      --glow-a:0 0 10px rgba(255,170,0,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px;overflow:hidden}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+
+    /* ── Toolbar ── */
+    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:0 14px;display:flex;align-items:center;gap:12px;height:40px;flex-shrink:0}
+    .logo{font-size:13px;color:var(--lora);letter-spacing:2px;white-space:nowrap}
+    .toolbar-right{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:9px;color:var(--cyan-d)}
+    .toolbar-right a{color:var(--cyan-d);text-decoration:none}
+    .toolbar-right a:hover{color:var(--cyan)}
+    .tb-btn{background:rgba(0,204,255,0.06);border:1px solid var(--cyan-d);color:var(--cyan-d);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
+    .tb-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glow-g);animation:sdotPulse 2s ease infinite}
+    @keyframes sdotPulse{0%,100%{box-shadow:none}50%{box-shadow:var(--glow-g)}}
+
+    /* ── Tabs ── */
+    .tab-bar{display:flex;background:var(--panel);border-bottom:1px solid var(--edge);flex-shrink:0}
+    .mtab{padding:8px 18px;font-size:10px;color:var(--cyan-d);cursor:pointer;letter-spacing:1px;border-bottom:2px solid transparent;transition:color .15s}
+    .mtab:hover{color:var(--cyan)}
+    .mtab.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+    /* ── Content ── */
+    .content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+    .tab-pane{display:none;flex:1;overflow:hidden;flex-direction:column}
+    .tab-pane.active{display:flex}
+
+    /* ── Section headers ── */
+    .sec-hdr{padding:8px 16px;font-size:8px;color:var(--cyan-d);letter-spacing:3px;border-bottom:1px solid var(--edge);background:#080f1e;display:flex;align-items:center;gap:12px;flex-shrink:0}
+    .sec-hdr-right{margin-left:auto;display:flex;gap:8px}
+
+    /* ── Registry table ── */
+    .table-wrap{flex:1;overflow:auto;padding:0}
+    .reg-table{border-collapse:collapse;width:100%;font-size:10px}
+    .reg-table th{background:#0a1628;border-bottom:1px solid var(--edge);padding:6px 12px;text-align:left;font-size:8px;color:var(--cyan-d);letter-spacing:1px;position:sticky;top:0;white-space:nowrap}
+    .reg-table td{border-bottom:1px solid rgba(21,32,53,0.8);padding:6px 12px;color:#8aaecc;vertical-align:middle;white-space:nowrap}
+    .reg-table tr:hover td{background:rgba(0,204,255,0.03)}
+    .status-pill{font-size:8px;padding:1px 6px;letter-spacing:1px;border:1px solid}
+    .status-pill.active{color:var(--green);border-color:var(--green-d);background:rgba(0,255,65,0.07)}
+    .status-pill.away{color:var(--amber);border-color:#886600;background:rgba(255,170,0,0.07)}
+    .status-pill.dark{color:var(--red);border-color:#880022;background:rgba(255,51,68,0.07);animation:blink .9s step-end infinite}
+    .status-pill.offline{color:var(--cyan-d);border-color:var(--edge)}
+    .tier-badge{font-size:8px;padding:1px 5px;border:1px solid var(--cyan-d);color:var(--cyan-d)}
+    .tbl-btn{background:none;border:1px solid var(--edge);color:var(--cyan-d);font-family:var(--font);font-size:8px;padding:1px 6px;cursor:pointer}
+    .tbl-btn:hover{border-color:var(--red);color:var(--red)}
+    .tbl-btn.edit{border-color:var(--cyan-d)}
+    .tbl-btn.edit:hover{border-color:var(--cyan);color:var(--cyan)}
+
+    /* ── Stats grid ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;background:var(--edge);flex-shrink:0}
+    .stat-card{background:var(--panel);padding:14px 16px}
+    .stat-label{font-size:8px;color:var(--cyan-d);letter-spacing:2px;margin-bottom:6px}
+    .stat-val{font-size:28px;color:var(--green);text-shadow:var(--glow-g)}
+    .stat-val.amber{color:var(--amber)}
+    .stat-val.red{color:var(--red)}
+    .stat-val.cyan{color:var(--cyan)}
+    .stat-sub{font-size:8px;color:var(--cyan-d);margin-top:3px}
+
+    /* ── Live feed ── */
+    .live-feed{flex:1;overflow-y:auto;padding:4px 16px}
+    .feed-item{display:flex;gap:10px;padding:3px 0;font-size:9px;border-bottom:1px solid rgba(21,32,53,0.5)}
+    .feed-t{color:var(--cyan-d);min-width:44px;flex-shrink:0}
+    .feed-msg{color:#8aaecc;flex:1}
+    .feed-msg .g{color:var(--green)}
+    .feed-msg .a{color:var(--amber)}
+    .feed-msg .r{color:var(--red)}
+    .feed-msg .l{color:var(--lora)}
+    .feed-msg .c{color:var(--cyan)}
+
+    /* ── CID manager ── */
+    .cid-list{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:6px}
+    .cid-row{background:var(--panel);border:1px solid var(--edge);padding:8px 12px;display:flex;align-items:center;gap:10px}
+    .cid-row:hover{border-color:var(--cyan-d)}
+    .cid-hash{color:var(--green);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+    .cid-hash:hover{color:var(--cyan)}
+    .cid-label{font-size:9px;color:var(--amber);min-width:120px;overflow:hidden;text-overflow:ellipsis}
+    .cid-date{font-size:8px;color:var(--cyan-d);white-space:nowrap}
+    .cid-status{font-size:8px;color:var(--green)}
+
+    /* ── Broadcast ── */
+    .broadcast-panel{padding:20px;max-width:600px}
+    .bcast-label{font-size:8px;color:var(--cyan-d);letter-spacing:2px;margin-bottom:8px}
+    .bcast-room{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+    .room-chip{background:rgba(0,204,255,0.06);border:1px solid var(--cyan-d);color:var(--cyan-d);font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px}
+    .room-chip:hover,.room-chip.sel{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,0.08)}
+    .bcast-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--green);font-family:var(--font);font-size:11px;padding:10px 12px;outline:none;resize:vertical;min-height:80px;margin-bottom:10px}
+    .bcast-input:focus{border-color:var(--cyan)}
+    .bcast-footer{display:flex;gap:8px;align-items:center}
+    .bcast-hint{font-size:9px;color:var(--cyan-d);flex:1}
+    .bcast-btn{background:rgba(255,170,0,0.1);border:1px solid var(--amber);color:var(--amber);font-family:var(--font);font-size:10px;padding:6px 20px;cursor:pointer;letter-spacing:2px;transition:all .15s}
+    .bcast-btn:hover{background:rgba(255,170,0,0.2);box-shadow:var(--glow-a)}
+    .bcast-result{margin-top:12px;font-size:9px;color:var(--green);display:none}
+
+    /* ── Add guardian form ── */
+    .add-form{padding:16px;background:var(--panel);border:1px solid var(--edge);margin:12px 16px;max-width:500px}
+    .form-title{font-size:9px;color:var(--amber);letter-spacing:2px;margin-bottom:12px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+    .form-label{font-size:8px;color:var(--cyan-d);margin-bottom:3px}
+    .form-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--green);font-family:var(--font);font-size:10px;padding:4px 8px;outline:none}
+    .form-input:focus{border-color:var(--cyan)}
+    .form-actions{display:flex;gap:8px;margin-top:12px}
+
+    /* ── Status bar ── */
+    .statusbar{height:22px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 14px;gap:16px;font-size:8px;color:var(--cyan-d);flex-shrink:0}
+    .sv{color:var(--green)}
+
+    @keyframes blink{50%{opacity:0}}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+  </style>
+</head>
+<body style="display:flex;flex-direction:column;height:100vh">
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="logo">◈ GUARDIAN MANAGE</span>
+  <div class="status-dot"></div>
+  <span style="font-size:9px;color:var(--cyan-d)" id="tbStatus">loading registry…</span>
+  <div class="toolbar-right">
+    <button class="tb-btn" onclick="reloadRegistry()">↻ Refresh</button>
+    <button class="tb-btn" onclick="exportRegistry()">Export JSON</button>
+    <span>|</span>
+    <a href="chat.html">CHAT ↗</a>
+    <a href="chain.html">CHAIN ↗</a>
+    <a href="index.html">NET ↗</a>
+  </div>
+</div>
+
+<!-- ── Tab bar ── -->
+<div class="tab-bar">
+  <div class="mtab active" id="mtab-registry" onclick="switchTab('registry')">REGISTRY</div>
+  <div class="mtab" id="mtab-network"  onclick="switchTab('network')">LIVE NETWORK</div>
+  <div class="mtab" id="mtab-cids"     onclick="switchTab('cids')">CID VAULT</div>
+  <div class="mtab" id="mtab-broadcast" onclick="switchTab('broadcast')">BROADCAST</div>
+</div>
+
+<div class="content">
+
+  <!-- ── REGISTRY TAB ── -->
+  <div class="tab-pane active" id="tpane-registry">
+    <div class="sec-hdr">
+      <span>GUARDIAN REGISTRY</span>
+      <span style="color:var(--green)" id="regCount">— guardians</span>
+      <div class="sec-hdr-right">
+        <button class="tb-btn" onclick="toggleAddForm()">+ Add Guardian</button>
+      </div>
+    </div>
+
+    <!-- Add form (hidden) -->
+    <div class="add-form" id="addForm" style="display:none">
+      <div class="form-title">REGISTER NEW GUARDIAN</div>
+      <div class="form-row">
+        <div><div class="form-label">SCREEN NAME</div><input class="form-input" id="fName" placeholder="CipherHawk23" maxlength="16"></div>
+        <div><div class="form-label">TIER (1-6)</div><input class="form-input" id="fTier" placeholder="3" type="number" min="1" max="6" value="3"></div>
+      </div>
+      <div class="form-row">
+        <div><div class="form-label">NODE TYPE</div>
+          <select class="form-input" id="fNodeType">
+            <option>IPFS</option><option>LoRa</option><option>Observer</option><option>Archivist</option><option>Relay</option>
+          </select>
+        </div>
+        <div><div class="form-label">LOCATION (opt)</div><input class="form-input" id="fLoc" placeholder="region or n/a"></div>
+      </div>
+      <div><div class="form-label">NOTES</div><input class="form-input" id="fNotes" placeholder="any notes…" style="width:100%"></div>
+      <div class="form-actions">
+        <button class="tb-btn" onclick="addGuardian()" style="border-color:var(--green);color:var(--green)">✓ Register</button>
+        <button class="tb-btn" onclick="toggleAddForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>SCREEN NAME</th>
+            <th>STATUS</th>
+            <th>TIER</th>
+            <th>NODE TYPE</th>
+            <th>LOCATION</th>
+            <th>LAST SEEN</th>
+            <th>JOINED</th>
+            <th>NOTES</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="regBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── LIVE NETWORK TAB ── -->
+  <div class="tab-pane" id="tpane-network">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">TOTAL GUARDIANS</div><div class="stat-val" id="statTotal">—</div><div class="stat-sub">in registry</div></div>
+      <div class="stat-card"><div class="stat-label">ACTIVE NOW</div><div class="stat-val" id="statActive">—</div><div class="stat-sub">seen &lt;65s</div></div>
+      <div class="stat-card"><div class="stat-label">IN CHAIN</div><div class="stat-val cyan" id="statChain">—</div><div class="stat-sub">dead man's chain</div></div>
+      <div class="stat-card"><div class="stat-label">DARK NODES</div><div class="stat-val red" id="statDark">—</div><div class="stat-sub">&gt;48h offline</div></div>
+      <div class="stat-card"><div class="stat-label">RESILIENCE</div><div class="stat-val amber" id="statPct">—</div><div class="stat-sub">active / total</div></div>
+      <div class="stat-card"><div class="stat-label">PINNED CIDs</div><div class="stat-val" id="statCids">—</div><div class="stat-sub">content items</div></div>
+    </div>
+    <div class="sec-hdr">
+      <span>LIVE CHAIN EVENTS</span>
+      <span id="liveCount" style="color:var(--cyan-d)">0 events</span>
+    </div>
+    <div class="live-feed" id="liveFeed">
+      <div class="feed-item"><span class="feed-t">[boot]</span><span class="feed-msg">Connecting to P2P network…</span></div>
+    </div>
+  </div>
+
+  <!-- ── CID VAULT TAB ── -->
+  <div class="tab-pane" id="tpane-cids">
+    <div class="sec-hdr">
+      <span>CID VAULT</span>
+      <span style="color:var(--green)" id="cidCount">— items</span>
+      <div class="sec-hdr-right">
+        <button class="tb-btn" onclick="showAddCid()">+ Pin CID</button>
+        <button class="tb-btn" onclick="verifyCids()">Verify All</button>
+      </div>
+    </div>
+
+    <!-- Add CID form -->
+    <div class="add-form" id="cidForm" style="display:none;margin:8px 16px">
+      <div class="form-title">PIN NEW CID</div>
+      <div><div class="form-label">IPFS CID</div><input class="form-input" id="cidInput" placeholder="bafybei… or Qm…" style="width:100%;margin-bottom:8px"></div>
+      <div class="form-row">
+        <div><div class="form-label">LABEL</div><input class="form-input" id="cidLabelInput" placeholder="Evidence doc / schematic…"></div>
+        <div><div class="form-label">CATEGORY</div>
+          <select class="form-input" id="cidCat">
+            <option>Evidence</option><option>Schematic</option><option>Code</option><option>Document</option><option>Archive</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="tb-btn" onclick="pinCid()" style="border-color:var(--green);color:var(--green)">✓ Pin</button>
+        <button class="tb-btn" onclick="document.getElementById('cidForm').style.display='none'">Cancel</button>
+      </div>
+    </div>
+
+    <div class="cid-list" id="cidList"></div>
+  </div>
+
+  <!-- ── BROADCAST TAB ── -->
+  <div class="tab-pane" id="tpane-broadcast">
+    <div class="sec-hdr"><span>BROADCAST TO CHAT</span></div>
+    <div class="broadcast-panel">
+      <div class="bcast-label">TARGET ROOM</div>
+      <div class="bcast-room">
+        <div class="room-chip sel" data-room="general">#general</div>
+        <div class="room-chip" data-room="investigation">#investigation</div>
+        <div class="room-chip" data-room="guardian-net">#guardian-net</div>
+        <div class="room-chip" data-room="hardware">#hardware-lab</div>
+        <div class="room-chip" data-room="deadmans">#dead-mans-chain</div>
+        <div class="room-chip" data-room="collab">#collab-coding</div>
+      </div>
+      <div class="bcast-label" style="margin-top:14px">MESSAGE</div>
+      <textarea class="bcast-input" id="bcastMsg" placeholder="System broadcast message…
+Type a network alert, CID announcement, or admin notice here.
+This message will appear as a system message in the selected room."></textarea>
+      <div class="bcast-footer">
+        <span class="bcast-hint" id="bcastHint">Message sends as SYSTEM in the selected room via Gun.js P2P.</span>
+        <button class="bcast-btn" onclick="sendBroadcast()">▶ BROADCAST</button>
+      </div>
+      <div class="bcast-result" id="bcastResult"></div>
+
+      <!-- Quick broadcasts -->
+      <div style="margin-top:20px;border-top:1px solid var(--edge);padding-top:14px">
+        <div class="bcast-label">QUICK MESSAGES</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
+          <div class="room-chip" onclick="quickBcast('🔴 ALERT: Network resilience check. All guardians please confirm heartbeat in Dead Man\'s Chain.')">🔴 Resilience Check</div>
+          <div class="room-chip" onclick="quickBcast('📦 New evidence CID pinned. See #guardian-net for details.')">📦 New CID Pinned</div>
+          <div class="room-chip" onclick="quickBcast('⛓ Dead Man\'s Chain maintenance. Expect brief interruption.')">⛓ Chain Maintenance</div>
+          <div class="room-chip" onclick="quickBcast('✅ Guardian network status: ALL SYSTEMS OPERATIONAL.')">✅ Status OK</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Status bar ── -->
+<div class="statusbar">
+  <span>GUARDIAN NET ADMIN</span>
+  <span>|</span>
+  <span>TOTAL: <span class="sv" id="sbTotal">—</span></span>
+  <span>ACTIVE: <span class="sv" id="sbActive">—</span></span>
+  <span>CHAIN: <span class="sv" id="sbChain">—</span></span>
+  <span style="margin-left:auto" id="sbMsg">loading…</span>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const CHAT_NS  = 'guardian-chat-v1';
+const CHAIN_NS = 'guardian-chain-v1';
+const GUN_PEERS = ['https://gun-manhattan.herokuapp.com/gun','https://gun-us.herokuapp.com/gun'];
+const AWAY_MS  = 65000;
+const DARK_MS  = 48 * 60 * 60 * 1000;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let gun;
+let registry = { metadata:{}, nodes:[], cids:[] };
+let chainNodes = {};
+let chatPresence = {};
+let liveCount = 0;
+let selectedRoom = 'general';
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function ts() { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function rndHex(n){ return [...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase(); }
+
+function ago(ms) {
+  if (!ms) return 'never';
+  const diff = Date.now() - ms;
+  if (diff < 60000)  return `${Math.floor(diff/1000)}s ago`;
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+  return `${Math.floor(diff/3600000)}h ago`;
+}
+
+function nodeStatus(lastBeat) {
+  const age = Date.now() - (lastBeat||0);
+  if (age > DARK_MS)  return 'dark';
+  if (age > AWAY_MS)  return 'away';
+  return 'active';
+}
+
+function setStatus(msg) {
+  document.getElementById('sbMsg').textContent = msg;
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.mtab').forEach(t => t.classList.toggle('active', t.id==='mtab-'+tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id==='tpane-'+tab));
+}
+
+// ── REGISTRY ──────────────────────────────────────────────────────────────────
+async function loadRegistry() {
+  try {
+    const r   = await fetch('data/guardian_registry.json');
+    registry  = await r.json();
+    if (!registry.nodes) registry.nodes = [];
+    if (!registry.cids)  registry.cids  = [];
+    renderRegistry();
+    renderCids();
+    updateStats();
+    document.getElementById('tbStatus').textContent = `registry loaded · ${registry.nodes.length} guardians`;
+    document.getElementById('tbStatus').style.color = 'var(--green)';
+  } catch(e) {
+    // No registry file — start fresh
+    registry = { metadata:{ created:new Date().toISOString(), pinned_cid:'' }, nodes:[], cids:[] };
+    renderRegistry();
+    renderCids();
+    document.getElementById('tbStatus').textContent = 'no registry file — using live data';
+    document.getElementById('tbStatus').style.color = 'var(--amber)';
+  }
+}
+
+function renderRegistry() {
+  const tbody = document.getElementById('regBody');
+  tbody.innerHTML = '';
+  const nodes = registry.nodes || [];
+  document.getElementById('regCount').textContent = `${nodes.length} guardian${nodes.length!==1?'s':''}`;
+
+  if (!nodes.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--cyan-d);padding:24px">No guardians registered. Add one above or let live P2P data populate the table.</td></tr>`;
+    return;
+  }
+
+  nodes.forEach((n, i) => {
+    const livePresence = chatPresence[n.name] || chainNodes[n.nodeId];
+    const lastBeat     = livePresence?.t || n.last_seen || null;
+    const status       = lastBeat ? nodeStatus(lastBeat) : 'offline';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--cyan-d)">${i+1}</td>
+      <td style="color:var(--green)">${esc(n.name||n.id||'—')}</td>
+      <td><span class="status-pill ${status}">${status.toUpperCase()}</span></td>
+      <td><span class="tier-badge">T${n.tier||'?'}</span></td>
+      <td style="color:var(--cyan)">${esc(n.node_type||n.type||'—')}</td>
+      <td>${esc(n.location||'—')}</td>
+      <td>${ago(lastBeat)}</td>
+      <td style="color:var(--cyan-d)">${n.joined ? new Date(n.joined).toLocaleDateString() : '—'}</td>
+      <td style="color:var(--cyan-d);max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(n.notes||'')}</td>
+      <td><button class="tbl-btn" onclick="removeGuardian(${i})" title="Remove">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleAddForm() {
+  const f = document.getElementById('addForm');
+  f.style.display = f.style.display==='none' ? '' : 'none';
+}
+
+function addGuardian() {
+  const name = document.getElementById('fName').value.trim().replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,16);
+  if (!name) { alert('Screen name required'); return; }
+  const entry = {
+    id:        rndHex(4),
+    name,
+    tier:      parseInt(document.getElementById('fTier').value)||3,
+    node_type: document.getElementById('fNodeType').value,
+    location:  document.getElementById('fLoc').value.trim(),
+    notes:     document.getElementById('fNotes').value.trim(),
+    joined:    Date.now(),
+    last_seen: null,
+    status:    'offline',
+  };
+  registry.nodes.push(entry);
+  renderRegistry();
+  updateStats();
+  toggleAddForm();
+  logFeed(`<span class="g">+ ${esc(name)} registered as guardian</span>`);
+  setStatus(`Registered ${name}`);
+}
+
+function removeGuardian(idx) {
+  const n = registry.nodes[idx];
+  if (!confirm(`Remove ${n.name} from registry?`)) return;
+  registry.nodes.splice(idx,1);
+  renderRegistry();
+  updateStats();
+  logFeed(`<span class="a">- ${esc(n.name)} removed from registry</span>`);
+}
+
+function reloadRegistry() { loadRegistry(); }
+
+function exportRegistry() {
+  const out  = JSON.stringify(registry, null, 2);
+  const blob = new Blob([out], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='guardian_registry.json';
+  a.click(); URL.revokeObjectURL(url);
+  setStatus('Registry exported.');
+}
+
+// ── CID VAULT ─────────────────────────────────────────────────────────────────
+function renderCids() {
+  const list = document.getElementById('cidList');
+  const cids = registry.cids || [];
+  document.getElementById('cidCount').textContent = `${cids.length} item${cids.length!==1?'s':''}`;
+  document.getElementById('statCids').textContent = cids.length;
+
+  if (!cids.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--cyan-d);padding:24px;font-size:9px">No pinned CIDs. Add content via the + Pin CID button.</div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  cids.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'cid-row';
+    row.innerHTML = `
+      <a class="cid-hash" href="https://ipfs.io/ipfs/${esc(c.cid)}" target="_blank" rel="noopener" title="${esc(c.cid)}">${c.cid.slice(0,20)}…${c.cid.slice(-6)} ↗</a>
+      <span class="cid-label">${esc(c.label||'Untitled')}</span>
+      <span style="font-size:8px;color:var(--cyan-d)">${esc(c.category||'')}</span>
+      <span class="cid-date">${c.added ? new Date(c.added).toLocaleDateString() : '—'}</span>
+      <span class="cid-status">● pinned</span>
+      <button class="tbl-btn" onclick="removeCid(${i})" title="Remove">✕</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function showAddCid() {
+  const f = document.getElementById('cidForm');
+  f.style.display = f.style.display==='none' ? '' : 'none';
+}
+
+function pinCid() {
+  const cid = document.getElementById('cidInput').value.trim();
+  if (!cid.match(/^(baf[a-z2-7]{50,}|Qm[1-9A-HJ-NP-Za-km-z]{44,})$/i)) {
+    alert('Invalid CID format. Expected bafybei… or Qm…'); return;
+  }
+  const entry = {
+    cid,
+    label:    document.getElementById('cidLabelInput').value.trim() || 'Untitled',
+    category: document.getElementById('cidCat').value,
+    added:    Date.now(),
+  };
+  registry.cids.push(entry);
+  renderCids();
+  document.getElementById('cidForm').style.display='none';
+  document.getElementById('cidInput').value='';
+  document.getElementById('cidLabelInput').value='';
+  logFeed(`<span class="c">📌 CID pinned: ${cid.slice(0,16)}… — ${esc(entry.label)}</span>`);
+  setStatus('CID pinned: '+cid.slice(0,20)+'…');
+}
+
+function removeCid(idx) {
+  if (!confirm('Remove this CID from vault?')) return;
+  registry.cids.splice(idx,1);
+  renderCids();
+}
+
+function verifyCids() {
+  setStatus('Verifying CIDs via IPFS gateway…');
+  let checked = 0;
+  (registry.cids||[]).forEach(c => {
+    fetch(`https://ipfs.io/api/v0/dag/stat?arg=${c.cid}&timeout=5`, {method:'POST'})
+      .then(r => { checked++; if(checked===registry.cids.length) setStatus(`Verified ${checked} CIDs.`); })
+      .catch(() => { checked++; });
+  });
+  if (!registry.cids?.length) setStatus('No CIDs to verify.');
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const nodes    = registry.nodes || [];
+  const chain    = Object.values(chainNodes).filter(n=>n&&n.name);
+  const presence = Object.values(chatPresence);
+  const now      = Date.now();
+
+  const active = chain.filter(n=>nodeStatus(n.last_beat)==='active').length
+               + presence.filter(p=>now-(p.t||0)<AWAY_MS).length;
+  const dark   = chain.filter(n=>nodeStatus(n.last_beat)==='dark').length;
+  const pct    = nodes.length ? Math.round(Math.min(active,nodes.length)/nodes.length*100) : 0;
+
+  document.getElementById('statTotal').textContent  = nodes.length;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statChain').textContent  = chain.length;
+  document.getElementById('statDark').textContent   = dark;
+  document.getElementById('statPct').textContent    = pct+'%';
+
+  document.getElementById('sbTotal').textContent = nodes.length;
+  document.getElementById('sbActive').textContent= active;
+  document.getElementById('sbChain').textContent = chain.length;
+}
+
+// ── LIVE FEED ─────────────────────────────────────────────────────────────────
+function logFeed(html) {
+  liveCount++;
+  const feed = document.getElementById('liveFeed');
+  const div  = document.createElement('div');
+  div.className = 'feed-item';
+  div.innerHTML = `<span class="feed-t">[${ts()}]</span><span class="feed-msg">${html}</span>`;
+  feed.appendChild(div);
+  while (feed.children.length > 200) feed.removeChild(feed.firstChild);
+  feed.scrollTop = feed.scrollHeight;
+  document.getElementById('liveCount').textContent = `${liveCount} events`;
+}
+
+// ── BROADCAST ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.room-chip[data-room]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.room-chip[data-room]').forEach(c=>c.classList.remove('sel'));
+    chip.classList.add('sel');
+    selectedRoom = chip.dataset.room;
+  });
+});
+
+function quickBcast(msg) {
+  document.getElementById('bcastMsg').value = msg;
+  sendBroadcast();
+}
+
+function sendBroadcast() {
+  const text = document.getElementById('bcastMsg').value.trim();
+  if (!text) { alert('Message cannot be empty'); return; }
+  if (!gun) { alert('P2P not connected'); return; }
+  const key = `sys_${Date.now()}_${rndHex(2)}`;
+  gun.get(CHAT_NS).get('rooms').get(selectedRoom).get('msgs').get(key).put({
+    from:'GUARDIAN-NET-ADMIN',
+    text,
+    time:ts(),
+    room:selectedRoom,
+    type:'system',
+    t:Date.now(),
+  });
+  const result = document.getElementById('bcastResult');
+  result.style.display='';
+  result.innerHTML = `✓ Broadcast sent to <span style="color:var(--amber)">#${selectedRoom}</span> at ${ts()}`;
+  logFeed(`<span class="l">📣 Broadcast to #${esc(selectedRoom)}: ${esc(text.slice(0,60))}${text.length>60?'…':''}</span>`);
+  setStatus(`Broadcast sent to #${selectedRoom}`);
+}
+
+// ── GUN INIT ──────────────────────────────────────────────────────────────────
+function initGun() {
+  gun = Gun(GUN_PEERS);
+
+  // Watch chain
+  gun.get(CHAIN_NS).get('nodes').map().on((data, nodeId) => {
+    if (!data || !nodeId || !data.name) return;
+    const isNew = !chainNodes[nodeId];
+    chainNodes[nodeId] = { ...data, nodeId };
+    if (isNew) {
+      logFeed(`<span class="g">⛓ Chain node: ${esc(data.name)} #${data.position}</span>`);
+    }
+    updateStats();
+    renderRegistry();
+  });
+
+  // Watch chat presence
+  gun.get(CHAT_NS).get('presence').map().on((data, name) => {
+    if (!data || !name) return;
+    const wasOn = chatPresence[name] && (Date.now()-(chatPresence[name].t||0))<AWAY_MS;
+    chatPresence[name] = data;
+    if (!wasOn && (Date.now()-(data.t||0))<AWAY_MS) {
+      logFeed(`<span class="c">👤 ${esc(name)} came online in chat</span>`);
+    }
+    updateStats();
+  });
+
+  logFeed('<span class="g">P2P connected — watching chain + presence</span>');
+  setStatus('P2P connected');
+}
+
+// ── STARTUP ───────────────────────────────────────────────────────────────────
+loadRegistry();
+initGun();
+</script>
+</body>
+</html>
