@@ -69,5 +69,5 @@ git add -A && git commit -m "sync: guardian files from cybertemplate"
 | `guardian-globe.html` | ✅ Live (copy from cybertemplate) |
 | `witness.html` | ✅ Live (copy from cybertemplate) |
 | `chat.html` | ✅ Live |
-| `chain.html` | ⬜ In progress |
+| `chain.html` | ✅ Live |
 | `manage.html` | ⬜ Planned (admin UI) |
