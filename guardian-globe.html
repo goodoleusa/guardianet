@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUARDIAN NETWORK — CyberTemplate</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:          #060916;
+      --bg-panel:    #0b1120;
+      --bg-globe:    #030810;
+      --green:       #00ff41;
+      --green-dim:   #00992a;
+      --green-faint: rgba(0,255,65,0.08);
+      --cyan:        #00ccff;
+      --cyan-dim:    #0077aa;
+      --cyan-faint:  rgba(0,204,255,0.08);
+      --amber:       #ffaa00;
+      --red:         #ff3333;
+      --lora:        #ff66ff;
+      --lora-dim:    rgba(255,102,255,0.35);
+      --land:        #142840;
+      --land-stroke: #1f3f60;
+      --graticule:   rgba(0,204,255,0.08);
+      --panel-edge:  #152035;
+      --font:        'Share Tech Mono', 'Courier New', monospace;
+      --glow-g:      0 0 8px rgba(0,255,65,0.5);
+      --glow-c:      0 0 8px rgba(0,204,255,0.5);
+      --glow-l:      0 0 8px rgba(255,102,255,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--green);
+      font-family: var(--font);
+      font-size: 11px;
+    }
+
+    /* CRT scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+    }
+
+    .body-row {
+      display: grid;
+      grid-template-columns: 190px 1fr 215px;
+      min-height: 0;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(90deg, #080f1e 0%, #0d1e38 50%, #080f1e 100%);
+      border-bottom: 1px solid var(--cyan-dim);
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--cyan-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--cyan);
+      box-shadow: var(--glow-c);
+      animation: iconPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+      0%,100% { box-shadow: var(--glow-c); }
+      50%      { box-shadow: 0 0 18px rgba(0,204,255,0.8); }
+    }
+
+    .logo-text {
+      font-size: 13px;
+      color: var(--cyan);
+      text-shadow: var(--glow-c);
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .logo-sub {
+      font-size: 8px;
+      color: var(--cyan-dim);
+      letter-spacing: 3px;
+      margin-top: 2px;
+    }
+
+    .blink { animation: blink 1.1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .health-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .health-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: var(--cyan-dim);
+      letter-spacing: 1px;
+    }
+
+    .health-pct { color: var(--green); text-shadow: var(--glow-g); }
+
+    .health-track {
+      height: 6px;
+      background: #0a1628;
+      border: 1px solid var(--cyan-dim);
+    }
+
+    .health-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 1.2s ease;
+      background: linear-gradient(90deg, var(--green-dim), var(--green));
+      box-shadow: var(--glow-g);
+    }
+
+    .header-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      font-size: 8px;
+      padding: 2px 7px;
+      border: 1px solid;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .badge.online  { color: var(--green); border-color: var(--green-dim); box-shadow: var(--glow-g); }
+    .badge.version { color: var(--cyan-dim); border-color: #152035; }
+
+    /* ─── PANELS ─────────────────────────────────────────────── */
+    .panel {
+      background: var(--bg-panel);
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .panel-left  { border-right: 1px solid var(--panel-edge); }
+    .panel-right { border-left:  1px solid var(--panel-edge); }
+
+    .panel-title {
+      font-size: 8px;
+      color: var(--cyan-dim);
+      letter-spacing: 2.5px;
+      border-bottom: 1px solid var(--panel-edge);
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+    }
+
+    /* ─── STATS ──────────────────────────────────────────────── */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(21,32,53,0.7);
+    }
+
+    .stat-lbl { color: var(--cyan-dim); }
+    .stat-val { }
+    .stat-val.g  { color: var(--green); text-shadow: var(--glow-g); }
+    .stat-val.a  { color: var(--amber); }
+    .stat-val.r  { color: var(--red); }
+    .stat-val.c  { color: var(--cyan); text-shadow: var(--glow-c); }
+    .stat-val.lo { color: var(--lora); text-shadow: var(--glow-l); }
+
+    .stat-divider { border: none; border-top: 1px solid var(--panel-edge); margin: 6px 0; }
+
+    .chain-alert {
+      margin-top: 8px;
+      padding: 7px;
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .chain-alert-title { font-size: 8px; letter-spacing: 1px; margin-bottom: 3px; }
+
+    .lora-info {
+      margin-top: 8px;
+      padding: 7px;
+      border: 1px solid var(--lora-dim);
+      color: var(--lora);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .lora-info-title { font-size: 8px; letter-spacing: 1px; margin-bottom: 3px; color: var(--lora); }
+
+    .join-section { margin-top: auto; padding-top: 10px; }
+    .join-title { font-size: 8px; color: var(--cyan-dim); letter-spacing: 1px; margin-bottom: 6px; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: var(--font);
+      font-size: 9px;
+      padding: 5px 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+
+    .btn:hover { background: var(--green-faint); box-shadow: var(--glow-g); }
+
+    .btn.lora-btn { border-color: var(--lora); color: var(--lora); }
+    .btn.lora-btn:hover { background: rgba(255,102,255,0.08); box-shadow: var(--glow-l); }
+
+    /* ─── GLOBE ──────────────────────────────────────────────── */
+    .globe-wrap {
+      position: relative;
+      background: var(--bg-globe);
+      overflow: hidden;
+    }
+
+    #globeSvg { cursor: grab; display: block; }
+    #globeSvg:active { cursor: grabbing; }
+
+    .globe-sphere { fill: #020c1a; }
+    .globe-land   { fill: var(--land); stroke: var(--land-stroke); stroke-width: 0.4; }
+    .globe-grat   { fill: none; stroke: var(--graticule); stroke-width: 0.4; }
+
+    /* arcs animate along the chain */
+    .globe-arc {
+      fill: none;
+      stroke-width: 1;
+      stroke-dasharray: 5 5;
+    }
+
+    .globe-arc.ipfs { stroke: rgba(0,204,255,0.2); animation: dashFlow 8s linear infinite; }
+    .globe-arc.lora { stroke: rgba(255,102,255,0.25); animation: dashFlow 5s linear infinite; }
+    .globe-arc.dark { stroke: rgba(255,51,51,0.15); }
+
+    @keyframes dashFlow { to { stroke-dashoffset: -100; } }
+
+    /* node dots */
+    .n-pulse { fill: none; transform-box: fill-box; transform-origin: center; }
+
+    .n-active .n-pulse  { animation: pulseRing 2s ease-out infinite; }
+    .n-sentinel .n-pulse { animation: pulseRing 2.5s ease-out infinite; }
+    .n-away .n-pulse    { animation: pulseRing 4s ease-out infinite; }
+
+    @keyframes pulseRing {
+      0%   { transform: scale(1);   opacity: 0.7; }
+      100% { transform: scale(3.2); opacity: 0;   }
+    }
+
+    /* tooltip */
+    .tip {
+      position: absolute;
+      background: #0b1424;
+      border: 1px solid var(--cyan-dim);
+      padding: 8px 11px;
+      font-size: 9px;
+      color: var(--green);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      z-index: 50;
+      line-height: 1.6;
+    }
+
+    .tip.show { opacity: 1; }
+    .tip-head { color: var(--cyan); margin-bottom: 3px; font-size: 11px; }
+    .tip-lora { color: var(--lora); }
+
+    /* coords readout */
+    .coords {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      color: rgba(0,204,255,0.3);
+      letter-spacing: 1.5px;
+      pointer-events: none;
+    }
+
+    /* legend */
+    .legend {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 8px;
+      color: var(--cyan-dim);
+      line-height: 2;
+    }
+
+    .leg-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .leg-dot.active   { background: var(--green);  box-shadow: 0 0 4px var(--green); }
+    .leg-dot.sentinel { background: var(--cyan);   box-shadow: 0 0 4px var(--cyan); }
+    .leg-dot.away     { background: var(--amber);  }
+    .leg-dot.dark     { background: var(--red);    }
+    .leg-dot.lora     { background: var(--lora);   box-shadow: 0 0 4px var(--lora); }
+
+    /* ─── NODE LIST ──────────────────────────────────────────── */
+    .node-item {
+      padding: 6px 0 6px 4px;
+      border-bottom: 1px solid rgba(21,32,53,0.6);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .node-item:hover { background: var(--cyan-faint); }
+    .node-item.sel   { background: var(--green-faint); border-left: 2px solid var(--green); }
+
+    .ni-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ni-id { font-size: 12px; color: var(--green); }
+    .ni-id.lora-node { color: var(--lora); text-shadow: var(--glow-l); }
+
+    .ni-status { font-size: 8px; }
+    .ni-status.active   { color: var(--green); }
+    .ni-status.away     { color: var(--amber); }
+    .ni-status.dark     { color: var(--red); }
+
+    .ni-region { font-size: 8px; color: var(--cyan-dim); margin-top: 1px; }
+
+    .ni-meta {
+      font-size: 8px;
+      color: var(--cyan-dim);
+      margin-top: 1px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .ni-tier { }
+    .ni-tier.sentinel { color: var(--cyan); }
+    .ni-tier.lora-t   { color: var(--lora); }
+
+    .sdot {
+      display: inline-block;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      margin-right: 3px;
+      vertical-align: middle;
+    }
+
+    .sdot.active   { background: var(--green); box-shadow: 0 0 3px var(--green); }
+    .sdot.away     { background: var(--amber); }
+    .sdot.dark     { background: var(--red); }
+
+    /* ─── FOOTER ─────────────────────────────────────────────── */
+    .footer {
+      background: #080f1e;
+      border-top: 1px solid var(--cyan-dim);
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 8px;
+      color: var(--cyan-dim);
+      flex-wrap: wrap;
+    }
+
+    .footer a {
+      color: var(--green);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .footer a:hover { text-shadow: var(--glow-g); }
+    .footer .sep { color: var(--panel-edge); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg-panel); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan-dim); }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── HEADER ──────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="logo-block">
+      <div class="logo-icon">◈</div>
+      <div>
+        <div class="logo-text">GUARDIAN NET <span class="blink">_</span></div>
+        <div class="logo-sub">CYBERTEMPLATE v2.0</div>
+      </div>
+    </div>
+
+    <div class="health-wrap">
+      <div class="health-top">
+        <span>NETWORK RESILIENCE</span>
+        <span class="health-pct" id="hPct">-- %</span>
+      </div>
+      <div class="health-track">
+        <div class="health-fill" id="hFill"></div>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <div class="badge online" id="onlineBadge">● ONLINE</div>
+      <div class="badge version">IPFS + LORA MESH</div>
+    </div>
+  </header>
+
+  <!-- ── BODY ROW ─────────────────────────────────────────────── -->
+  <div class="body-row">
+
+    <!-- LEFT PANEL -->
+    <aside class="panel panel-left">
+      <div class="panel-title">NETWORK STATS</div>
+
+      <div class="stat-row"><span class="stat-lbl">ACTIVE</span>   <span class="stat-val g"  id="sActive">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">AWAY</span>     <span class="stat-val a"  id="sAway">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">DARK</span>     <span class="stat-val r"  id="sDark">--</span></div>
+      <hr class="stat-divider">
+      <div class="stat-row"><span class="stat-lbl">SENTINELS</span><span class="stat-val c"  id="sSent">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">GUARDIANS</span><span class="stat-val g"  id="sGuard">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">LORA NODES</span><span class="stat-val lo" id="sLora">--</span></div>
+      <hr class="stat-divider">
+      <div class="stat-row"><span class="stat-lbl">CHAIN LEN</span><span class="stat-val g"  id="sChain">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">BTC BLOCK</span><span class="stat-val c"  id="sBlock">--</span></div>
+      <hr class="stat-divider">
+      <div class="stat-row"><span class="stat-lbl">ATTEMPTS</span> <span class="stat-val a"  id="sAttempts">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">SURVIVED</span> <span class="stat-val g"  id="sSurvived">--</span></div>
+
+      <div id="darkAlert" class="chain-alert" style="display:none">
+        <div class="chain-alert-title">⚠ DARK NODE DETECTED</div>
+        <div id="darkAlertText"></div>
+      </div>
+
+      <div id="loraInfo" class="lora-info" style="display:none">
+        <div class="lora-info-title">◉ LORA MESH NODES</div>
+        <div id="loraInfoText"></div>
+      </div>
+
+      <div class="join-section">
+        <div class="join-title">BECOME A GUARDIAN</div>
+        <a class="btn" href="IPFS-PINNING-GUIDE.md">PIN TO IPFS →</a>
+        <a class="btn lora-btn" href="#lora-guide">DEPLOY LORA →</a>
+        <a class="btn" href="chain.html">JOIN THE CHAIN →</a>
+      </div>
+    </aside>
+
+    <!-- GLOBE -->
+    <div class="globe-wrap" id="globeWrap">
+      <svg id="globeSvg"></svg>
+      <div class="tip" id="tip"></div>
+      <div class="coords" id="coords">INITIALIZING...</div>
+      <div class="legend">
+        <div><span class="leg-dot active"></span>ACTIVE GUARDIAN</div>
+        <div><span class="leg-dot sentinel"></span>SENTINEL (FULL NODE)</div>
+        <div><span class="leg-dot away"></span>AWAY</div>
+        <div><span class="leg-dot dark"></span>DARK / OFFLINE</div>
+        <div><span class="leg-dot lora"></span>LORA MESH NODE</div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <aside class="panel panel-right">
+      <div class="panel-title">ACTIVE NODES</div>
+      <div id="nodeList"></div>
+    </aside>
+
+  </div><!-- /body-row -->
+
+  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <footer class="footer">
+    <span>CID: <span id="fCid" style="color:var(--green)">loading…</span></span>
+    <span class="sep">|</span>
+    <span>UPDATED: <span id="fUpdated" style="color:var(--green)">--</span></span>
+    <span class="sep">|</span>
+    <a href="witness.html">[ VERIFY TIMESTAMP ]</a>
+    <a href="chat.html">[ ENTER CHATROOM ]</a>
+    <a href="chain.html">[ DEAD MAN'S CHAIN ]</a>
+    <a href="index.html" style="margin-left:auto">← INVESTIGATION</a>
+  </footer>
+
+</div><!-- /layout -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  GUARDIAN GLOBE — CyberTemplate v2.0
+//  D3 v7 orthographic projection + AOL retro aesthetic
+// ═══════════════════════════════════════════════════════════════
+
+let registry = null;
+let world    = null;
+let proj, path, svg, gRoot;
+let rotating = true;
+let selectedId = null;
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    const [regRes, worldRes] = await Promise.all([
+      fetch('data/guardian_registry.json'),
+      fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    ]);
+    registry = await regRes.json();
+    world    = await worldRes.json();
+  } catch (e) {
+    console.warn('Using embedded fallback data');
+    registry = FALLBACK;
+    world    = null;
+  }
+  buildGlobe();
+  updateStats();
+  buildNodeList();
+  updateFooter();
+}
+
+// ── Build globe ───────────────────────────────────────────────
+function buildGlobe() {
+  const wrap = document.getElementById('globeWrap');
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const R = Math.min(W, H) * 0.43;
+
+  proj = d3.geoOrthographic()
+    .scale(R)
+    .translate([W / 2, H / 2])
+    .rotate([0, -20, 0])
+    .clipAngle(90);
+
+  path = d3.geoPath().projection(proj);
+
+  svg = d3.select('#globeSvg').attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+
+  // ── Defs: atmosphere glow ─────────────────────────────────
+  const defs = svg.append('defs');
+  const atm = defs.append('radialGradient').attr('id', 'atm')
+    .attr('cx', '38%').attr('cy', '38%');
+  atm.append('stop').attr('offset', '70%').attr('stop-color', '#0a2040').attr('stop-opacity', 0);
+  atm.append('stop').attr('offset', '100%').attr('stop-color', '#00ccff').attr('stop-opacity', 0.18);
+
+  gRoot = svg.append('g');
+
+  // Ocean
+  gRoot.append('circle').attr('class', 'globe-sphere')
+    .attr('cx', W / 2).attr('cy', H / 2).attr('r', R);
+
+  // Atmosphere
+  gRoot.append('circle').attr('fill', 'url(#atm)')
+    .attr('cx', W / 2).attr('cy', H / 2).attr('r', R + 5);
+
+  // Graticule
+  const grat = d3.geoGraticule().step([20, 20]);
+  gRoot.append('path').datum(grat()).attr('class', 'globe-grat').attr('d', path);
+
+  // Land
+  if (world) {
+    const land = topojson.feature(world, world.objects.countries);
+    gRoot.append('path').datum(land).attr('class', 'globe-land').attr('d', path);
+  }
+
+  // Arc layer (below nodes)
+  gRoot.append('g').attr('class', 'arcs-layer');
+  // Node layer
+  gRoot.append('g').attr('class', 'nodes-layer');
+
+  drawArcs();
+  drawNodes();
+
+  // Drag to rotate
+  svg.call(
+    d3.drag()
+      .on('start', () => { rotating = false; })
+      .on('drag', ev => {
+        const r = proj.rotate();
+        proj.rotate([r[0] + ev.dx * 0.4, r[1] - ev.dy * 0.4]);
+        redraw();
+      })
+      .on('end', () => { rotating = true; })
+  );
+
+  animate();
+}
+
+// ── Draw chain arcs ───────────────────────────────────────────
+function drawArcs() {
+  if (!registry) return;
+  const layer = gRoot.select('.arcs-layer');
+  layer.selectAll('*').remove();
+
+  registry.nodes.forEach(n => {
+    if (!n.successor) return;
+    const succ = registry.nodes.find(x => x.id === n.successor);
+    if (!succ) return;
+
+    const feature = { type: 'LineString', coordinates: [[n.lng, n.lat], [succ.lng, succ.lat]] };
+    const arcClass = n.status === 'dark' ? 'dark'
+                   : n.type   === 'lora' ? 'lora'
+                   : 'ipfs';
+
+    layer.append('path')
+      .datum(feature)
+      .attr('class', `globe-arc ${arcClass}`)
+      .attr('d', path)
+      .attr('data-arc', `${n.id}-${succ.id}`);
+  });
+}
+
+// ── Draw node dots ────────────────────────────────────────────
+function drawNodes() {
+  if (!registry) return;
+  const layer = gRoot.select('.nodes-layer');
+  layer.selectAll('*').remove();
+
+  registry.nodes.forEach(n => {
+    const coords = proj([n.lng, n.lat]);
+    if (!coords) return;
+
+    const isSentinel = n.tier === 'sentinel';
+    const isLora     = n.type === 'lora';
+    const r = isSentinel ? 5 : isLora ? 4 : 3.5;
+
+    const dotColor = isLora     ? 'var(--lora)'
+                   : isSentinel ? 'var(--cyan)'
+                   : n.status === 'away' ? 'var(--amber)'
+                   : n.status === 'dark' ? 'var(--red)'
+                   : 'var(--green)';
+
+    const cls = `n-${isSentinel ? 'sentinel' : n.status}`;
+
+    const g = layer.append('g')
+      .attr('class', cls)
+      .attr('transform', `translate(${coords})`)
+      .attr('data-nid', n.id)
+      .style('cursor', 'pointer')
+      .on('mouseover', ev => showTip(ev, n))
+      .on('mouseout',  () => { document.getElementById('tip').classList.remove('show'); rotating = true; })
+      .on('click',     () => focusNode(n));
+
+    // Outer ring for sentinels / LoRa
+    if (isSentinel || isLora) {
+      g.append('circle').attr('r', r + 7)
+        .attr('fill', 'none')
+        .attr('stroke', dotColor)
+        .attr('stroke-opacity', 0.2)
+        .attr('stroke-width', 1);
+    }
+
+    // Pulse ring
+    g.append('circle').attr('class', 'n-pulse')
+      .attr('r', r + 2)
+      .attr('fill', 'none')
+      .attr('stroke', dotColor)
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.7);
+
+    // Core dot
+    g.append('circle').attr('r', r)
+      .attr('fill', dotColor)
+      .attr('stroke', dotColor)
+      .attr('stroke-width', 0.5);
+
+    // Label
+    const lblColor = dotColor.replace('var(', '').replace(')', '');
+    g.append('text')
+      .attr('x', r + 5).attr('y', 4)
+      .attr('font-size', 8)
+      .attr('font-family', 'var(--font)')
+      .attr('fill', dotColor)
+      .attr('fill-opacity', 0.8)
+      .text(n.id + (isLora ? ' ◉' : ''));
+  });
+}
+
+// ── Redraw on rotation ────────────────────────────────────────
+function redraw() {
+  gRoot.selectAll('.globe-land').attr('d', path);
+  gRoot.selectAll('.globe-grat').attr('d', path);
+  gRoot.selectAll('.globe-arc').attr('d', path);
+
+  if (!registry) return;
+
+  const layer = gRoot.select('.nodes-layer');
+  registry.nodes.forEach(n => {
+    const coords = proj([n.lng, n.lat]);
+    const el = layer.select(`[data-nid="${n.id}"]`);
+    if (!coords) {
+      el.style('display', 'none');
+    } else {
+      el.style('display', null).attr('transform', `translate(${coords})`);
+    }
+  });
+
+  // Update coords readout
+  const r = proj.rotate();
+  const lon = (-r[0]).toFixed(1), lat = (-r[1]).toFixed(1);
+  document.getElementById('coords').textContent =
+    `${Math.abs(lon)}°${lon >= 0 ? 'E' : 'W'}  ${Math.abs(lat)}°${lat >= 0 ? 'N' : 'S'}`;
+}
+
+// ── Rotation loop ─────────────────────────────────────────────
+function animate() {
+  (function tick() {
+    if (rotating) {
+      const r = proj.rotate();
+      proj.rotate([r[0] + 0.1, r[1]]);
+      redraw();
+    }
+    requestAnimationFrame(tick);
+  })();
+}
+
+// ── Tooltip ───────────────────────────────────────────────────
+function showTip(ev, n) {
+  rotating = false;
+  const wrap = document.getElementById('globeWrap');
+  const tip  = document.getElementById('tip');
+  const bRect = wrap.getBoundingClientRect();
+
+  const hoursAgo = Math.round((Date.now() - new Date(n.last_seen)) / 3.6e6);
+  const tierLabel = n.tier === 'sentinel' ? '◈◈◈ SENTINEL'
+                  : n.type === 'lora'     ? '◉ LORA MESH' : '◈ GUARDIAN';
+
+  const loraExtra = n.lora ? `
+    <div class="tip-lora">FREQ: ${n.lora.freq_mhz} MHz  SF:${n.lora.spreading_factor}</div>
+    <div class="tip-lora">RANGE: ~${n.lora.range_km}km  PEERS: ${n.lora.mesh_peers}</div>` : '';
+
+  tip.innerHTML = `
+    <div class="tip-head">${n.id}</div>
+    <div>${tierLabel}</div>
+    <div style="color:var(--cyan-dim)">${n.region}</div>
+    <div>STATUS: <span style="color:${n.status==='active'?'var(--green)':n.status==='away'?'var(--amber)':'var(--red)'}">${n.status.toUpperCase()}</span></div>
+    <div style="color:var(--cyan-dim)">LAST SEEN: ${hoursAgo}h ago</div>
+    <div style="color:var(--cyan-dim)">CHAIN: #${n.position} → ${n.successor||'end'}</div>
+    <div style="color:var(--cyan-dim)">JOINED: ${n.joined}</div>
+    ${loraExtra}
+  `;
+
+  let tx = ev.clientX - bRect.left + 14;
+  let ty = ev.clientY - bRect.top  - 10;
+  if (tx + 180 > wrap.clientWidth)  tx = ev.clientX - bRect.left - 190;
+  if (ty + 160 > wrap.clientHeight) ty = ev.clientY - bRect.top  - 140;
+
+  tip.style.left = tx + 'px';
+  tip.style.top  = ty + 'px';
+  tip.classList.add('show');
+}
+
+// ── Focus (smooth rotate to node) ────────────────────────────
+function focusNode(n) {
+  selectedId = n.id;
+  document.querySelectorAll('.node-item').forEach(el =>
+    el.classList.toggle('sel', el.dataset.nid === n.id));
+  document.querySelector(`.node-item[data-nid="${n.id}"]`)
+    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  rotating = false;
+  const target = [-n.lng, -n.lat + 10, 0];
+  const start  = proj.rotate();
+  const interp = d3.interpolate(start, target);
+
+  let t0 = null;
+  const dur = 900;
+  (function step(ts) {
+    if (!t0) t0 = ts;
+    const t = Math.min((ts - t0) / dur, 1);
+    proj.rotate(interp(d3.easeCubicInOut(t)));
+    redraw();
+    if (t < 1) requestAnimationFrame(step);
+    else rotating = true;
+  })(performance.now());
+}
+
+// ── Stats panel ───────────────────────────────────────────────
+function updateStats() {
+  if (!registry) return;
+  const m = registry.metadata;
+  const nodes = registry.nodes;
+
+  const active   = nodes.filter(x => x.status === 'active').length;
+  const away     = nodes.filter(x => x.status === 'away').length;
+  const dark     = nodes.filter(x => x.status === 'dark').length;
+  const sents    = nodes.filter(x => x.tier   === 'sentinel').length;
+  const guards   = nodes.filter(x => x.tier   === 'guardian' && x.type !== 'lora').length;
+  const loras    = nodes.filter(x => x.type   === 'lora').length;
+
+  document.getElementById('sActive').textContent   = active;
+  document.getElementById('sAway').textContent     = away;
+  document.getElementById('sDark').textContent     = dark;
+  document.getElementById('sSent').textContent     = sents;
+  document.getElementById('sGuard').textContent    = guards;
+  document.getElementById('sLora').textContent     = loras;
+  document.getElementById('sChain').textContent    = nodes.length;
+  document.getElementById('sBlock').textContent    = '#' + (m.bitcoin_block || 0).toLocaleString();
+  document.getElementById('sAttempts').textContent = m.takedown_attempts || 0;
+  document.getElementById('sSurvived').textContent = m.takedown_attempts || 0;
+
+  // Health bar
+  const pct = Math.round((active / nodes.length) * 100);
+  document.getElementById('hFill').style.width = pct + '%';
+  document.getElementById('hPct').textContent  = pct + '% RESILIENT';
+  const fill = document.getElementById('hFill');
+  fill.style.background = pct > 70
+    ? 'linear-gradient(90deg,#00992a,#00ff41)'
+    : pct > 40
+    ? 'linear-gradient(90deg,#aa6600,#ffaa00)'
+    : 'linear-gradient(90deg,#aa1111,#ff3333)';
+
+  // Dark node alert
+  const darkNodes = nodes.filter(x => x.status === 'dark');
+  if (darkNodes.length) {
+    const dn = darkNodes[0];
+    const succ = nodes.find(x => x.id === dn.successor);
+    document.getElementById('darkAlert').style.display = 'block';
+    document.getElementById('darkAlertText').textContent =
+      `${dn.id} DARK. Successor ${dn.successor || 'NONE'} (${succ?.region || '?'}) will auto-promote.`;
+  }
+
+  // LoRa info
+  const loraNodes = nodes.filter(x => x.type === 'lora');
+  if (loraNodes.length) {
+    document.getElementById('loraInfo').style.display = 'block';
+    document.getElementById('loraInfoText').textContent =
+      loraNodes.map(n => `${n.id} ${n.region} ${n.lora?.freq_mhz}MHz`).join(' · ');
+  }
+}
+
+// ── Node list ─────────────────────────────────────────────────
+function buildNodeList() {
+  if (!registry) return;
+  const container = document.getElementById('nodeList');
+  container.innerHTML = '';
+
+  const sorted = [...registry.nodes].sort((a, b) => {
+    const o = { active: 0, away: 1, dark: 2 };
+    return (o[a.status] || 0) - (o[b.status] || 0);
+  });
+
+  sorted.forEach(n => {
+    const isLora = n.type === 'lora';
+    const div = document.createElement('div');
+    div.className = 'node-item';
+    div.dataset.nid = n.id;
+    div.onclick = () => focusNode(n);
+
+    const tierLabel = n.tier === 'sentinel' ? '◈◈ SENTINEL'
+                    : isLora                ? '◉ LORA'
+                    : '◈ GUARDIAN';
+    const tierClass = n.tier === 'sentinel' ? 'sentinel'
+                    : isLora                ? 'lora-t' : '';
+    const idClass   = isLora ? 'ni-id lora-node' : 'ni-id';
+
+    div.innerHTML = `
+      <div class="ni-top">
+        <span class="${idClass}"><span class="sdot ${n.status}"></span>${n.id}</span>
+        <span class="ni-status ${n.status}">${n.status.toUpperCase()}</span>
+      </div>
+      <div class="ni-region">${n.region}</div>
+      <div class="ni-meta">
+        <span class="ni-tier ${tierClass}">${tierLabel}</span>
+        <span>#${n.position}</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ── Footer ────────────────────────────────────────────────────
+function updateFooter() {
+  if (!registry) return;
+  const m = registry.metadata;
+  document.getElementById('fCid').textContent     = (m.pinned_cid || '').slice(0, 22) + '…';
+  document.getElementById('fUpdated').textContent = new Date(m.updated_at).toLocaleString();
+}
+
+// ── Resize ────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const wrap = document.getElementById('globeWrap');
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const R = Math.min(W, H) * 0.43;
+  proj.scale(R).translate([W / 2, H / 2]);
+  svg.attr('width', W).attr('height', H);
+  svg.select('.globe-sphere').attr('cx', W / 2).attr('cy', H / 2).attr('r', R);
+  svg.select('[fill="url(#atm)"]').attr('cx', W / 2).attr('cy', H / 2).attr('r', R + 5);
+  redraw();
+});
+
+// ── Fallback data ─────────────────────────────────────────────
+const FALLBACK = {
+  metadata: {
+    chain_version: 3, updated_at: new Date().toISOString(),
+    pinned_cid: 'bafybeiabc123xyz456def789ghi012jkl345mno678pqr',
+    bitcoin_block: 891247, takedown_attempts: 3, network_health: 0.82
+  },
+  nodes: [
+    { id:'2af3e9b1', position:1,  tier:'sentinel', type:'ipfs', region:'New York, US',       lat:40.71,  lng:-74.01,  last_seen:new Date(Date.now()-600000).toISOString(),   successor:'7bc4d2a0', joined:'2026-01-15', status:'active', pinned_cid:'bafybei...' },
+    { id:'7bc4d2a0', position:2,  tier:'sentinel', type:'ipfs', region:'Frankfurt, DE',      lat:50.11,  lng:8.68,    last_seen:new Date(Date.now()-300000).toISOString(),   successor:'f1a8e3c9', joined:'2026-01-20', status:'active', pinned_cid:'bafybei...' },
+    { id:'f1a8e3c9', position:3,  tier:'guardian', type:'ipfs', region:'London, UK',         lat:51.51,  lng:-0.13,   last_seen:new Date(Date.now()-1200000).toISOString(),  successor:'9d4b7f2e', joined:'2026-01-28', status:'active', pinned_cid:'bafybei...' },
+    { id:'9d4b7f2e', position:4,  tier:'guardian', type:'ipfs', region:'Seattle, US',        lat:47.61,  lng:-122.33, last_seen:new Date(Date.now()-7200000).toISOString(),  successor:'e2d8b4f6', joined:'2026-02-01', status:'away',   pinned_cid:'bafybei...' },
+    { id:'e2d8b4f6', position:5,  tier:'guardian', type:'ipfs', region:'Tokyo, JP',          lat:35.68,  lng:139.65,  last_seen:new Date(Date.now()-900000).toISOString(),   successor:'3c9f1a7b', joined:'2026-02-03', status:'active', pinned_cid:'bafybei...' },
+    { id:'3c9f1a7b', position:6,  tier:'guardian', type:'ipfs', region:'São Paulo, BR',      lat:-23.55, lng:-46.63,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'a8c5f2e1', joined:'2026-02-05', status:'active', pinned_cid:'bafybei...' },
+    { id:'a8c5f2e1', position:7,  tier:'guardian', type:'ipfs', region:'Sydney, AU',         lat:-33.87, lng:151.21,  last_seen:new Date(Date.now()-2400000).toISOString(),  successor:'b3e7d9c4', joined:'2026-02-08', status:'active', pinned_cid:'bafybei...' },
+    { id:'b3e7d9c4', position:8,  tier:'guardian', type:'ipfs', region:'Toronto, CA',        lat:43.65,  lng:-79.38,  last_seen:new Date(Date.now()-5400000).toISOString(),  successor:'c4f8a2b5', joined:'2026-02-10', status:'away',   pinned_cid:'bafybei...' },
+    { id:'c4f8a2b5', position:9,  tier:'sentinel', type:'ipfs', region:'Amsterdam, NL',      lat:52.37,  lng:4.90,    last_seen:new Date(Date.now()-480000).toISOString(),   successor:'d5e9b3c6', joined:'2026-02-12', status:'active', pinned_cid:'bafybei...' },
+    { id:'d5e9b3c6', position:10, tier:'guardian', type:'ipfs', region:'Seoul, KR',          lat:37.57,  lng:126.98,  last_seen:new Date(Date.now()-720000).toISOString(),   successor:'e6f0c4d7', joined:'2026-02-15', status:'active', pinned_cid:'bafybei...' },
+    { id:'e6f0c4d7', position:11, tier:'guardian', type:'ipfs', region:'Cape Town, ZA',      lat:-33.92, lng:18.42,   last_seen:new Date(Date.now()-3600000).toISOString(),  successor:'f7a1d5e8', joined:'2026-02-18', status:'active', pinned_cid:'bafybei...' },
+    { id:'f7a1d5e8', position:12, tier:'guardian', type:'ipfs', region:'Chicago, US',        lat:41.88,  lng:-87.63,  last_seen:new Date(Date.now()-172800000).toISOString(),successor:'a0b1c2d3', joined:'2026-02-20', status:'dark',   pinned_cid:null },
+    { id:'a0b1c2d3', position:13, tier:'guardian', type:'lora', region:'Appalachian Ridge, US', lat:36.5, lng:-81.5,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'2af3e9b1', joined:'2026-03-01', status:'active', pinned_cid:'bafybei...', lora:{ freq_mhz:915, spreading_factor:10, range_km:40, mesh_peers:3 } }
+  ]
+};
+
+init();
+</script>
+</body>
+</html>
