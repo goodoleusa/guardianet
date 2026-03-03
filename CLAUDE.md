@@ -20,7 +20,7 @@ Configure via `config.json`. No build step. Vanilla HTML/CSS/JS only.
 | `guardian-globe.html` | ✅ Live | D3 globe, IPFS + LoRa nodes |
 | `witness.html` | ✅ Live | Bitcoin OTS ceremony |
 | `chat.html` | ✅ Live | P2P chatroom, AOL skin, Gun.js |
-| `chain.html` | ⬜ Planned | Dead Man's Switch relay UI |
+| `chain.html` | ✅ Live | Dead Man's Switch relay UI, Gun.js |
 | `config.json` | ✅ Live | Site configuration |
 | `data/guardian_registry.json` | ✅ Live | Node registry |
 
