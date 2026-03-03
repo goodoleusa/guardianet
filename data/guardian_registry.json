@@ -1,0 +1,14 @@
+{
+  "_note": "Copy from cybertemplate/data/guardian_registry.json and update site_cid in config.json",
+  "metadata": {
+    "chain_version": 1,
+    "updated_at": "2026-03-02T00:00:00Z",
+    "pinned_cid": "REPLACE_WITH_YOUR_CID",
+    "bitcoin_block": null,
+    "total_guardians": 0,
+    "active_guardians": 0,
+    "takedown_attempts": 0,
+    "network_health": 0
+  },
+  "nodes": []
+}

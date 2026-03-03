@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUARDIAN NET — Decentralized Resilience Layer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060916; --panel:#0b1120; --deep:#030810;
+      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
+      --amber:#ffaa00; --lora:#ff66ff; --edge:#152035;
+      --font:'Share Tech Mono','Courier New',monospace;
+      --glow-g:0 0 10px rgba(0,255,65,0.5);
+      --glow-c:0 0 10px rgba(0,204,255,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100vh;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:9999}
+
+    .header{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:10px 24px;display:flex;align-items:center;gap:12px}
+    .logo-icon{width:32px;height:32px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--cyan);box-shadow:var(--glow-c);animation:iconPulse 3s ease-in-out infinite}
+    @keyframes iconPulse{0%,100%{box-shadow:var(--glow-c)}50%{box-shadow:0 0 20px rgba(0,204,255,0.8)}}
+    .logo-text{font-size:15px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
+    .logo-sub{font-size:8px;color:var(--cyan-d);letter-spacing:3px;margin-top:2px}
+    .blink{animation:blink 1.1s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    .hero{text-align:center;padding:48px 20px 40px;border-bottom:1px solid var(--edge)}
+    .hero-title{font-size:13px;color:var(--cyan-d);letter-spacing:4px;margin-bottom:12px}
+    .hero-stat{font-size:36px;color:var(--green);text-shadow:var(--glow-g);margin-bottom:8px}
+    .hero-sub{font-size:10px;color:var(--cyan-d);letter-spacing:2px;max-width:480px;margin:0 auto;line-height:2}
+    .hero-bar{margin:20px auto;max-width:360px}
+    .hero-bar-label{display:flex;justify-content:space-between;font-size:8px;color:var(--cyan-d);margin-bottom:4px}
+    .hero-bar-track{height:8px;background:#0a1628;border:1px solid var(--cyan-d)}
+    .hero-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:var(--glow-g);transition:width 1.5s ease}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--edge);margin-bottom:1px}
+    .card{background:var(--panel);padding:20px;cursor:pointer;transition:background 0.15s;text-decoration:none;color:inherit;display:block}
+    .card:hover{background:#0d1830}
+    .card-icon{font-size:24px;margin-bottom:10px}
+    .card-title{font-size:13px;letter-spacing:2px;margin-bottom:6px}
+    .card-title.green{color:var(--green);text-shadow:var(--glow-g)}
+    .card-title.cyan{color:var(--cyan);text-shadow:var(--glow-c)}
+    .card-title.amber{color:var(--amber)}
+    .card-title.lora{color:var(--lora)}
+    .card-desc{font-size:9px;color:var(--cyan-d);line-height:1.7}
+    .card-status{margin-top:10px;font-size:8px;letter-spacing:1px}
+    .card-status.live{color:var(--green)}
+    .card-status.soon{color:var(--amber)}
+
+    .how-section{padding:32px 24px;border-bottom:1px solid var(--edge);max-width:900px;margin:0 auto}
+    .section-title{font-size:8px;color:var(--cyan-d);letter-spacing:3px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid var(--edge)}
+
+    .tier-list{display:flex;flex-direction:column;gap:2px}
+    .tier{display:grid;grid-template-columns:28px 1fr 1fr;gap:12px;padding:8px 12px;border-left:2px solid var(--edge);transition:border-color 0.2s}
+    .tier:hover{border-color:var(--green);background:rgba(0,255,65,0.03)}
+    .tier-num{color:var(--cyan-d);font-size:10px}
+    .tier-action{font-size:10px;color:var(--green)}
+    .tier-concept{font-size:9px;color:var(--cyan-d)}
+
+    .footer{background:#080f1e;border-top:1px solid var(--cyan-d);padding:8px 24px;display:flex;gap:20px;font-size:8px;color:var(--cyan-d);flex-wrap:wrap;align-items:center}
+    .footer a{color:var(--green);text-decoration:none}
+    .footer a:hover{text-shadow:var(--glow-g)}
+
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo-icon">◈</div>
+  <div>
+    <div class="logo-text">GUARDIAN NET <span class="blink">_</span></div>
+    <div class="logo-sub">DECENTRALIZED RESILIENCE LAYER</div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-title">NETWORK STATUS</div>
+  <div class="hero-stat" id="heroCount">-- GUARDIANS</div>
+  <div class="hero-sub">
+    This evidence cannot be silenced as long as one node holds.<br>
+    More guardians = more censorship resistance.
+  </div>
+  <div class="hero-bar">
+    <div class="hero-bar-label">
+      <span>NETWORK RESILIENCE</span>
+      <span id="heroPct" style="color:var(--green)">--%</span>
+    </div>
+    <div class="hero-bar-track">
+      <div class="hero-bar-fill" id="heroFill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE GRID -->
+<div class="grid">
+  <a class="card" href="guardian-globe.html">
+    <div class="card-icon">🌐</div>
+    <div class="card-title green">GUARDIAN GLOBE</div>
+    <div class="card-desc">Live map of all IPFS and LoRa mesh nodes protecting this evidence. Rotating D3 globe. Click any node to inspect.</div>
+    <div class="card-status live">● LIVE</div>
+  </a>
+  <a class="card" href="witness.html">
+    <div class="card-icon">⧖</div>
+    <div class="card-title cyan">WITNESS CHAMBER</div>
+    <div class="card-desc">Seal your witness to the Bitcoin blockchain. Generate a cryptographic receipt. No trust required — math is the notary.</div>
+    <div class="card-status live">● LIVE</div>
+  </a>
+  <a class="card" href="chat.html">
+    <div class="card-icon">💬</div>
+    <div class="card-title amber">CHATROOM</div>
+    <div class="card-desc">P2P chatroom with AOL retro skin. Gun.js mesh — no server. Pick a retro screen name. CID drops link to IPFS automatically.</div>
+    <div class="card-status live">● LIVE</div>
+  </a>
+  <a class="card" href="chain.html">
+    <div class="card-icon">⛓</div>
+    <div class="card-title lora">DEAD MAN'S CHAIN</div>
+    <div class="card-desc">Relay chain: each guardian has a successor. If a node goes dark 48h, successor auto-promotes. Evidence outlives any single node.</div>
+    <div class="card-status soon">◌ COMING SOON</div>
+  </a>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="section-title">THE FIVE TIERS — BECOME A GUARDIAN</div>
+  <div class="tier-list">
+    <div class="tier"><span class="tier-num">T1</span><span class="tier-action">Browse 10 evidence items</span><span class="tier-concept">Content addressing — same content = same ID forever</span></div>
+    <div class="tier"><span class="tier-num">T2</span><span class="tier-action">Share an IPFS link</span><span class="tier-concept">Gateways are just doors — the file lives everywhere</span></div>
+    <div class="tier"><span class="tier-num">T3</span><span class="tier-action">Pin via Fleek or Pinata</span><span class="tier-concept">You're running a library branch. Free. Permanent.</span></div>
+    <div class="tier"><span class="tier-num">T4</span><span class="tier-action">Bitcoin timestamp ceremony</span><span class="tier-concept">Blockchain as a notary that never forgets</span></div>
+    <div class="tier"><span class="tier-num">T5</span><span class="tier-action">Run a full IPFS node</span><span class="tier-concept">You ARE the network. Censorship requires taking you down.</span></div>
+    <div class="tier" style="border-color:var(--lora)"><span class="tier-num" style="color:var(--lora)">T6</span><span class="tier-action" style="color:var(--lora)">Deploy LoRa mesh node</span><span class="tier-concept">Off-grid resilience — alerts survive internet shutdown</span></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>CID: <span id="footerCid" style="color:var(--green)">loading…</span></span>
+  <span>|</span>
+  <span>NODES: <span id="footerNodes" style="color:var(--green)">--</span> active</span>
+  <span style="margin-left:auto">
+    <a href="https://github.com/goodoleusa/cybertemplate" target="_blank">SOURCE</a> ·
+    <a href="IPFS-PINNING-GUIDE.md">PIN GUIDE</a> ·
+    <a href="guardian-globe.html">GLOBE</a>
+  </span>
+</footer>
+
+<script>
+async function loadStats() {
+  try {
+    const r = await fetch('data/guardian_registry.json');
+    const reg = await r.json();
+    const m = reg.metadata;
+    const active = reg.nodes.filter(n => n.status === 'active').length;
+    const pct = Math.round(active / reg.nodes.length * 100);
+
+    document.getElementById('heroCount').textContent = active + ' ACTIVE GUARDIANS';
+    document.getElementById('heroPct').textContent = pct + '%';
+    document.getElementById('heroFill').style.width = pct + '%';
+    document.getElementById('footerCid').textContent = (m.pinned_cid || '').slice(0,20) + '…';
+    document.getElementById('footerNodes').textContent = active;
+  } catch(e) {
+    document.getElementById('heroCount').textContent = 'JOIN THE NETWORK';
+  }
+}
+loadStats();
+</script>
+</body>
+</html>
