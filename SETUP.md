@@ -54,12 +54,40 @@ git push -u origin main
 
 ## Sync Files From cybertemplate
 
-When guardian-globe.html or witness.html are updated in cybertemplate:
+guardian-net is a standalone fork. These files are maintained in cybertemplate
+and copied here. When cybertemplate updates any of them, sync with:
+
 ```bash
+cd d:\0LOCAL\gitrepos\guardian-net
+
+# Sync all guardian pages from cybertemplate:
 cp ../cybertemplate/guardian-globe.html .
 cp ../cybertemplate/witness.html .
-git add -A && git commit -m "sync: guardian files from cybertemplate"
+cp ../cybertemplate/chat.html .
+cp ../cybertemplate/chain.html .
+
+git add guardian-globe.html witness.html chat.html chain.html
+git commit -m "sync: guardian pages from cybertemplate"
 ```
+
+### What lives where
+
+| File | Maintained in | Sync direction |
+|------|--------------|----------------|
+| `guardian-globe.html` | cybertemplate | ct → guardian-net |
+| `witness.html` | cybertemplate | ct → guardian-net |
+| `chat.html` | cybertemplate | ct → guardian-net |
+| `chain.html` | cybertemplate | ct → guardian-net |
+| `index.html` | guardian-net | standalone |
+| `config.json` | guardian-net | standalone |
+| `data/guardian_registry.json` | guardian-net | standalone |
+
+### Diverging from cybertemplate
+
+If you want guardian-net to diverge (custom branding, different config):
+- Edit `config.json` — controls site name, CID, relay settings
+- Do NOT edit synced files directly; edits will be overwritten on next sync
+- Instead, fork cybertemplate and update the source there
 
 ## What's Live vs Planned
 

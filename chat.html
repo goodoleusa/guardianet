@@ -3,212 +3,325 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GUARDIAN CHAT — P2P Secure</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>Guardian Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
-      --bg:#060916; --panel:#0b1120; --deep:#030810;
-      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
-      --amber:#ffaa00; --lora:#ff66ff; --edge:#152035;
-      --font:'Share Tech Mono','Courier New',monospace;
-      --glow-g:0 0 10px rgba(0,255,65,0.5);
-      --glow-c:0 0 10px rgba(0,204,255,0.5);
+      --bg:        #d4d0c8;    /* Windows 98 grey */
+      --white:     #ffffff;
+      --black:     #000000;
+      --hi:        #dfdfdf;    /* highlight edge */
+      --shadow:    #808080;    /* shadow edge */
+      --darkshadow:#404040;    /* dark shadow */
+      --titleL:    #000080;    /* title bar gradient start */
+      --titleR:    #1084d0;    /* title bar gradient end */
+      --desktop:   #008080;    /* Win98 teal desktop */
+      --aim-blue:  #0033bb;
+      --aim-link:  #0000cc;
+      --aim-yellow:#ffcc00;
+      --msg-self:  #0000cc;    /* classic AIM blue for self */
+      --msg-other: #cc0000;    /* classic AIM red for others */
+      --msg-sys:   #007700;
+      --font-ui:   'Tahoma','Arial',sans-serif;
+      --font-msg:  'Arial','Helvetica',sans-serif;
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px}
-    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--desktop); font-family: var(--font-ui); font-size: 11px; color: var(--black); }
 
-    /* ── Toolbar ── */
-    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:0 12px;display:flex;align-items:center;gap:10px;height:40px;flex-shrink:0}
-    .logo{font-size:14px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:2px}
-    .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:var(--glow-g);animation:pulse 2s ease infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-    .sn-display{background:var(--deep);border:1px solid var(--cyan-d);padding:2px 8px;color:var(--amber);font-size:11px;cursor:pointer;letter-spacing:1px}
-    .sn-display:hover{border-color:var(--amber)}
-    .toolbar-right{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:9px;color:var(--cyan-d)}
-    .toolbar-right a{color:var(--cyan-d);text-decoration:none}
-    .toolbar-right a:hover{color:var(--cyan)}
+    /* ── Win98 primitives ── */
+    .raised  { border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); box-shadow:inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow); }
+    .sunken  { border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); box-shadow:inset 1px 1px 0 var(--darkshadow); }
+
+    .titlebar { background:linear-gradient(90deg,var(--titleL),var(--titleR)); height:22px; padding:2px 4px 2px 6px; display:flex; align-items:center; gap:4px; user-select:none; flex-shrink:0; }
+    .titlebar-text { color:white; font:bold 11px 'Tahoma',sans-serif; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .titlebar-icon { font-size:13px; flex-shrink:0; }
+
+    .wbtn { width:16px; height:14px; background:var(--bg); border:1px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); font:bold 8px 'Arial'; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:#000; flex-shrink:0; }
+    .wbtn:hover { background:#e8e8e8; }
+    .wbtn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); }
+    .wbtn.close { font-size:9px; }
+
+    .menubar { background:var(--bg); display:flex; align-items:center; padding:1px 2px; border-bottom:1px solid var(--shadow); height:19px; flex-shrink:0; }
+    .mitem { padding:1px 6px; font:11px 'Tahoma'; cursor:pointer; }
+    .mitem:hover { background:#000080; color:white; }
+
+    .w98-btn { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); padding:2px 8px; font:11px 'Tahoma'; cursor:pointer; color:#000; white-space:nowrap; min-width:36px; }
+    .w98-btn:hover { background:#e8e8e8; }
+    .w98-btn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); padding:3px 7px 1px 9px; }
+    .w98-btn:disabled { color:var(--shadow); cursor:default; }
+    .w98-btn.def { border-color:var(--shadow) var(--hi) var(--hi) var(--shadow); } /* default button has extra dark border */
 
     /* ── Layout ── */
-    .main{display:flex;height:calc(100vh - 40px - 22px);overflow:hidden}
+    .desktop { display:flex; height:100vh; gap:3px; padding:3px; }
 
-    /* ── Buddy panel ── */
-    .buddy-panel{width:185px;min-width:185px;background:var(--panel);border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow:hidden}
-    .buddy-head{background:linear-gradient(180deg,#0d1e38,#08132a);border-bottom:1px solid var(--edge);padding:7px 10px;font-size:9px;color:var(--cyan);letter-spacing:2px}
-    .sec-label{font-size:7px;color:var(--cyan-d);letter-spacing:2px;padding:5px 10px 3px;border-bottom:1px solid var(--edge)}
-    .room-item{display:flex;align-items:center;gap:7px;padding:4px 10px;cursor:pointer;font-size:10px;transition:background 0.1s}
-    .room-item:hover,.room-item.active{background:rgba(0,204,255,0.07)}
-    .room-item.active{color:var(--cyan)}
-    .rdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-    .rdot.on{background:var(--green);box-shadow:var(--glow-g)}
-    .rdot.unread{background:var(--amber);box-shadow:0 0 4px var(--amber)}
-    .rdot.off{background:var(--cyan-d)}
-    .ubadge{margin-left:auto;background:var(--amber);color:#000;font-size:7px;padding:0 3px;min-width:12px;text-align:center}
-    .buddy-item{display:flex;align-items:center;gap:7px;padding:3px 10px}
-    .bonline{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:var(--glow-g)}
-    .baway{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0}
-    .bname{font-size:9px;color:var(--green)}
-    .buddy-foot{margin-top:auto;border-top:1px solid var(--edge);padding:6px 10px;font-size:8px;color:var(--cyan-d)}
+    /* ── Buddy List window ── */
+    .bl-win { width:188px; min-width:188px; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); }
 
-    /* ── Chat area ── */
-    .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-    .chat-tabs{background:#080f1e;border-bottom:1px solid var(--edge);display:flex;height:27px;overflow-x:auto;flex-shrink:0}
-    .ctab{padding:0 11px;height:27px;display:flex;align-items:center;font-size:9px;color:var(--cyan-d);cursor:pointer;border-right:1px solid var(--edge);white-space:nowrap;transition:background 0.1s}
-    .ctab:hover{background:rgba(0,204,255,0.05)}
-    .ctab.active{background:var(--panel);color:var(--cyan)}
-    .chat-win{flex:1;overflow:hidden;position:relative}
-    .msg-area{position:absolute;inset:0;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:1px}
+    .sn-bar { background:white; border-bottom:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; display:flex; align-items:center; gap:5px; flex-shrink:0; }
+    .sn-icon { font-size:18px; }
+    .sn-info { flex:1; min-width:0; }
+    .sn-name { font:bold 12px 'Tahoma'; color:var(--aim-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+    .sn-name:hover { text-decoration:underline; }
+    .sn-status { font:9px 'Tahoma'; color:var(--shadow); }
 
-    /* ── Messages ── */
-    .msg{display:flex;gap:6px;align-items:baseline;animation:mIn 0.15s ease}
-    @keyframes mIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-    .mtime{color:var(--cyan-d);font-size:9px;flex-shrink:0;min-width:44px}
-    .msender{font-size:10px;flex-shrink:0;white-space:nowrap}
-    .msender.self{color:var(--amber)}
-    .msender.other{color:var(--cyan)}
-    .msender.sys{color:var(--green-d)}
-    .mtext{font-size:10px;color:#b8d0f0;line-height:1.65;word-break:break-word}
-    .mtext a{color:var(--green);text-decoration:none}
-    .mtext a:hover{text-shadow:var(--glow-g)}
-    .msg.sysmsg .mtext{color:var(--cyan-d);font-style:italic}
-    .cid-tag{display:inline-block;background:rgba(0,255,65,0.08);border:1px solid var(--green-d);padding:0 3px;font-size:8px;margin-right:2px;vertical-align:middle}
+    .buddy-scroll { flex:1; overflow-y:auto; background:white; }
 
-    /* ── Typing + Input ── */
-    .typing-row{height:16px;padding:0 12px;font-size:8px;color:var(--cyan-d);flex-shrink:0;overflow:hidden}
-    .tdot{display:inline-block;animation:tdot 1s infinite}
-    .tdot:nth-child(2){animation-delay:.2s}
-    .tdot:nth-child(3){animation-delay:.4s}
-    @keyframes tdot{0%,100%{opacity:0.2}50%{opacity:1}}
-    .input-area{border-top:1px solid var(--edge);background:var(--deep);padding:7px 10px;flex-shrink:0}
-    .input-row{display:flex;gap:6px;margin-bottom:4px}
-    .chat-input{flex:1;background:#0a1628;border:1px solid var(--cyan-d);color:var(--green);font-family:var(--font);font-size:11px;padding:5px 8px;outline:none}
-    .chat-input:focus{border-color:var(--cyan);box-shadow:var(--glow-c)}
-    .send-btn{background:var(--cyan-d);color:#000;border:none;font-family:var(--font);font-size:10px;padding:5px 12px;cursor:pointer;letter-spacing:1px}
-    .send-btn:hover{background:var(--cyan)}
-    .input-hints{font-size:8px;color:var(--cyan-d);display:flex;gap:14px}
-    .hk{color:var(--amber)}
+    .bcat { }
+    .bcat-hdr { background:var(--bg); padding:2px 4px 2px 6px; font:bold 11px 'Tahoma'; cursor:pointer; display:flex; align-items:center; gap:3px; user-select:none; border-bottom:1px solid var(--shadow); }
+    .bcat-hdr:hover { background:#e4e0d8; }
+    .bcat-arr { font-size:7px; transition:transform 0.1s; }
+    .bcat-arr.cl { transform:rotate(-90deg); }
+    .bcat-cnt { margin-left:auto; font:10px 'Tahoma'; color:var(--shadow); font-weight:normal; }
+    .bcat-body { background:white; }
+    .bcat-body.hidden { display:none; }
 
-    /* ── Status bar ── */
-    .statusbar{height:22px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 12px;gap:16px;font-size:8px;color:var(--cyan-d);flex-shrink:0}
-    .sv{color:var(--green)}
+    .bitem { display:flex; align-items:center; gap:5px; padding:2px 6px 2px 18px; cursor:pointer; font:11px 'Tahoma'; }
+    .bitem:hover { background:#000080; color:white; }
+    .bitem:hover .bitem-sub { color:#a0b8ff; }
+    .bitem.cur { background:#000080; color:white; font-weight:bold; }
+    .bitem.cur .bitem-sub { color:#a0b8ff; }
+    .bitem-ico { font-size:13px; flex-shrink:0; }
+    .bitem-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bitem-sub { font-size:9px; color:var(--shadow); }
+    .bitem-badge { margin-left:auto; background:#cc0000; color:white; font:bold 8px 'Tahoma'; padding:0 3px; min-width:13px; text-align:center; border-radius:1px; }
+
+    .bl-toolbar { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:4px 4px 3px; display:flex; gap:3px; flex-shrink:0; }
+    .bl-toolbar .w98-btn { padding:2px 5px; font-size:10px; }
+
+    /* ── Chat window ── */
+    .chat-win { flex:1; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); }
+
+    .tab-strip { background:var(--bg); border-bottom:1px solid var(--shadow); display:flex; padding:3px 4px 0; gap:2px; overflow-x:auto; flex-shrink:0; }
+    .ctab { background:#b8b4ac; border:1px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); border-bottom:none; padding:2px 10px; font:11px 'Tahoma'; cursor:pointer; position:relative; top:1px; white-space:nowrap; }
+    .ctab:hover { background:#c8c4bc; }
+    .ctab.active { background:var(--bg); font-weight:bold; border-bottom:2px solid var(--bg); }
+
+    /* Message area */
+    .msg-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; margin:3px 3px 0; }
+    .msg-area { flex:1; background:white; overflow-y:auto; padding:6px 8px; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Arial'; }
+
+    /* AIM-style messages */
+    .aim-msg { margin-bottom:3px; line-height:1.55; }
+    .aim-who { font:bold 11px 'Tahoma'; }
+    .aim-who.me { color:var(--msg-self); }
+    .aim-who.them { color:var(--msg-other); }
+    .aim-who.sys { color:var(--msg-sys); font-style:italic; font-weight:normal; }
+    .aim-ts { font:9px 'Tahoma'; color:var(--shadow); margin-left:3px; font-weight:normal; }
+    .aim-body { display:block; font:12px 'Arial'; color:#000; padding-left:4px; }
+    .aim-body a { color:var(--aim-link); text-decoration:underline; }
+    .aim-body a:hover { color:blue; }
+    .cid-badge { background:#eef0ff; border:1px solid #0000bb; padding:0 3px; font:10px 'Tahoma'; color:#0000bb; margin-right:2px; }
+    .aim-divider { border:none; border-top:1px solid #e0e0e0; margin:5px 0; }
+
+    /* Format bar */
+    .fmt-bar { background:var(--bg); border-top:1px solid var(--shadow); border-bottom:1px solid #c0bdb5; padding:2px 6px; display:flex; align-items:center; gap:2px; flex-shrink:0; }
+    .fmt-btn { background:var(--bg); border:1px solid transparent; padding:1px 5px; cursor:pointer; font-size:11px; color:#000; min-width:20px; text-align:center; }
+    .fmt-btn:hover { border-color:var(--shadow); background:#e4e0d8; }
+    .fmt-sep { width:1px; height:14px; background:var(--shadow); margin:0 2px; }
+    .fmt-spacer { flex:1; }
+    .warn-lv { font:10px 'Tahoma'; color:var(--shadow); white-space:nowrap; }
+
+    /* Typing row */
+    .typing-row { height:16px; padding:0 8px; font:italic 10px 'Tahoma'; color:var(--shadow); flex-shrink:0; overflow:hidden; }
+
+    /* Input */
+    .input-row { display:flex; gap:4px; padding:3px 4px; background:var(--bg); flex-shrink:0; }
+    .chat-input { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:3px 5px; font:12px 'Arial'; color:#000; outline:none; }
+
+    /* Status bar */
+    .aim-sb { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:1px 8px; font:10px 'Tahoma'; color:#000; display:flex; gap:12px; height:19px; align-items:center; flex-shrink:0; }
+    .sb-sep { width:1px; height:12px; background:var(--shadow); }
 
     /* ── Modal ── */
-    .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:100}
-    .modal{background:var(--panel);border:1px solid var(--cyan-d);padding:28px;width:310px;box-shadow:var(--glow-c)}
-    .modal-title{font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:6px;text-align:center}
-    .modal-sub{font-size:9px;color:var(--cyan-d);text-align:center;margin-bottom:20px;letter-spacing:1px}
-    .modal-label{font-size:9px;color:var(--cyan-d);margin-bottom:5px}
-    .modal-input{width:100%;background:var(--deep);border:1px solid var(--cyan-d);color:var(--green);font-family:var(--font);font-size:13px;padding:8px;outline:none;margin-bottom:12px;letter-spacing:1px}
-    .modal-input:focus{border-color:var(--cyan)}
-    .modal-btn{width:100%;background:var(--cyan-d);color:#000;border:none;font-family:var(--font);font-size:11px;padding:9px;cursor:pointer;letter-spacing:2px}
-    .modal-btn:hover{background:var(--cyan)}
-    .modal-note{font-size:8px;color:var(--cyan-d);text-align:center;margin-top:8px}
-    .name-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
-    .name-opt{background:var(--deep);border:1px solid var(--cyan-d);color:var(--cyan);font-family:var(--font);font-size:10px;padding:7px 6px;cursor:pointer;text-align:center;letter-spacing:1px;transition:all 0.1s}
-    .name-opt:hover{background:rgba(0,204,255,0.1);border-color:var(--cyan);color:#fff;box-shadow:var(--glow-c)}
-    .name-opt.picked{border-color:var(--amber);color:var(--amber)}
-    .shuffle-btn{background:none;border:1px solid var(--edge);color:var(--cyan-d);font-family:var(--font);font-size:9px;padding:3px 8px;cursor:pointer;margin-bottom:10px;letter-spacing:1px}
-    .shuffle-btn:hover{border-color:var(--cyan-d);color:var(--cyan)}
-    .modal-divider{font-size:8px;color:var(--cyan-d);text-align:center;margin:6px 0;letter-spacing:2px}
+    .modal-ov { position:fixed; inset:0; background:rgba(0,0,60,0.5); display:flex; align-items:center; justify-content:center; z-index:100; }
+    .modal-win { background:var(--bg); border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); width:310px; }
+    .modal-body { padding:14px 16px; }
+    .modal-label { font:11px 'Tahoma'; margin-bottom:6px; }
+    .name-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px; }
+    .name-opt { background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; font:11px 'Tahoma'; cursor:pointer; text-align:center; color:var(--aim-blue); }
+    .name-opt:hover,.name-opt.picked { background:#000080; color:white; border-color:#000080; }
+    .shuffle-lnk { font:10px 'Tahoma'; color:var(--aim-link); cursor:pointer; text-decoration:underline; text-align:center; display:block; margin-bottom:10px; }
+    .shuffle-lnk:hover { color:blue; }
+    .modal-div { text-align:center; font:10px 'Tahoma'; color:var(--shadow); margin:6px 0; }
+    .modal-footer { display:flex; justify-content:flex-end; gap:6px; margin-top:12px; }
+    .modal-note { font:9px 'Tahoma'; color:var(--shadow); margin-top:8px; text-align:center; }
 
-    /* ── Toast ── */
-    .toast{position:fixed;bottom:30px;right:14px;background:var(--panel);border:1px solid var(--amber);padding:8px 12px;font-size:10px;color:var(--amber);z-index:200;animation:tIn .2s ease;max-width:260px}
-    @keyframes tIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+    /* AOL toast */
+    .aol-toast { position:fixed; bottom:8px; right:8px; background:#ffffcc; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); padding:8px 12px; font:11px 'Tahoma'; color:#000; z-index:200; max-width:240px; box-shadow:2px 2px 4px rgba(0,0,0,0.4); animation:tIn .15s ease; }
+    @keyframes tIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 
-    ::-webkit-scrollbar{width:3px}
-    ::-webkit-scrollbar-track{background:var(--deep)}
-    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
-    .blink{animation:blink 1.1s step-end infinite}
-    @keyframes blink{50%{opacity:0}}
-    .hidden{display:none!important}
+    ::-webkit-scrollbar { width:16px; }
+    ::-webkit-scrollbar-track { background:var(--bg); border:1px solid var(--shadow); }
+    ::-webkit-scrollbar-thumb { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); }
+
+    /* ── Code Pad ── */
+    .codepad { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); display:flex; flex-direction:column; flex-shrink:0; height:180px; }
+    .codepad-bar { padding:2px 5px; display:flex; align-items:center; gap:4px; height:23px; border-bottom:1px solid var(--shadow); background:var(--bg); }
+    .codepad-lbl { font:bold 11px 'Tahoma'; }
+    .codepad-who { font:italic 10px 'Tahoma'; color:var(--shadow); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:6px; }
+    .codepad-area { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Courier New','Lucida Console',monospace; padding:4px 6px; color:#000; outline:none; resize:none; margin:3px; tab-size:2; }
+    .codepad-area::placeholder { color:#b0b0b0; }
   </style>
 </head>
 <body>
 
 <!-- ── Screen name modal ─────────────────────────────────────────────────── -->
 <div class="modal-ov" id="nameModal">
-  <div class="modal">
-    <div class="modal-title">◈ GUARDIAN CHAT <span class="blink">_</span></div>
-    <div class="modal-sub">DECENTRALIZED · NO SERVER · NO ACCOUNT</div>
-
-    <div class="modal-label">PICK A SCREEN NAME</div>
-    <div class="name-grid" id="nameGrid"></div>
-    <button class="shuffle-btn" id="shuffleBtn">⟳ SHUFFLE NAMES</button>
-
-    <div class="modal-divider">— or type your own —</div>
-    <input class="modal-input" id="nameInput" maxlength="16" placeholder="custom name…" autocomplete="off" spellcheck="false">
-    <button class="modal-btn" id="nameBtn">▶ CONNECT TO NETWORK</button>
-    <div class="modal-note">Stored locally · Change anytime with /name</div>
+  <div class="modal-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">🏃</span>
+      <span class="titlebar-text">Welcome to Guardian Chat</span>
+      <div class="wbtn close">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label"><b>Choose your Guardian screen name:</b></div>
+      <div class="name-grid" id="nameGrid"></div>
+      <a class="shuffle-lnk" id="shuffleBtn">↻ Generate more names</a>
+      <div class="modal-div">— or enter your own below —</div>
+      <div class="modal-label">Screen name:</div>
+      <input class="w98-btn" style="width:100%;padding:3px 6px;background:white;border:2px solid;border-color:#808080 #fff #fff #808080;font:12px Tahoma;color:#000;outline:none" id="nameInput" maxlength="16" autocomplete="off" spellcheck="false">
+      <div class="modal-footer">
+        <button class="w98-btn def" id="nameBtn" style="padding:3px 20px">Sign On</button>
+      </div>
+      <div class="modal-note">No account required. Name saved locally.</div>
+    </div>
   </div>
 </div>
 
-<!-- ── App ───────────────────────────────────────────────────────────────── -->
-<div id="appRoot" class="hidden" style="display:flex;flex-direction:column;height:100vh">
+<!-- ── Desktop ───────────────────────────────────────────────────────────── -->
+<div class="desktop hidden" id="appRoot">
 
-  <div class="toolbar">
-    <span class="logo">◈ GCHAT</span>
-    <div class="pulse-dot"></div>
-    <div class="sn-display" id="snDisplay" title="Click to change"></div>
-    <div class="toolbar-right">
-      <span id="tbRoom">—</span>
-      <span>|</span>
-      <span id="tbOnline">1 online</span>
-      <span>|</span>
-      <a href="index.html">NET ↗</a>
-      <a href="guardian-globe.html">GLOBE ↗</a>
+  <!-- Buddy List window -->
+  <div class="bl-win">
+    <div class="titlebar">
+      <span class="titlebar-icon" style="color:var(--aim-yellow)">🏃</span>
+      <span class="titlebar-text">Guardian Buddy List</span>
+      <div style="display:flex;gap:2px">
+        <div class="wbtn">–</div>
+        <div class="wbtn">□</div>
+        <div class="wbtn close">✕</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <span class="mitem">File</span>
+      <span class="mitem">Edit</span>
+      <span class="mitem">People</span>
+      <span class="mitem">Help</span>
+    </div>
+
+    <!-- My SN -->
+    <div class="sn-bar">
+      <div class="sn-icon">🏃</div>
+      <div class="sn-info">
+        <div class="sn-name" id="snDisplay" title="Click to change">(loading)</div>
+        <div class="sn-status">● Available</div>
+      </div>
+    </div>
+
+    <!-- Buddy scroll -->
+    <div class="buddy-scroll" id="buddyScroll">
+      <!-- Chat Rooms category -->
+      <div class="bcat" id="catRooms">
+        <div class="bcat-hdr" onclick="toggleCat('catRooms')">
+          <span class="bcat-arr" id="arr-catRooms">▼</span>
+          Chat Rooms
+          <span class="bcat-cnt" id="cnt-catRooms">5</span>
+        </div>
+        <div class="bcat-body" id="body-catRooms" id="roomList"></div>
+      </div>
+      <!-- Online guardians category -->
+      <div class="bcat" id="catOnline">
+        <div class="bcat-hdr" onclick="toggleCat('catOnline')">
+          <span class="bcat-arr" id="arr-catOnline">▼</span>
+          Online Guardians
+          <span class="bcat-cnt" id="cnt-catOnline">0</span>
+        </div>
+        <div class="bcat-body" id="body-catOnline"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="bl-toolbar">
+      <button class="w98-btn" title="Send an Instant Message" onclick="focusInput()">IM</button>
+      <button class="w98-btn" title="Go to chat room" id="blChatBtn">Chat</button>
+      <button class="w98-btn" style="color:#808080" title="Set Away message">Away</button>
+      <button class="w98-btn" style="margin-left:auto" title="Preferences" onclick="window.location='index.html'">Net ↗</button>
     </div>
   </div>
 
-  <div class="main">
-
-    <!-- Buddy list -->
-    <div class="buddy-panel">
-      <div class="buddy-head">GUARDIAN NET CHAT</div>
-
-      <div>
-        <div class="sec-label">ROOMS</div>
-        <div id="roomList"></div>
-      </div>
-
-      <div style="margin-top:4px">
-        <div class="sec-label">ONLINE NOW</div>
-        <div id="buddyList"></div>
-      </div>
-
-      <div class="buddy-foot">
-        <div>P2P · Gun.js · No server</div>
-        <div id="connStatus" style="color:var(--amber);margin-top:3px">connecting…</div>
+  <!-- Chat window -->
+  <div class="chat-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">💬</span>
+      <span class="titlebar-text" id="winTitle">Guardian Chat</span>
+      <div style="display:flex;gap:2px">
+        <div class="wbtn">–</div>
+        <div class="wbtn">□</div>
+        <div class="wbtn close" onclick="window.location='index.html'">✕</div>
       </div>
     </div>
-
-    <!-- Chat -->
-    <div class="chat-area">
-      <div class="chat-tabs" id="chatTabs"></div>
-      <div class="chat-win">
-        <div class="msg-area" id="msgArea"></div>
-      </div>
-      <div class="typing-row" id="typingRow"></div>
-      <div class="input-area">
-        <div class="input-row">
-          <input class="chat-input" id="chatInput" placeholder="type a message… drop a CID to share with the network" autocomplete="off" spellcheck="false">
-          <button class="send-btn" id="sendBtn">SEND</button>
-        </div>
-        <div class="input-hints">
-          <span><span class="hk">ENTER</span> send</span>
-          <span><span class="hk">bafybei…</span> auto-links IPFS</span>
-          <span><span class="hk">/help</span> commands</span>
-        </div>
-      </div>
+    <div class="menubar">
+      <span class="mitem">File</span>
+      <span class="mitem">Edit</span>
+      <span class="mitem">Insert</span>
+      <span class="mitem">People</span>
+      <span class="mitem">Smileys</span>
+      <span class="mitem" style="margin-left:auto;text-decoration:none;color:#808080" id="tbConn">connecting…</span>
     </div>
 
-  </div>
+    <!-- Tabs -->
+    <div class="tab-strip" id="tabStrip"></div>
 
-  <div class="statusbar">
-    <span>ROOM: <span class="sv" id="sbRoom">—</span></span>
-    <span>MSGS: <span class="sv" id="sbMsgs">0</span></span>
-    <span>PEERS: <span class="sv" id="sbPeers">0</span></span>
-    <span style="margin-left:auto">GUN P2P · END-TO-END OPTIONAL · <span class="sv">DECENTRALIZED</span></span>
+    <!-- Messages -->
+    <div class="msg-panel">
+      <div class="msg-area" id="msgArea"></div>
+    </div>
+
+    <!-- Typing -->
+    <!-- Code Pad — shared live buffer -->
+    <div class="codepad hidden" id="codePad">
+      <div class="codepad-bar">
+        <span class="codepad-lbl">📝 CodePad</span>
+        <span class="codepad-who" id="padWho">shared · real-time P2P sync</span>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padCopy">Copy</button>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClear">Clear</button>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClose">Close</button>
+      </div>
+      <textarea class="codepad-area" id="padArea" spellcheck="false"
+        placeholder="// Shared code pad — everyone in this room sees your changes in real-time&#10;// Paste a snippet, draft a function, or drop a CID for review&#10;// No server — synced via Gun.js P2P"></textarea>
+    </div>
+
+    <div class="typing-row" id="typingRow"></div>
+
+    <!-- Format bar -->
+    <div class="fmt-bar">
+      <button class="fmt-btn" title="Bold"><b>A</b></button>
+      <button class="fmt-btn" title="Color" style="color:#0000cc">A</button>
+      <div class="fmt-sep"></div>
+      <button class="fmt-btn" title="Sounds" id="sndToggle" title="Toggle sounds">🔈</button>
+      <button class="fmt-btn" id="padToggleBtn" style="min-width:56px;font-size:10px;letter-spacing:0" title="Toggle shared code pad">📝 CodePad</button>
+      <div class="fmt-sep"></div>
+      <span class="fmt-spacer"></span>
+      <span class="warn-lv">Warning Level: <span id="warnLv">0%</span></span>
+    </div>
+
+    <!-- Input -->
+    <div class="input-row">
+      <input class="chat-input" id="chatInput" placeholder="Type a message here…" autocomplete="off" spellcheck="false">
+      <button class="w98-btn def" id="sendBtn" style="padding:3px 16px">Send</button>
+      <button class="w98-btn" id="warnBtn" title="Warn (classic AOL feature)">Warn</button>
+    </div>
+
+    <!-- Status bar -->
+    <div class="aim-sb">
+      <span>Room: <b id="sbRoom">—</b></span>
+      <div class="sb-sep"></div>
+      <span>Online: <b id="sbOnline">1</b></span>
+      <div class="sb-sep"></div>
+      <span>Msgs: <b id="sbMsgs">0</b></span>
+      <div class="sb-sep" style="margin-left:auto"></div>
+      <span style="color:#808080">P2P · No server · <a href="guardian-globe.html" style="color:var(--aim-link)">Globe ↗</a></span>
+    </div>
   </div>
 
 </div>
@@ -216,137 +329,118 @@
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const ROOMS = [
-  { id:'general',       label:'#general',          desc:'Open channel — all guardians' },
-  { id:'investigation', label:'#investigation',     desc:'Evidence analysis & hypotheses' },
-  { id:'collab',        label:'#collab-coding',     desc:'Build the network together' },
-  { id:'guardian-net',  label:'#guardian-net',      desc:'Network operations & nodes' },
-  { id:'deadmans',      label:'#dead-mans-chain',   desc:'Relay chain status & alerts' },
+  { id:'general',       label:'#general',         icon:'💬', desc:'Open channel' },
+  { id:'investigation', label:'#investigation',    icon:'🔍', desc:'Evidence & analysis' },
+  { id:'collab',        label:'#collab-coding',    icon:'💻', desc:'Build together' },
+  { id:'guardian-net',  label:'#guardian-net',     icon:'🌐', desc:'Network ops' },
+  { id:'deadmans',      label:'#dead-mans-chain',  icon:'⛓', desc:'Relay chain' },
 ];
-
-const IPFS_GW     = 'https://ipfs.io/ipfs/';
-const GUN_PEERS   = ['https://gun-manhattan.herokuapp.com/gun', 'https://gun-us.herokuapp.com/gun'];
-const NS          = 'guardian-chat-v1';   // gun namespace — change to fork
-const PRESENCE_MS = 65000;
-const HEARTBEAT   = 22000;
-const MAX_MSGS    = 180;
+const IPFS_GW   = 'https://ipfs.io/ipfs/';
+const GUN_PEERS = ['https://gun-manhattan.herokuapp.com/gun','https://gun-us.herokuapp.com/gun'];
+const NS        = 'guardian-chat-v1';
+const AWAY_MS   = 65000;
+const HB_MS     = 22000;
+const MAX_MSGS  = 200;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let screenName = '', currentRoom = ROOMS[0].id;
-let gun, msgCount = 0;
-let onlinePeers = {};          // name → last-seen timestamp
-let unread = {};               // roomId → count
-let typingTimers = {};
-let myTypingTimer = null;
-let seenMsgs = new Set();
+let gun, screenName = '', currentRoom = ROOMS[0].id;
+let onlinePeers = {}, unread = {}, seenMsgs = new Set(), msgCount = 0;
+let typingTimers = {}, myTypingTimer = null;
+let soundsOn = true;
 
 // ── AUDIO ─────────────────────────────────────────────────────────────────────
 let ac;
-function getAC() { return ac || (ac = new (window.AudioContext || window.webkitAudioContext)()); }
-
-function tone(hz, type, dur, vol=0.12) {
-  try {
-    const ctx = getAC(); const o = ctx.createOscillator(); const g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = type; o.frequency.value = hz;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    o.start(); o.stop(ctx.currentTime + dur);
-  } catch(_) {}
-}
-
-const sndOpen  = () => { tone(880,'sine',.25,.1); setTimeout(()=>tone(1046,'sine',.18,.07),90); };
-const sndClose = () => { tone(440,'sine',.18,.09); setTimeout(()=>tone(330,'sine',.25,.05),75); };
-const sndMsg   = () => { tone(1318,'sine',.08,.07); setTimeout(()=>tone(1047,'sine',.12,.05),55); };
-const sndJoin  = () => { tone(523,'triangle',.12,.05); setTimeout(()=>tone(659,'triangle',.12,.05),75); };
+const getAC = () => ac || (ac = new (window.AudioContext||window.webkitAudioContext)());
+function tone(hz,type,dur,vol=0.12){try{const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=type;o.frequency.value=hz;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);o.start();o.stop(ctx.currentTime+dur)}catch(_){}}
+const sndOpen  = () => { if(!soundsOn)return; tone(880,'sine',.25,.1); setTimeout(()=>tone(1046,'sine',.18,.07),90); };
+const sndClose = () => { if(!soundsOn)return; tone(440,'sine',.18,.09); setTimeout(()=>tone(330,'sine',.25,.05),75); };
+const sndMsg   = () => { if(!soundsOn)return; tone(1318,'sine',.08,.07); setTimeout(()=>tone(1047,'sine',.12,.05),55); };
+const sndJoin  = () => { if(!soundsOn)return; tone(523,'triangle',.12,.05); setTimeout(()=>tone(659,'triangle',.12,.05),75); };
+document.getElementById('sndToggle').addEventListener('click', () => {
+  soundsOn = !soundsOn;
+  document.getElementById('sndToggle').textContent = soundsOn ? '🔈' : '🔇';
+});
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
-function rndHex(n) { return [...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase(); }
-function rndInt(max) { const a=new Uint8Array(1); crypto.getRandomValues(a); return a[0]%max; }
+function rndHex(n){return[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()}
+function rndInt(max){const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]%max}
+function ts(){const d=new Date(),h=String(d.getHours()%12||12).padStart(2,' '),m=String(d.getMinutes()).padStart(2,'0');return`${h}:${m} ${d.getHours()<12?'AM':'PM'}`}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-const NAME_ADJ = ['Cyber','Neon','Ghost','Dark','Shadow','Rogue','Crypto','Binary','Quantum','Static',
-  'Pixel','Stealth','Cipher','Null','Vector','Chrome','Echo','Phantom','Turbo','Hyper',
-  'Proxy','Relay','Anon','Void','Pulse','Flux','Glitch','Node','Packet','Signal'];
-const NAME_NOUN= ['Hawk','Wolf','Fox','Ghost','Recon','Watch','Guard','Node','Relay','Vault',
-  'Sentinel','Runner','Coder','Hacker','Pilgrim','Nomad','Keeper','Warden','Wraith','Drifter',
-  'Witness','Oracle','Sage','Scout','Ranger','Rider','Monk','Archivist','Courier','Specter'];
-
-function genName()  {
-  const adj  = NAME_ADJ[rndInt(NAME_ADJ.length)];
-  const noun = NAME_NOUN[rndInt(NAME_NOUN.length)];
-  const num  = String(rndInt(99)+1).padStart(2,'0');
-  return `${adj}${noun}${num}`;
-}
-
-function genNames(n=4) { return Array.from({length:n}, genName); }
-function ts()       { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-function esc(s)     { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// CID linkifier — handles CIDv1 (baf...) and CIDv0 (Qm...)
 function linkify(raw) {
   return esc(raw)
     .replace(/(baf[ybz][a-z2-7]{40,})/gi, c =>
-      `<span class="cid-tag">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener" title="${c}">${c.slice(0,14)}…${c.slice(-4)} ↗</a>`)
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener" title="${c}">${c.slice(0,14)}&#x2026;${c.slice(-4)} &#x2197;</a>`)
     .replace(/(Qm[1-9A-HJ-NP-Za-km-z]{44,})/g, c =>
-      `<span class="cid-tag">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener" title="${c}">${c.slice(0,12)}… ↗</a>`);
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener">${c.slice(0,12)}&#x2026; &#x2197;</a>`);
 }
 
-function toast(msg, ms=3200) {
+function toast(msg, ms=3500) {
   const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
+  el.className = 'aol-toast';
+  el.innerHTML = `<b>Guardian Chat:</b><br>${esc(msg)}`;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), ms);
+  setTimeout(()=>el.remove(), ms);
 }
 
-function setConnStatus(txt, color) {
-  const el = document.getElementById('connStatus');
-  el.textContent = txt; el.style.color = color;
+// ── BUDDY LIST ────────────────────────────────────────────────────────────────
+function toggleCat(id) {
+  const body = document.getElementById('body-'+id);
+  const arr  = document.getElementById('arr-'+id);
+  body.classList.toggle('hidden');
+  arr.classList.toggle('cl');
 }
 
-// ── UI ────────────────────────────────────────────────────────────────────────
 function buildRoomList() {
-  const c = document.getElementById('roomList'); c.innerHTML = '';
+  const body = document.getElementById('body-catRooms');
+  body.innerHTML = '';
   ROOMS.forEach(r => {
-    const d = document.createElement('div');
-    d.className = 'room-item' + (r.id === currentRoom ? ' active' : '');
-    d.dataset.room = r.id;
     const cnt = unread[r.id] || 0;
-    const dotClass = r.id === currentRoom ? 'on' : cnt > 0 ? 'unread' : 'off';
-    d.innerHTML = `<div class="rdot ${dotClass}"></div><span>${esc(r.label)}</span>`
-      + (cnt > 0 && r.id !== currentRoom ? `<span class="ubadge">${cnt}</span>` : '');
-    d.onclick = () => switchRoom(r.id);
-    c.appendChild(d);
+    const el  = document.createElement('div');
+    el.className = 'bitem' + (r.id === currentRoom ? ' cur' : '');
+    el.dataset.room = r.id;
+    el.innerHTML =
+      `<span class="bitem-ico">${r.icon}</span>` +
+      `<span class="bitem-name">${esc(r.label)}</span>` +
+      (cnt > 0 && r.id !== currentRoom ? `<span class="bitem-badge">${cnt}</span>` : '');
+    el.onclick = () => switchRoom(r.id);
+    body.appendChild(el);
   });
+  document.getElementById('cnt-catRooms').textContent = ROOMS.length;
+}
+
+function buildBuddyList() {
+  const now    = Date.now();
+  const online = Object.entries(onlinePeers)
+    .filter(([n,t]) => n !== screenName && now - t < AWAY_MS)
+    .map(([n])=>n);
+
+  const body = document.getElementById('body-catOnline');
+  body.innerHTML = '';
+  if (!online.length) {
+    body.innerHTML = `<div class="bitem" style="color:#808080;cursor:default"><span class="bitem-ico">○</span><span class="bitem-name">No one online yet</span></div>`;
+  } else {
+    online.forEach(name => {
+      const el = document.createElement('div');
+      el.className = 'bitem';
+      el.innerHTML = `<span class="bitem-ico">🟢</span><span class="bitem-name">${esc(name)}</span>`;
+      body.appendChild(el);
+    });
+  }
+  document.getElementById('cnt-catOnline').textContent = `${online.length}/online`;
+  document.getElementById('sbOnline').textContent = online.length + 1;
 }
 
 function buildTabs() {
-  const c = document.getElementById('chatTabs'); c.innerHTML = '';
+  const strip = document.getElementById('tabStrip');
+  strip.innerHTML = '';
   ROOMS.forEach(r => {
     const t = document.createElement('div');
     t.className = 'ctab' + (r.id === currentRoom ? ' active' : '');
-    t.textContent = r.label; t.dataset.room = r.id;
+    t.textContent = r.label;
     t.onclick = () => switchRoom(r.id);
-    c.appendChild(t);
+    strip.appendChild(t);
   });
-}
-
-function updateBuddyList() {
-  const now = Date.now();
-  const online = Object.entries(onlinePeers)
-    .filter(([n, t]) => n !== screenName && now - t < PRESENCE_MS)
-    .map(([n]) => n);
-
-  const c = document.getElementById('buddyList'); c.innerHTML = '';
-  if (!online.length) {
-    c.innerHTML = `<div style="padding:4px 10px;font-size:9px;color:var(--cyan-d)">— no one here yet —</div>`;
-  } else {
-    online.forEach(name => {
-      const d = document.createElement('div'); d.className = 'buddy-item';
-      d.innerHTML = `<div class="bonline"></div><span class="bname">${esc(name)}</span>`;
-      c.appendChild(d);
-    });
-  }
-  document.getElementById('tbOnline').textContent = `${online.length + 1} online`;
-  document.getElementById('sbPeers').textContent = online.length;
 }
 
 // ── MESSAGES ──────────────────────────────────────────────────────────────────
@@ -355,31 +449,32 @@ function renderMsg(roomId, key, data) {
   seenMsgs.add(key);
 
   if (roomId !== currentRoom) {
-    unread[roomId] = (unread[roomId] || 0) + 1;
-    buildRoomList();
-    if (!document.hasFocus()) sndMsg();
+    unread[roomId] = (unread[roomId]||0) + 1;
+    buildRoomList(); buildTabs();
     return;
   }
 
   const area  = document.getElementById('msgArea');
-  const isSelf = data.from === screenName;
-  const isSys  = data.type === 'system';
-  const div    = document.createElement('div');
-  div.className = 'msg' + (isSys ? ' sysmsg' : '');
-  div.dataset.mid = key;
-  div.innerHTML =
-    `<span class="mtime">[${data.time || '??:??'}]</span>` +
-    `<span class="msender ${isSelf?'self':isSys?'sys':'other'}">${isSys ? '●' : '&lt;'+esc(data.from)+'&gt;'}</span>` +
-    `<span class="mtext">${linkify(data.text)}</span>`;
-  area.appendChild(div);
+  const isMe  = data.from === screenName;
+  const isSys = data.type === 'system';
+  const div   = document.createElement('div');
+  div.className = 'aim-msg';
 
+  if (isSys) {
+    div.innerHTML = `<span class="aim-who sys">-- ${linkify(data.text)} --</span>`;
+  } else {
+    div.innerHTML =
+      `<span class="aim-who ${isMe?'me':'them'}">${esc(data.from)}</span>` +
+      `<span class="aim-ts">(${data.time||'--:--'}):</span>` +
+      `<span class="aim-body">${linkify(data.text)}</span>`;
+  }
+
+  area.appendChild(div);
   while (area.children.length > MAX_MSGS) area.removeChild(area.firstChild);
   area.scrollTop = area.scrollHeight;
-
   msgCount++;
   document.getElementById('sbMsgs').textContent = msgCount;
-
-  if (!isSelf && !isSys) sndMsg();
+  if (!isMe && !isSys) sndMsg();
 }
 
 function sysMsg(text) {
@@ -387,21 +482,30 @@ function sysMsg(text) {
   renderMsg(currentRoom, key, { type:'system', from:'SYSTEM', text, time:ts(), room:currentRoom });
 }
 
-// ── ROOMS ─────────────────────────────────────────────────────────────────────
-let roomSubs = {};
-
+// ── ROOM SWITCHING ────────────────────────────────────────────────────────────
 function switchRoom(roomId) {
   currentRoom = roomId;
   unread[roomId] = 0;
   buildRoomList(); buildTabs();
-  const r = ROOMS.find(x => x.id === roomId);
-  document.getElementById('tbRoom').textContent = r.label;
-  document.getElementById('sbRoom').textContent = r.label;
-  document.getElementById('msgArea').innerHTML = '';
-  sysMsg(`Joined ${r.label} — ${r.desc}`);
-  if (gun) subscribeRoom(roomId);
+  const r = ROOMS.find(x=>x.id===roomId);
+  document.getElementById('winTitle').textContent = `Guardian Chat — ${r.label}`;
+  document.getElementById('sbRoom').textContent   = r.label;
+  document.getElementById('msgArea').innerHTML    = '';
+  sysMsg(`You have entered ${r.label} — ${r.desc}`);
+  sysMsg(`Welcome! ${r.label} is a P2P room. No central server.`);
+  if (gun) {
+    subscribeRoom(roomId);
+    // Re-sync pad for new room if pad is open
+    const pad = document.getElementById('codePad');
+    if (!pad.classList.contains('hidden')) {
+      document.getElementById('padArea').value = '';
+      document.getElementById('padWho').textContent = 'loading room pad…';
+      subscribePad(roomId);
+    }
+  }
 }
 
+// ── GUN ───────────────────────────────────────────────────────────────────────
 function subscribeRoom(roomId) {
   gun.get(NS).get('rooms').get(roomId).get('msgs').map().on((data, key) => {
     if (!data || !data.text || !data.from || data.room !== roomId) return;
@@ -409,90 +513,33 @@ function subscribeRoom(roomId) {
   });
 }
 
-// ── GUN ───────────────────────────────────────────────────────────────────────
-function initGun() {
-  gun = Gun(GUN_PEERS);
-
-  // Presence
-  const pref = gun.get(NS).get('presence');
-  const beat = () => pref.get(screenName).put({ t: Date.now(), n: screenName });
-  beat(); setInterval(beat, HEARTBEAT);
-
-  pref.map().on((d, k) => {
-    if (!d || k === screenName) return;
-    const wasOn = onlinePeers[k] && (Date.now() - onlinePeers[k]) < PRESENCE_MS;
-    onlinePeers[k] = d.t || Date.now();
-    if (!wasOn && (Date.now() - onlinePeers[k]) < PRESENCE_MS) { sndJoin(); toast(`${k} joined the network`); }
-    updateBuddyList();
-  });
-
-  setInterval(() => {
-    const now = Date.now();
-    let changed = false;
-    Object.keys(onlinePeers).forEach(k => {
-      if (now - onlinePeers[k] >= PRESENCE_MS) { delete onlinePeers[k]; changed = true; }
-    });
-    if (changed) { sndClose(); updateBuddyList(); }
-  }, 12000);
-
-  // Typing
-  gun.get(NS).get('typing').map().on((d, k) => {
-    if (!d || k === screenName || d.room !== currentRoom) return;
-    if (d.ts && Date.now() - d.ts < 4000) showTyping(k);
-  });
-
-  setConnStatus('connected (p2p)', 'var(--green)');
-
-  // Subscribe all rooms for unread counts; active room gets display
-  ROOMS.forEach(r => subscribeRoom(r.id));
-}
-
 function sendMsg(text) {
   text = text.trim();
   if (!text) return;
   if (text.startsWith('/')) { handleCmd(text); return; }
-
   const key  = `m${Date.now()}_${rndHex(2)}`;
-  const data = { from: screenName, text, time: ts(), room: currentRoom, t: Date.now() };
-  gun.get(NS).get('rooms').get(currentRoom).get('msgs').get(key).put(data);
+  gun.get(NS).get('rooms').get(currentRoom).get('msgs').get(key).put(
+    { from:screenName, text, time:ts(), room:currentRoom, t:Date.now() }
+  );
 }
 
-// ── COMMANDS ──────────────────────────────────────────────────────────────────
 function handleCmd(raw) {
   const parts = raw.trim().toLowerCase().split(/\s+/);
   switch(parts[0]) {
-    case '/help':
-      sysMsg('/rooms · /name [new] · /clear · /asl · /cid [hash] · /help');
-      break;
-    case '/rooms':
-      sysMsg('Rooms: ' + ROOMS.map(r=>r.label).join(' · '));
-      break;
-    case '/name':
-      if (parts[1]) setScreenName(parts.slice(1).join('_'));
-      else sysMsg('Name: ' + screenName);
-      break;
-    case '/clear':
-      document.getElementById('msgArea').innerHTML = '';
-      sysMsg('Local history cleared.');
-      break;
-    case '/asl':
-      sysMsg('a/s/l? This is Web3. Age = block height. Sex = public key. Location = your IPFS node.');
-      break;
-    case '/cid':
-      if (parts[1]) sendMsg(parts[1]);
-      else sysMsg('Usage: /cid bafybei...');
-      break;
-    default:
-      sysMsg(`Unknown: ${parts[0]} — try /help`);
+    case '/help':  sysMsg('/rooms · /name [new] · /clear · /asl · /cid [hash] · /help'); break;
+    case '/rooms': sysMsg('Rooms: ' + ROOMS.map(r=>r.label).join(' · ')); break;
+    case '/name':  if(parts[1]){setScreenName(parts.slice(1).join('_'));sysMsg('Screen name updated.');}else sysMsg('Name: '+screenName); break;
+    case '/clear': document.getElementById('msgArea').innerHTML=''; sysMsg('Cleared.'); break;
+    case '/asl':   sysMsg('a/s/l? This is Web3. Age = block height. Sex = public key. Location = your IPFS node.'); break;
+    case '/cid':   if(parts[1])sendMsg(parts[1]); break;
+    default: sysMsg(`Unknown command: ${parts[0]}  Try /help`);
   }
 }
 
-// ── TYPING ────────────────────────────────────────────────────────────────────
 function emitTyping() {
   clearTimeout(myTypingTimer);
-  gun.get(NS).get('typing').get(screenName).put({ ts: Date.now(), room: currentRoom });
-  myTypingTimer = setTimeout(() =>
-    gun.get(NS).get('typing').get(screenName).put({ ts: 0, room: currentRoom }), 3000);
+  gun.get(NS).get('typing').get(screenName).put({ ts:Date.now(), room:currentRoom });
+  myTypingTimer = setTimeout(()=>gun.get(NS).get('typing').get(screenName).put({ts:0,room:currentRoom}), 3000);
 }
 
 function showTyping(name) {
@@ -501,53 +548,166 @@ function showTyping(name) {
   if (!row.querySelector(`[data-typer="${name}"]`)) {
     const sp = document.createElement('span');
     sp.dataset.typer = name;
-    sp.innerHTML = `${esc(name)} typing<span class="tdot">.</span><span class="tdot">.</span><span class="tdot">.</span>&nbsp; `;
+    sp.textContent = `${name} is typing... `;
     row.appendChild(sp);
   }
-  typingTimers[name] = setTimeout(() => {
-    row.querySelector(`[data-typer="${name}"]`)?.remove();
-  }, 4500);
+  typingTimers[name] = setTimeout(()=>row.querySelector(`[data-typer="${name}"]`)?.remove(), 4500);
+}
+
+function initGun() {
+  gun = Gun(GUN_PEERS);
+  const pref = gun.get(NS).get('presence');
+  const beat = () => pref.get(screenName).put({ t:Date.now(), n:screenName });
+  beat(); setInterval(beat, HB_MS);
+
+  pref.map().on((d,k)=>{
+    if(!d||k===screenName)return;
+    const wasOn = onlinePeers[k]&&(Date.now()-onlinePeers[k])<AWAY_MS;
+    onlinePeers[k]=d.t||Date.now();
+    if(!wasOn&&(Date.now()-onlinePeers[k])<AWAY_MS){sndJoin();toast(`${k} is now online`);}
+    buildBuddyList();
+  });
+
+  setInterval(()=>{
+    const now=Date.now(); let changed=false;
+    Object.keys(onlinePeers).forEach(k=>{if(now-onlinePeers[k]>=AWAY_MS){delete onlinePeers[k];changed=true;}});
+    if(changed){sndClose();buildBuddyList();}
+  }, 12000);
+
+  gun.get(NS).get('typing').map().on((d,k)=>{
+    if(!d||k===screenName||d.room!==currentRoom)return;
+    if(d.ts&&Date.now()-d.ts<4000)showTyping(k);
+  });
+
+  document.getElementById('tbConn').textContent='● Connected (P2P)';
+  document.getElementById('tbConn').style.color='green';
+  ROOMS.forEach(r => subscribeRoom(r.id));
 }
 
 // ── SCREEN NAME ───────────────────────────────────────────────────────────────
 function setScreenName(raw) {
   screenName = raw.replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,16) || genName();
   localStorage.setItem('gchat_name', screenName);
-  document.getElementById('snDisplay').textContent = `[${screenName}]`;
-  document.title = `${screenName} — GUARDIAN CHAT`;
+  document.getElementById('snDisplay').textContent = screenName;
+  document.title = `${screenName} — Guardian Chat`;
 }
+
+// ── NAME GENERATION ───────────────────────────────────────────────────────────
+const ADJ  = ['Cyber','Neon','Ghost','Dark','Shadow','Rogue','Crypto','Binary','Quantum','Static','Pixel','Stealth','Cipher','Null','Vector','Chrome','Echo','Phantom','Turbo','Hyper','Proxy','Relay','Anon','Void','Pulse','Flux','Glitch','Node','Packet','Signal'];
+const NOUN = ['Hawk','Wolf','Fox','Ghost','Recon','Watch','Guard','Node','Relay','Vault','Sentinel','Runner','Coder','Hacker','Pilgrim','Nomad','Keeper','Warden','Wraith','Drifter','Witness','Oracle','Sage','Scout','Ranger','Rider','Monk','Archivist','Courier','Specter'];
+function genName()    { return ADJ[rndInt(ADJ.length)]+NOUN[rndInt(NOUN.length)]+String(rndInt(99)+1).padStart(2,'0'); }
+function genNames(n)  { return Array.from({length:n},genName); }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 function boot(name) {
   setScreenName(name);
   document.getElementById('nameModal').classList.add('hidden');
-  const root = document.getElementById('appRoot');
-  root.classList.remove('hidden');
-  root.style.display = 'flex';
-
+  document.getElementById('appRoot').classList.remove('hidden');
   sndOpen();
-  buildRoomList(); buildTabs(); updateBuddyList();
+  buildRoomList(); buildBuddyList(); buildTabs();
   initGun();
+  initPad();
   switchRoom('general');
 
   const inp = document.getElementById('chatInput');
   const btn = document.getElementById('sendBtn');
 
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const v = inp.value; if (v.trim()) { sendMsg(v); inp.value = ''; }
-    } else { emitTyping(); }
+    if (e.key === 'Enter') { e.preventDefault(); const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} }
+    else emitTyping();
   });
-  btn.addEventListener('click', () => {
-    const v = inp.value; if (v.trim()) { sendMsg(v); inp.value = ''; } inp.focus();
-  });
+  btn.addEventListener('click', () => { const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} inp.focus(); });
+
   document.getElementById('snDisplay').addEventListener('click', () => {
-    const n = prompt('New screen name (max 16 chars):', screenName);
-    if (n) { setScreenName(n); sysMsg(`Screen name changed to ${screenName}`); }
+    const n = prompt('New screen name:', screenName); if(n){setScreenName(n);sysMsg(`You are now known as ${screenName}`);}
+  });
+  document.getElementById('warnBtn').addEventListener('click', () => {
+    const wl = document.getElementById('warnLv');
+    const cur = parseInt(wl.textContent) || 0;
+    wl.textContent = Math.min(cur+5,100)+'%';
+    sysMsg(`You warned the room. Warning level increased. (Classic AOL feature — cosmetic only.)`);
+  });
+  document.getElementById('blChatBtn').onclick = () => focusInput();
+  inp.focus();
+}
+
+function focusInput() { document.getElementById('chatInput').focus(); }
+
+// ── CODE PAD ──────────────────────────────────────────────────────────────────
+let padDebounce = null;
+let padEditing  = false;
+let padRoomSub  = null;
+
+function initPad() {
+  const area = document.getElementById('padArea');
+
+  area.addEventListener('input', () => {
+    padEditing = true;
+    clearTimeout(padDebounce);
+    padDebounce = setTimeout(() => {
+      gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
+        content: area.value,
+        author:  screenName,
+        time:    ts(),
+        room:    currentRoom,
+        t:       Date.now()
+      });
+      padEditing = false;
+    }, 400);
   });
 
-  inp.focus();
+  // Tab key inserts 2 spaces (standard for a code editor)
+  area.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = area.selectionStart, end = area.selectionEnd;
+      area.value = area.value.slice(0,s) + '  ' + area.value.slice(end);
+      area.selectionStart = area.selectionEnd = s + 2;
+      area.dispatchEvent(new Event('input'));
+    }
+  });
+
+  document.getElementById('padCopy').onclick = () => {
+    navigator.clipboard.writeText(area.value)
+      .then(() => toast('Code copied to clipboard'))
+      .catch(() => { area.select(); document.execCommand('copy'); toast('Copied'); });
+  };
+
+  document.getElementById('padClear').onclick = () => {
+    if (!confirm('Clear the shared pad? Everyone in the room will see it cleared.')) return;
+    area.value = '';
+    gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
+      content:'', author:screenName, time:ts(), room:currentRoom, t:Date.now()
+    });
+    document.getElementById('padWho').textContent = 'cleared by ' + screenName;
+  };
+
+  document.getElementById('padClose').onclick  = togglePad;
+  document.getElementById('padToggleBtn').onclick = togglePad;
+}
+
+function subscribePad(roomId) {
+  gun.get(NS).get('rooms').get(roomId).get('pad').on((data) => {
+    if (!data || data.room !== roomId) return;
+    if (padEditing) return;   // don't overwrite while I'm typing
+    const area = document.getElementById('padArea');
+    if (data.content !== undefined) area.value = data.content;
+    if (data.author) {
+      document.getElementById('padWho').textContent =
+        `last edit: ${esc(data.author)} at ${data.time||''}`;
+    }
+  });
+}
+
+function togglePad() {
+  const panel = document.getElementById('codePad');
+  const isHidden = panel.classList.toggle('hidden');
+  document.getElementById('padToggleBtn').style.fontWeight = isHidden ? '' : 'bold';
+  if (!isHidden) {
+    subscribePad(currentRoom);
+    document.getElementById('padArea').focus();
+    sysMsg('CodePad open — shared in real-time with everyone in this room.');
+  }
 }
 
 // ── STARTUP ───────────────────────────────────────────────────────────────────
@@ -555,42 +715,29 @@ const saved = localStorage.getItem('gchat_name');
 if (saved) {
   boot(saved);
 } else {
-  const ni    = document.getElementById('nameInput');
-  const nb    = document.getElementById('nameBtn');
-  const grid  = document.getElementById('nameGrid');
-  const shuf  = document.getElementById('shuffleBtn');
-  let chosen  = '';
+  const ni   = document.getElementById('nameInput');
+  const nb   = document.getElementById('nameBtn');
+  const grid = document.getElementById('nameGrid');
+  const shuf = document.getElementById('shuffleBtn');
+  let chosen = '';
 
-  function buildNameGrid() {
+  function buildGrid() {
     grid.innerHTML = '';
     genNames(4).forEach(name => {
       const btn = document.createElement('button');
-      btn.className = 'name-opt';
-      btn.textContent = name;
-      btn.title = 'Click to select';
-      btn.addEventListener('click', () => {
-        grid.querySelectorAll('.name-opt').forEach(b => b.classList.remove('picked'));
-        btn.classList.add('picked');
-        ni.value = name;
-        chosen = name;
-      });
+      btn.className='name-opt'; btn.textContent=name;
+      btn.onclick=()=>{ grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); btn.classList.add('picked'); ni.value=name; chosen=name; };
       grid.appendChild(btn);
     });
   }
 
-  buildNameGrid();
-  shuf.addEventListener('click', () => { chosen = ''; ni.value = ''; buildNameGrid(); });
+  buildGrid();
+  shuf.addEventListener('click', ()=>{ chosen=''; ni.value=''; buildGrid(); });
 
-  const go = () => boot(ni.value.trim() || chosen || genName());
+  const go = () => boot(ni.value.trim()||chosen||genName());
   nb.addEventListener('click', go);
-  ni.addEventListener('keydown', e => {
-    if (e.key === 'Enter') go();
-    // Clear picked highlight when user types custom name
-    if (e.key.length === 1) grid.querySelectorAll('.name-opt').forEach(b => b.classList.remove('picked'));
-  });
-  ni.addEventListener('focus', () =>
-    grid.querySelectorAll('.name-opt').forEach(b => b.classList.remove('picked')));
-  requestAnimationFrame(() => ni.focus());
+  ni.addEventListener('keydown', e=>{ if(e.key==='Enter')go(); if(e.key.length===1)grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); });
+  requestAnimationFrame(()=>ni.focus());
 }
 </script>
 </body>
