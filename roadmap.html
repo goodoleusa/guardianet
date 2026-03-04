@@ -4,101 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GUARDIANET — Evolution Roadmap</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#060916; --panel:#0b1120; --deep:#030810; --edge:#152035;
-      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
-      --amber:#ffaa00; --lora:#ff66ff; --red:#ff3355; --gold:#ffd700;
-      --font:'Share Tech Mono','Courier New',monospace;
-      --glow-g:0 0 10px rgba(0,255,65,0.5);
-      --glow-c:0 0 10px rgba(0,204,255,0.5);
+      --bg:#060a12; --panel:#0c1422; --deep:#040810; --edge:#1a2840;
+      --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
+      --amber:#f59e0b; --lora:#c084fc; --red:#ef4444; --gold:#fbbf24;
+      --text:#cbd5e1; --text-dim:#64748b;
+      --font:'Courier Prime','Courier New',monospace;
+      --glow-g:0 0 12px rgba(34,197,94,0.5);
+      --glow-c:0 0 12px rgba(56,189,248,0.5);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{min-height:100vh;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px}
-    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+    html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
     a{color:inherit;text-decoration:none}
     .blink{animation:blink 1.1s step-end infinite}
     @keyframes blink{50%{opacity:0}}
 
     /* HEADER */
-    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
     .hdr-left{display:flex;align-items:center;gap:12px}
-    .logo-icon{width:30px;height:30px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cyan);animation:pulse 3s ease-in-out infinite}
-    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(0,204,255,0.3)}50%{box-shadow:0 0 20px rgba(0,204,255,0.7)}}
-    .logo-text{font-size:13px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
-    .logo-sub{font-size:8px;color:var(--cyan-d);letter-spacing:3px}
-    .hdr-back{font-size:9px;color:var(--cyan-d);border:1px solid var(--edge);padding:4px 8px;letter-spacing:1px}
-    .hdr-back:hover{color:var(--cyan);border-color:var(--cyan-d)}
+    .logo-icon{width:34px;height:34px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--cyan);animation:pulse 3s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(56,189,248,0.3)}50%{box-shadow:0 0 20px rgba(56,189,248,0.7)}}
+    .logo-text{font-size:16px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
+    .logo-sub{font-size:11px;color:var(--text-dim);letter-spacing:2px}
+    .hdr-back{font-size:13px;color:var(--text-dim);border:1px solid var(--edge);padding:5px 10px;letter-spacing:1px}
+    .hdr-back:hover{color:var(--cyan);border-color:var(--edge)}
 
     /* PREAMBLE */
-    .preamble{padding:24px 20px;border-bottom:1px solid var(--edge);max-width:780px}
-    .preamble-title{font-size:14px;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,0.3);letter-spacing:3px;margin-bottom:12px}
-    .preamble-text{font-size:10px;color:var(--cyan-d);line-height:2;margin-bottom:16px}
+    .preamble{padding:28px 24px;border-bottom:1px solid var(--edge);max-width:820px}
+    .preamble-title{font-size:16px;color:var(--gold);text-shadow:0 0 8px rgba(251,191,36,0.3);letter-spacing:3px;margin-bottom:14px}
+    .preamble-text{font-size:15px;color:var(--text);line-height:1.9;margin-bottom:16px}
     .preamble-text em{color:var(--green)}
     .preamble-text strong{color:var(--gold)}
 
     /* LAYER STACK */
-    .layers{padding:16px 20px 0;border-bottom:1px solid var(--edge)}
-    .layers-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .layer-stack{display:flex;flex-direction:column;gap:3px;max-width:680px;margin-bottom:20px}
-    .layer{display:grid;grid-template-columns:120px 1fr auto;gap:12px;padding:8px 12px;border:1px solid var(--edge);align-items:center}
-    .layer-num{font-size:8px;letter-spacing:2px}
-    .layer-desc{font-size:10px;line-height:1.5}
-    .layer-status{font-size:8px;letter-spacing:1px;white-space:nowrap}
+    .layers{padding:20px 24px 0;border-bottom:1px solid var(--edge)}
+    .layers-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .layer-stack{display:flex;flex-direction:column;gap:3px;max-width:720px;margin-bottom:20px}
+    .layer{display:grid;grid-template-columns:140px 1fr auto;gap:14px;padding:10px 14px;border:1px solid var(--edge);align-items:center}
+    .layer-num{font-size:12px;letter-spacing:2px}
+    .layer-desc{font-size:14px;line-height:1.5}
+    .layer-status{font-size:12px;letter-spacing:1px;white-space:nowrap}
     .layer.l5{border-left:3px solid var(--green);  } .layer.l5 .layer-num{color:var(--green)}
     .layer.l4{border-left:3px solid var(--cyan);   } .layer.l4 .layer-num{color:var(--cyan)}
     .layer.l3{border-left:3px solid var(--amber);  } .layer.l3 .layer-num{color:var(--amber)}
     .layer.l2{border-left:3px solid var(--lora);   } .layer.l2 .layer-num{color:var(--lora)}
     .layer.l1{border-left:3px solid var(--red);    } .layer.l1 .layer-num{color:var(--red)}
-    .layer-connector{text-align:center;font-size:10px;color:var(--edge);margin:-2px 0}
+    .layer-connector{text-align:center;font-size:12px;color:var(--edge);margin:-2px 0}
 
     /* PILLAR GRID */
-    .pillars{padding:16px 20px;border-bottom:1px solid var(--edge)}
-    .pillars-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .pillar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
-    .pillar{background:var(--panel);border:1px solid var(--edge);padding:14px}
+    .pillars{padding:20px 24px;border-bottom:1px solid var(--edge)}
+    .pillars-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .pillar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+    .pillar{background:var(--panel);border:1px solid var(--edge);padding:16px}
     .pillar:hover{border-color:var(--green-d)}
-    .pillar-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .pillar-num{font-size:8px;width:22px;height:22px;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .pillar-title{font-size:11px;letter-spacing:2px}
-    .pillar-icon{font-size:16px;margin-left:auto}
+    .pillar-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .pillar-num{font-size:11px;width:24px;height:24px;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .pillar-title{font-size:14px;letter-spacing:2px}
+    .pillar-icon{font-size:18px;margin-left:auto}
     .pillar.p-green .pillar-num,.pillar.p-green .pillar-title{color:var(--green)}
     .pillar.p-cyan  .pillar-num,.pillar.p-cyan  .pillar-title{color:var(--cyan)}
     .pillar.p-amber .pillar-num,.pillar.p-amber .pillar-title{color:var(--amber)}
     .pillar.p-lora  .pillar-num,.pillar.p-lora  .pillar-title{color:var(--lora)}
     .pillar.p-gold  .pillar-num,.pillar.p-gold  .pillar-title{color:var(--gold)}
     .pillar.p-red   .pillar-num,.pillar.p-red   .pillar-title{color:var(--red)}
-    .pillar-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:10px}
-    .pillar-tags{display:flex;flex-wrap:wrap;gap:4px}
-    .tag{font-size:8px;padding:2px 6px;border:1px solid var(--edge);color:var(--cyan-d);letter-spacing:1px}
+    .pillar-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
+    .pillar-tags{display:flex;flex-wrap:wrap;gap:5px}
+    .tag{font-size:11px;padding:3px 8px;border:1px solid var(--edge);color:var(--text-dim);letter-spacing:1px}
     .tag.live{border-color:var(--green-d);color:var(--green-d)}
     .tag.design{border-color:var(--amber);color:var(--amber)}
     .tag.concept{border-color:var(--edge);color:var(--edge)}
 
     /* HARDWARE SECTION */
-    .hw-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
-    .hw-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-    .hw-card{background:var(--deep);border:1px solid var(--edge);border-left:3px solid var(--lora);padding:12px}
-    .hw-card-header{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
-    .hw-card-name{font-size:11px;color:var(--lora)}
-    .hw-card-bom{font-size:9px;color:var(--gold)}
-    .hw-card-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:8px}
-    .hw-card-chips{display:flex;flex-wrap:wrap;gap:4px}
-    .chip{font-size:7px;padding:2px 5px;background:var(--panel);color:var(--cyan-d);letter-spacing:1px}
+    .hw-section{padding:20px 24px;border-bottom:1px solid var(--edge)}
+    .hw-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+    .hw-card{background:var(--deep);border:1px solid var(--edge);border-left:3px solid var(--lora);padding:14px}
+    .hw-card-header{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+    .hw-card-name{font-size:14px;color:var(--lora)}
+    .hw-card-bom{font-size:13px;color:var(--gold)}
+    .hw-card-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:10px}
+    .hw-card-chips{display:flex;flex-wrap:wrap;gap:5px}
+    .chip{font-size:11px;padding:2px 6px;background:var(--panel);color:var(--text-dim);letter-spacing:1px}
     .chip.green{color:var(--green-d)}
     .chip.amber{color:var(--amber)}
-    .hw-card-irl{margin-top:8px;background:#060d1a;border-left:2px solid var(--cyan-d);padding:5px 8px;font-size:8px;color:var(--cyan);line-height:1.6}
+    .hw-card-irl{margin-top:10px;background:#060d1a;border-left:2px solid var(--edge);padding:8px 12px;font-size:13px;color:var(--cyan);line-height:1.6}
 
     /* STACK DIAGRAM */
-    .stack-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
-    .stack-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .stack-diagram{max-width:720px}
-    .stack-row{display:grid;grid-template-columns:140px 1fr;gap:1px;background:var(--edge);margin-bottom:1px}
-    .stack-label{background:var(--panel);padding:10px 12px;font-size:9px;letter-spacing:2px;display:flex;align-items:center}
-    .stack-tools{background:var(--panel);padding:10px 12px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-    .stack-tool{font-size:9px;padding:2px 7px;border:1px solid var(--edge);letter-spacing:1px}
+    .stack-section{padding:20px 24px;border-bottom:1px solid var(--edge)}
+    .stack-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .stack-diagram{max-width:760px}
+    .stack-row{display:grid;grid-template-columns:160px 1fr;gap:1px;background:var(--edge);margin-bottom:1px}
+    .stack-label{background:var(--panel);padding:10px 14px;font-size:12px;letter-spacing:2px;display:flex;align-items:center}
+    .stack-tools{background:var(--panel);padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .stack-tool{font-size:12px;padding:3px 8px;border:1px solid var(--edge);letter-spacing:1px}
     .stack-tool.green{color:var(--green);border-color:var(--green-d)}
     .stack-tool.cyan{color:var(--cyan);border-color:var(--cyan-d)}
     .stack-tool.amber{color:var(--amber);border-color:#553300}
@@ -107,46 +108,46 @@
     .stack-tool.new{color:var(--green-d);border-color:var(--edge);font-style:italic}
 
     /* GOVERNANCE */
-    .gov-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
-    .gov-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .gov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
-    .gov-tier{background:var(--panel);border:1px solid var(--edge);padding:12px}
-    .gov-tier-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .gov-tier-name{font-size:11px;letter-spacing:2px}
-    .gov-tier-badge{font-size:8px;padding:2px 6px;border:1px solid currentColor}
-    .gov-tier.t0 .gov-tier-name,.gov-tier.t0 .gov-tier-badge{color:var(--cyan-d)}
+    .gov-section{padding:20px 24px;border-bottom:1px solid var(--edge)}
+    .gov-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .gov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+    .gov-tier{background:var(--panel);border:1px solid var(--edge);padding:14px}
+    .gov-tier-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .gov-tier-name{font-size:14px;letter-spacing:2px}
+    .gov-tier-badge{font-size:11px;padding:3px 8px;border:1px solid currentColor}
+    .gov-tier.t0 .gov-tier-name,.gov-tier.t0 .gov-tier-badge{color:var(--text-dim)}
     .gov-tier.t1 .gov-tier-name,.gov-tier.t1 .gov-tier-badge{color:var(--green)}
     .gov-tier.t2 .gov-tier-name,.gov-tier.t2 .gov-tier-badge{color:var(--cyan)}
     .gov-tier.t3 .gov-tier-name,.gov-tier.t3 .gov-tier-badge{color:var(--gold)}
-    .gov-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:6px}
-    .gov-tech{font-size:8px;line-height:1.7}
+    .gov-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px}
+    .gov-tech{font-size:12px;line-height:1.7}
     .gov-tech span{color:var(--amber)}
 
-    .semaphore-box{background:#0a100a;border:1px solid var(--green-d);border-left:3px solid var(--green);padding:12px;margin-top:12px;max-width:680px}
-    .semaphore-title{font-size:8px;letter-spacing:2px;color:var(--green);margin-bottom:8px}
-    .semaphore-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:9px}
-    .semaphore-step{background:var(--panel);border:1px solid var(--green-d);padding:5px 10px;color:var(--green)}
+    .semaphore-box{background:#0a100a;border:1px solid var(--green-d);border-left:3px solid var(--green);padding:14px;margin-top:14px;max-width:720px}
+    .semaphore-title{font-size:12px;letter-spacing:2px;color:var(--green);margin-bottom:10px}
+    .semaphore-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+    .semaphore-step{background:var(--panel);border:1px solid var(--green-d);padding:6px 12px;color:var(--green)}
     .semaphore-arrow{color:var(--green-d)}
 
     /* PHASES */
-    .phases{padding:16px 20px;border-bottom:1px solid var(--edge)}
-    .phases-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
-    .phase-row{display:grid;grid-template-columns:100px 1fr;gap:12px;margin-bottom:8px;align-items:start}
-    .phase-label{font-size:9px;color:var(--amber);letter-spacing:2px;padding-top:2px}
-    .phase-items{display:flex;flex-wrap:wrap;gap:5px}
-    .phase-item{font-size:9px;padding:3px 8px;border:1px solid var(--edge);color:var(--cyan-d)}
+    .phases{padding:20px 24px;border-bottom:1px solid var(--edge)}
+    .phases-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
+    .phase-row{display:grid;grid-template-columns:110px 1fr;gap:14px;margin-bottom:10px;align-items:start}
+    .phase-label{font-size:13px;color:var(--amber);letter-spacing:2px;padding-top:3px}
+    .phase-items{display:flex;flex-wrap:wrap;gap:6px}
+    .phase-item{font-size:12px;padding:4px 10px;border:1px solid var(--edge);color:var(--text-dim)}
     .phase-item.done{border-color:var(--green-d);color:var(--green-d)}
     .phase-item.active{border-color:var(--amber);color:var(--amber)}
-    .phase-item.next{border-color:var(--cyan-d);color:var(--cyan-d)}
+    .phase-item.next{border-color:var(--text-dim);color:var(--text-dim)}
 
     /* PRINCIPLE */
-    .principle{padding:20px;text-align:center;border-top:1px solid var(--edge)}
-    .principle-text{font-size:11px;color:var(--cyan-d);line-height:2;max-width:600px;margin:0 auto}
-    .principle-text strong{color:var(--green);font-size:13px}
+    .principle{padding:28px;text-align:center;border-top:1px solid var(--edge)}
+    .principle-text{font-size:15px;color:var(--text);line-height:2;max-width:640px;margin:0 auto}
+    .principle-text strong{color:var(--green);font-size:17px}
 
-    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:var(--panel)}
-    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+    ::-webkit-scrollbar-thumb{background:var(--edge)}
   </style>
 </head>
 <body>
@@ -176,7 +177,7 @@
     <br><br>
     That is the answer to censorship. Not a better app. <strong>A protocol.</strong>
   </div>
-  <a href="EVOLUTION.md" target="_blank" style="font-size:9px;color:var(--green-d);letter-spacing:2px">▸ READ FULL SPEC (EVOLUTION.md)</a>
+  <a href="EVOLUTION.md" target="_blank" style="font-size:13px;color:var(--green-d);letter-spacing:2px">▸ READ FULL SPEC (EVOLUTION.md)</a>
 </div>
 
 <!-- RESILIENCE LAYERS -->
@@ -433,8 +434,8 @@
 
     <div class="hw-card" style="border-left-color:var(--green-d);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:180px">
       <div style="font-size:24px;margin-bottom:8px;color:var(--green-d)">+</div>
-      <div style="font-size:10px;color:var(--green-d);letter-spacing:2px;margin-bottom:6px">CONTRIBUTE A DESIGN</div>
-      <div style="font-size:9px;color:var(--cyan-d);line-height:1.7;max-width:180px">Submit KiCad schematics + BOM to Gitea. Reviewed by chapter anchors. Pinned to IPFS. CERN OHL-S v2.</div>
+      <div style="font-size:14px;color:var(--green-d);letter-spacing:2px;margin-bottom:6px">CONTRIBUTE A DESIGN</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.7;max-width:200px">Submit KiCad schematics + BOM to Gitea. Reviewed by chapter anchors. Pinned to IPFS. CERN OHL-S v2.</div>
       <div style="margin-top:10px;font-size:9px;color:var(--green-d)">hardware.html →</div>
     </div>
 
@@ -508,7 +509,7 @@
       </div>
     </div>
     <div class="stack-row">
-      <div class="stack-label" style="color:var(--cyan-d)">INTELLIGENCE</div>
+      <div class="stack-label" style="color:var(--text)">INTELLIGENCE</div>
       <div class="stack-tools">
         <span class="stack-tool new">OONI API</span>
         <span class="stack-tool new">Hamilton Dashboard</span>
@@ -560,15 +561,15 @@
   <div class="semaphore-box">
     <div class="semaphore-title">SEMAPHORE VOTE FLOW — ANONYMOUS DEMOCRATIC DECISION</div>
     <div class="semaphore-flow">
-      <div class="semaphore-step">READ PROPOSAL<br><span style="font-size:8px;color:var(--green-d)">(IPFS CID)</span></div>
+      <div class="semaphore-step">READ PROPOSAL<br><span style="font-size:12px;color:var(--green-d)">(IPFS CID)</span></div>
       <div class="semaphore-arrow">→</div>
-      <div class="semaphore-step">GENERATE ZK PROOF<br><span style="font-size:8px;color:var(--green-d)">(local, ~2s WASM)</span></div>
+      <div class="semaphore-step">GENERATE ZK PROOF<br><span style="font-size:12px;color:var(--green-d)">(local, ~2s WASM)</span></div>
       <div class="semaphore-arrow">→</div>
-      <div class="semaphore-step">SUBMIT NULLIFIER + VOTE<br><span style="font-size:8px;color:var(--green-d)">(GUN.js relay)</span></div>
+      <div class="semaphore-step">SUBMIT NULLIFIER + VOTE<br><span style="font-size:12px;color:var(--green-d)">(GUN.js relay)</span></div>
       <div class="semaphore-arrow">→</div>
-      <div class="semaphore-step">VERIFY PROOF<br><span style="font-size:8px;color:var(--green-d)">(IPFS Merkle tree)</span></div>
+      <div class="semaphore-step">VERIFY PROOF<br><span style="font-size:12px;color:var(--green-d)">(IPFS Merkle tree)</span></div>
       <div class="semaphore-arrow">→</div>
-      <div class="semaphore-step">RESULT TALLIED<br><span style="font-size:8px;color:var(--green-d)">(publicly verifiable,<br>individually anonymous)</span></div>
+      <div class="semaphore-step">RESULT TALLIED<br><span style="font-size:12px;color:var(--green-d)">(publicly verifiable,<br>individually anonymous)</span></div>
     </div>
   </div>
 </div>
@@ -624,7 +625,7 @@
     <strong>The censors are centralized. We should not be.</strong><br>
     Every chapter that runs its own node, pins its own archive, and holds its own keys<br>
     is a chapter that cannot be silenced by taking down one server, one domain, one organization.<br><br>
-    <span style="color:var(--cyan-d)">This is not a product. It is a protocol for democratic survival.</span>
+    <span style="color:var(--text)">This is not a product. It is a protocol for democratic survival.</span>
   </div>
 </div>
 
