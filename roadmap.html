@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUARDIANET — Evolution Roadmap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060916; --panel:#0b1120; --deep:#030810; --edge:#152035;
+      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
+      --amber:#ffaa00; --lora:#ff66ff; --red:#ff3355; --gold:#ffd700;
+      --font:'Share Tech Mono','Courier New',monospace;
+      --glow-g:0 0 10px rgba(0,255,65,0.5);
+      --glow-c:0 0 10px rgba(0,204,255,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100vh;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+    a{color:inherit;text-decoration:none}
+    .blink{animation:blink 1.1s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    /* HEADER */
+    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .hdr-left{display:flex;align-items:center;gap:12px}
+    .logo-icon{width:30px;height:30px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cyan);animation:pulse 3s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(0,204,255,0.3)}50%{box-shadow:0 0 20px rgba(0,204,255,0.7)}}
+    .logo-text{font-size:13px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
+    .logo-sub{font-size:8px;color:var(--cyan-d);letter-spacing:3px}
+    .hdr-back{font-size:9px;color:var(--cyan-d);border:1px solid var(--edge);padding:4px 8px;letter-spacing:1px}
+    .hdr-back:hover{color:var(--cyan);border-color:var(--cyan-d)}
+
+    /* PREAMBLE */
+    .preamble{padding:24px 20px;border-bottom:1px solid var(--edge);max-width:780px}
+    .preamble-title{font-size:14px;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,0.3);letter-spacing:3px;margin-bottom:12px}
+    .preamble-text{font-size:10px;color:var(--cyan-d);line-height:2;margin-bottom:16px}
+    .preamble-text em{color:var(--green)}
+    .preamble-text strong{color:var(--gold)}
+
+    /* LAYER STACK */
+    .layers{padding:16px 20px 0;border-bottom:1px solid var(--edge)}
+    .layers-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .layer-stack{display:flex;flex-direction:column;gap:3px;max-width:680px;margin-bottom:20px}
+    .layer{display:grid;grid-template-columns:120px 1fr auto;gap:12px;padding:8px 12px;border:1px solid var(--edge);align-items:center}
+    .layer-num{font-size:8px;letter-spacing:2px}
+    .layer-desc{font-size:10px;line-height:1.5}
+    .layer-status{font-size:8px;letter-spacing:1px;white-space:nowrap}
+    .layer.l5{border-left:3px solid var(--green);  } .layer.l5 .layer-num{color:var(--green)}
+    .layer.l4{border-left:3px solid var(--cyan);   } .layer.l4 .layer-num{color:var(--cyan)}
+    .layer.l3{border-left:3px solid var(--amber);  } .layer.l3 .layer-num{color:var(--amber)}
+    .layer.l2{border-left:3px solid var(--lora);   } .layer.l2 .layer-num{color:var(--lora)}
+    .layer.l1{border-left:3px solid var(--red);    } .layer.l1 .layer-num{color:var(--red)}
+    .layer-connector{text-align:center;font-size:10px;color:var(--edge);margin:-2px 0}
+
+    /* PILLAR GRID */
+    .pillars{padding:16px 20px;border-bottom:1px solid var(--edge)}
+    .pillars-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .pillar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+    .pillar{background:var(--panel);border:1px solid var(--edge);padding:14px}
+    .pillar:hover{border-color:var(--green-d)}
+    .pillar-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .pillar-num{font-size:8px;width:22px;height:22px;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .pillar-title{font-size:11px;letter-spacing:2px}
+    .pillar-icon{font-size:16px;margin-left:auto}
+    .pillar.p-green .pillar-num,.pillar.p-green .pillar-title{color:var(--green)}
+    .pillar.p-cyan  .pillar-num,.pillar.p-cyan  .pillar-title{color:var(--cyan)}
+    .pillar.p-amber .pillar-num,.pillar.p-amber .pillar-title{color:var(--amber)}
+    .pillar.p-lora  .pillar-num,.pillar.p-lora  .pillar-title{color:var(--lora)}
+    .pillar.p-gold  .pillar-num,.pillar.p-gold  .pillar-title{color:var(--gold)}
+    .pillar.p-red   .pillar-num,.pillar.p-red   .pillar-title{color:var(--red)}
+    .pillar-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:10px}
+    .pillar-tags{display:flex;flex-wrap:wrap;gap:4px}
+    .tag{font-size:8px;padding:2px 6px;border:1px solid var(--edge);color:var(--cyan-d);letter-spacing:1px}
+    .tag.live{border-color:var(--green-d);color:var(--green-d)}
+    .tag.design{border-color:var(--amber);color:var(--amber)}
+    .tag.concept{border-color:var(--edge);color:var(--edge)}
+
+    /* HARDWARE SECTION */
+    .hw-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
+    .hw-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+    .hw-card{background:var(--deep);border:1px solid var(--edge);border-left:3px solid var(--lora);padding:12px}
+    .hw-card-header{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+    .hw-card-name{font-size:11px;color:var(--lora)}
+    .hw-card-bom{font-size:9px;color:var(--gold)}
+    .hw-card-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:8px}
+    .hw-card-chips{display:flex;flex-wrap:wrap;gap:4px}
+    .chip{font-size:7px;padding:2px 5px;background:var(--panel);color:var(--cyan-d);letter-spacing:1px}
+    .chip.green{color:var(--green-d)}
+    .chip.amber{color:var(--amber)}
+    .hw-card-irl{margin-top:8px;background:#060d1a;border-left:2px solid var(--cyan-d);padding:5px 8px;font-size:8px;color:var(--cyan);line-height:1.6}
+
+    /* STACK DIAGRAM */
+    .stack-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
+    .stack-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .stack-diagram{max-width:720px}
+    .stack-row{display:grid;grid-template-columns:140px 1fr;gap:1px;background:var(--edge);margin-bottom:1px}
+    .stack-label{background:var(--panel);padding:10px 12px;font-size:9px;letter-spacing:2px;display:flex;align-items:center}
+    .stack-tools{background:var(--panel);padding:10px 12px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+    .stack-tool{font-size:9px;padding:2px 7px;border:1px solid var(--edge);letter-spacing:1px}
+    .stack-tool.green{color:var(--green);border-color:var(--green-d)}
+    .stack-tool.cyan{color:var(--cyan);border-color:var(--cyan-d)}
+    .stack-tool.amber{color:var(--amber);border-color:#553300}
+    .stack-tool.lora{color:var(--lora);border-color:#441144}
+    .stack-tool.gold{color:var(--gold);border-color:#554400}
+    .stack-tool.new{color:var(--green-d);border-color:var(--edge);font-style:italic}
+
+    /* GOVERNANCE */
+    .gov-section{padding:16px 20px;border-bottom:1px solid var(--edge)}
+    .gov-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .gov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+    .gov-tier{background:var(--panel);border:1px solid var(--edge);padding:12px}
+    .gov-tier-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .gov-tier-name{font-size:11px;letter-spacing:2px}
+    .gov-tier-badge{font-size:8px;padding:2px 6px;border:1px solid currentColor}
+    .gov-tier.t0 .gov-tier-name,.gov-tier.t0 .gov-tier-badge{color:var(--cyan-d)}
+    .gov-tier.t1 .gov-tier-name,.gov-tier.t1 .gov-tier-badge{color:var(--green)}
+    .gov-tier.t2 .gov-tier-name,.gov-tier.t2 .gov-tier-badge{color:var(--cyan)}
+    .gov-tier.t3 .gov-tier-name,.gov-tier.t3 .gov-tier-badge{color:var(--gold)}
+    .gov-desc{font-size:9px;color:var(--cyan-d);line-height:1.7;margin-bottom:6px}
+    .gov-tech{font-size:8px;line-height:1.7}
+    .gov-tech span{color:var(--amber)}
+
+    .semaphore-box{background:#0a100a;border:1px solid var(--green-d);border-left:3px solid var(--green);padding:12px;margin-top:12px;max-width:680px}
+    .semaphore-title{font-size:8px;letter-spacing:2px;color:var(--green);margin-bottom:8px}
+    .semaphore-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:9px}
+    .semaphore-step{background:var(--panel);border:1px solid var(--green-d);padding:5px 10px;color:var(--green)}
+    .semaphore-arrow{color:var(--green-d)}
+
+    /* PHASES */
+    .phases{padding:16px 20px;border-bottom:1px solid var(--edge)}
+    .phases-title{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:14px}
+    .phase-row{display:grid;grid-template-columns:100px 1fr;gap:12px;margin-bottom:8px;align-items:start}
+    .phase-label{font-size:9px;color:var(--amber);letter-spacing:2px;padding-top:2px}
+    .phase-items{display:flex;flex-wrap:wrap;gap:5px}
+    .phase-item{font-size:9px;padding:3px 8px;border:1px solid var(--edge);color:var(--cyan-d)}
+    .phase-item.done{border-color:var(--green-d);color:var(--green-d)}
+    .phase-item.active{border-color:var(--amber);color:var(--amber)}
+    .phase-item.next{border-color:var(--cyan-d);color:var(--cyan-d)}
+
+    /* PRINCIPLE */
+    .principle{padding:20px;text-align:center;border-top:1px solid var(--edge)}
+    .principle-text{font-size:11px;color:var(--cyan-d);line-height:2;max-width:600px;margin:0 auto}
+    .principle-text strong{color:var(--green);font-size:13px}
+
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="logo-icon">◈</div>
+    <div>
+      <div class="logo-text">DEMOCRACY OS <span class="blink">_</span></div>
+      <div class="logo-sub">GUARDIANET PLATFORM EVOLUTION</div>
+    </div>
+  </div>
+  <a href="index.html" class="hdr-back">← MISSION CONTROL</a>
+</header>
+
+<!-- PREAMBLE -->
+<div class="preamble">
+  <div class="preamble-title">FROM APPLICATION TO INFRASTRUCTURE</div>
+  <div class="preamble-text">
+    GuardianNet today is an app. The evolution makes it an <em>operating system for democratic organizing</em> —
+    a federated stack of open-source tools, cheap reproducible hardware, and community protocols
+    that works when the internet is up, works differently when it's unreliable,
+    and <strong>still works when it's gone.</strong>
+    <br><br>
+    The metric for success is not daily active users.
+    It is: <em>how many chapters could operate indefinitely if guardianet.com disappeared tomorrow?</em>
+    <br><br>
+    That is the answer to censorship. Not a better app. <strong>A protocol.</strong>
+  </div>
+  <a href="EVOLUTION.md" target="_blank" style="font-size:9px;color:var(--green-d);letter-spacing:2px">▸ READ FULL SPEC (EVOLUTION.md)</a>
+</div>
+
+<!-- RESILIENCE LAYERS -->
+<div class="layers">
+  <div class="layers-title">RESILIENCE LAYERS — EVERY LAYER FUNCTIONS WITHOUT THE ONE ABOVE</div>
+  <div class="layer-stack">
+    <div class="layer l5">
+      <div class="layer-num">LAYER 5<br>INTERNET PRESENT</div>
+      <div class="layer-desc" style="color:var(--green)">GuardianNet web + GUN.js + IPFS + Matrix + Nostr + Evidence Pipeline</div>
+      <div class="layer-status" style="color:var(--green)">LIVE NOW</div>
+    </div>
+    <div class="layer-connector">▼</div>
+    <div class="layer l4">
+      <div class="layer-num">LAYER 4<br>INTERNET DEGRADED</div>
+      <div class="layer-desc" style="color:var(--cyan)">Tor circumvention + SSB offline sync + IPFS local node + Briar over WiFi</div>
+      <div class="layer-status" style="color:var(--amber)">DESIGN</div>
+    </div>
+    <div class="layer-connector">▼</div>
+    <div class="layer l3">
+      <div class="layer-num">LAYER 3<br>INTERNET CUT</div>
+      <div class="layer-desc" style="color:var(--amber)">Meshtastic LoRa mesh + tinySSB relay + WiFi ad-hoc (LibreMesh)</div>
+      <div class="layer-status" style="color:var(--amber)">PARTIAL</div>
+    </div>
+    <div class="layer-connector">▼</div>
+    <div class="layer l2">
+      <div class="layer-num">LAYER 2<br>POWER GRID DOWN</div>
+      <div class="layer-desc" style="color:var(--lora)">Solar-powered mesh beacons + battery-backed Democracy Box servers</div>
+      <div class="layer-status" style="color:var(--edge)">HARDWARE ROADMAP</div>
+    </div>
+    <div class="layer-connector">▼</div>
+    <div class="layer l1">
+      <div class="layer-num">LAYER 1<br>ALL DIGITAL BLOCKED</div>
+      <div class="layer-desc" style="color:var(--red)">Printable mission cards + QR dead drops + analog succession protocols</div>
+      <div class="layer-status" style="color:var(--edge)">DESIGN</div>
+    </div>
+  </div>
+</div>
+
+<!-- PILLARS -->
+<div class="pillars">
+  <div class="pillars-title">EIGHT PILLARS</div>
+  <div class="pillar-grid">
+
+    <div class="pillar p-green">
+      <div class="pillar-header">
+        <div class="pillar-num">01</div>
+        <div class="pillar-title">FEDERATION</div>
+        <div class="pillar-icon">🌐</div>
+      </div>
+      <div class="pillar-desc">Every chapter runs its own node. Matrix homeserver + IPFS + SSB + GUN relay + Meshtastic gateway. No center = no single point of failure. The Democracy Box (Raspberry Pi) is the chapter server.</div>
+      <div class="pillar-tags">
+        <span class="tag design">chapter.html</span>
+        <span class="tag design">keys.html</span>
+        <span class="tag">YunoHost</span>
+        <span class="tag">Matrix</span>
+        <span class="tag">IPFS Cluster</span>
+      </div>
+    </div>
+
+    <div class="pillar p-lora">
+      <div class="pillar-header">
+        <div class="pillar-num">02</div>
+        <div class="pillar-title">OPEN HARDWARE</div>
+        <div class="pillar-icon">⚡</div>
+      </div>
+      <div class="pillar-desc">Cheap, mass-reproducible hardware under CERN OHL-S v2. PCB files on IPFS. Flashable from browser. Build workshops. Not everything needs a smartphone or an app store.</div>
+      <div class="pillar-tags">
+        <span class="tag design">hardware.html</span>
+        <span class="tag">Guardian Node v2 ~$38</span>
+        <span class="tag">Proof Witness ~$45</span>
+        <span class="tag">Democracy Box ~$80</span>
+      </div>
+    </div>
+
+    <div class="pillar p-cyan">
+      <div class="pillar-header">
+        <div class="pillar-num">03</div>
+        <div class="pillar-title">EVIDENCE PIPELINE</div>
+        <div class="pillar-icon">🔐</div>
+      </div>
+      <div class="pillar-desc">ProofMode → IPFS bundle → OpenTimestamps → Nostr broadcast → Guardian signatures. Complete chain of custody in 4 button clicks. Verifiable by courts without trusting GuardianNet.</div>
+      <div class="pillar-tags">
+        <span class="tag design">evidence.html</span>
+        <span class="tag live">witness.html</span>
+        <span class="tag">ProofMode</span>
+        <span class="tag">OpenTimestamps</span>
+        <span class="tag">Nostr NIP-1</span>
+      </div>
+    </div>
+
+    <div class="pillar p-amber">
+      <div class="pillar-header">
+        <div class="pillar-num">04</div>
+        <div class="pillar-title">MULTI-PROTOCOL</div>
+        <div class="pillar-icon">📡</div>
+      </div>
+      <div class="pillar-desc">Every critical action publishes to 3 protocols simultaneously. Dead man's switch fires on GUN + Nostr + SMS. Evidence on IPFS + Nostr + SSB. Platform accessible via domain + .onion + IPFS CID.</div>
+      <div class="pillar-tags">
+        <span class="tag">Nostr</span>
+        <span class="tag">SSB/tinySSB</span>
+        <span class="tag">Tor hidden service</span>
+        <span class="tag">SMS Bridge</span>
+        <span class="tag design">Pillar 4 integration</span>
+      </div>
+    </div>
+
+    <div class="pillar p-cyan">
+      <div class="pillar-header">
+        <div class="pillar-num">05</div>
+        <div class="pillar-title">COMMUNITY INTEL</div>
+        <div class="pillar-icon">🛡</div>
+      </div>
+      <div class="pillar-desc">OONI censorship radar + auto-archive-on-censor + Hamilton disinfo feed + Protect Democracy threat level. When a monitored URL goes offline, automatic IPFS archiving triggers across the network.</div>
+      <div class="pillar-tags">
+        <span class="tag design">intel.html</span>
+        <span class="tag">OONI API</span>
+        <span class="tag">Hamilton Dashboard</span>
+        <span class="tag">Information Laundromat</span>
+      </div>
+    </div>
+
+    <div class="pillar p-green">
+      <div class="pillar-header">
+        <div class="pillar-num">06</div>
+        <div class="pillar-title">PSEUDONYMOUS ID</div>
+        <div class="pillar-icon">👤</div>
+      </div>
+      <div class="pillar-desc">Nostr keypair as identity. No email. No phone. No corporate account. zkMe ZK proofs for Sybil-resistant Tier 2 verification without doxxing. Chapter keys via Shamir Secret Sharing.</div>
+      <div class="pillar-tags">
+        <span class="tag design">keys.html</span>
+        <span class="tag">Nostr keypairs</span>
+        <span class="tag">zkMe ZK proofs</span>
+        <span class="tag">Shamir's Secret Sharing</span>
+      </div>
+    </div>
+
+    <div class="pillar p-amber">
+      <div class="pillar-header">
+        <div class="pillar-num">07</div>
+        <div class="pillar-title">OFFLINE FIRST</div>
+        <div class="pillar-icon">🖨</div>
+      </div>
+      <div class="pillar-desc">Full stack degrades to paper. Printable mission cards with Nostr pubkey + mesh channel QR. SSB for offline content. Mapeo for offline organizing maps. When everything fails: analog succession protocol.</div>
+      <div class="pillar-tags">
+        <span class="tag">Anytype</span>
+        <span class="tag">Mapeo</span>
+        <span class="tag">Butter App</span>
+        <span class="tag design">Printable card generator</span>
+        <span class="tag design">Analog protocols doc</span>
+      </div>
+    </div>
+
+    <div class="pillar p-gold">
+      <div class="pillar-header">
+        <div class="pillar-num">08</div>
+        <div class="pillar-title">ZK GOVERNANCE</div>
+        <div class="pillar-icon">🗳</div>
+      </div>
+      <div class="pillar-desc">Anonymous voting via Semaphore ZK protocol. Vote without being seen. Anti-coercion via MACI for chapter-anchor decisions. Forking is healthy — both branches inherit the archive. Reputation staking, not financial.</div>
+      <div class="pillar-tags">
+        <span class="tag design">vote.html</span>
+        <span class="tag">Semaphore.js (WASM)</span>
+        <span class="tag">MACI</span>
+        <span class="tag">Nostr NIP-69</span>
+        <span class="tag">IPFS Merkle tree</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HARDWARE -->
+<div class="hw-section">
+  <div class="hw-title">OPEN-SOURCE HARDWARE MISSION — CHEAP, MASS-PRODUCIBLE, FREEDOM-ORIENTED</div>
+  <div class="hw-grid">
+
+    <div class="hw-card">
+      <div class="hw-card-header">
+        <div class="hw-card-name">GUARDIAN NODE v2</div>
+        <div class="hw-card-bom">~$38 BOM</div>
+      </div>
+      <div class="hw-card-desc">ESP32-S3 + SX1276 LoRa + NEO-6M GPS + TP4056 solar + 18650 battery. Weatherproof. Flashes from browser. Meshtastic encrypted mesh. Indefinite solar runtime.</div>
+      <div class="hw-card-chips">
+        <span class="chip green">Meshtastic fw</span>
+        <span class="chip">10–40km range</span>
+        <span class="chip">AES-256</span>
+        <span class="chip amber">RF detectable</span>
+        <span class="chip">CERN OHL-S v2</span>
+      </div>
+      <div class="hw-card-irl">50 nodes in a mid-sized city = city-wide encrypted comms when cell is jammed or cut.</div>
+    </div>
+
+    <div class="hw-card">
+      <div class="hw-card-header">
+        <div class="hw-card-name">PROOF WITNESS DEVICE</div>
+        <div class="hw-card-bom">~$45 BOM</div>
+      </div>
+      <div class="hw-card-desc">Pi Zero 2W + OV5647 camera + ATECC608A hardware crypto chip. Press one button → hardware-signed photo + GPS + timestamp. ProofMode-compatible. Looks like a USB battery pack.</div>
+      <div class="hw-card-chips">
+        <span class="chip green">Hardware-signed</span>
+        <span class="chip green">ATECC608A</span>
+        <span class="chip">Auto-IPFS on WiFi</span>
+        <span class="chip">Offline-first</span>
+        <span class="chip">No app needed</span>
+      </div>
+      <div class="hw-card-irl">For activists where smartphones are surveilled or absent. Courts accept hardware-signed evidence. Impossible to retroactively forge.</div>
+    </div>
+
+    <div class="hw-card">
+      <div class="hw-card-header">
+        <div class="hw-card-name">MESH RELAY BEACON</div>
+        <div class="hw-card-bom">~$25 BOM</div>
+      </div>
+      <div class="hw-card-desc">Heltec LoRa32 V3 (ESP32+SX1276+OLED built-in). Flash Meshtastic in 2 minutes. Configure channel key via QR. Mount anywhere with USB power. Always-on mesh relay. OLED shows active peers.</div>
+      <div class="hw-card-chips">
+        <span class="chip green">2-min flash</span>
+        <span class="chip">QR channel config</span>
+        <span class="chip">OLED status</span>
+        <span class="chip amber">Always-on = detectable</span>
+      </div>
+      <div class="hw-card-irl">Pre-deploy 10 beacons in a city before an event. They form the backbone. Mobile nodes extend it.</div>
+    </div>
+
+    <div class="hw-card">
+      <div class="hw-card-header">
+        <div class="hw-card-name">DEMOCRACY BOX</div>
+        <div class="hw-card-bom">~$80 BOM</div>
+      </div>
+      <div class="hw-card-desc">Raspberry Pi 4 4GB + YunoHost. Runs Matrix homeserver, IPFS node, Gitea, Nextcloud, SSB pub, GUN relay, Meshtastic gateway. Chapter-in-a-box. 2-hour setup via guided installer.</div>
+      <div class="hw-card-chips">
+        <span class="chip green">Matrix homeserver</span>
+        <span class="chip green">IPFS node</span>
+        <span class="chip">Gitea</span>
+        <span class="chip">SSB pub</span>
+        <span class="chip amber">Known IP = target</span>
+      </div>
+      <div class="hw-card-irl">Seizing one box affects one chapter. The network routes around it. Every chapter is a node.</div>
+    </div>
+
+    <div class="hw-card">
+      <div class="hw-card-header">
+        <div class="hw-card-name">FEATURE PHONE BRIDGE</div>
+        <div class="hw-card-bom">~$20 BOM</div>
+      </div>
+      <div class="hw-card-desc">ESP32 + SIM800L GSM module. Bridges inbound SMS from any $10 Nokia to GuardianNet GUN.js mesh. Outbound: delivers mesh messages as SMS. Based on Openclaw SMS-Gate architecture.</div>
+      <div class="hw-card-chips">
+        <span class="chip green">No smartphone needed</span>
+        <span class="chip">SMS ↔ P2P bridge</span>
+        <span class="chip">Any feature phone</span>
+        <span class="chip amber">SMS metadata visible to carrier</span>
+      </div>
+      <div class="hw-card-irl">Rural organizers with $10 Nokias participate in the mesh. The network extends to people without smartphones.</div>
+    </div>
+
+    <div class="hw-card" style="border-left-color:var(--green-d);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:180px">
+      <div style="font-size:24px;margin-bottom:8px;color:var(--green-d)">+</div>
+      <div style="font-size:10px;color:var(--green-d);letter-spacing:2px;margin-bottom:6px">CONTRIBUTE A DESIGN</div>
+      <div style="font-size:9px;color:var(--cyan-d);line-height:1.7;max-width:180px">Submit KiCad schematics + BOM to Gitea. Reviewed by chapter anchors. Pinned to IPFS. CERN OHL-S v2.</div>
+      <div style="margin-top:10px;font-size:9px;color:var(--green-d)">hardware.html →</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FULL STACK -->
+<div class="stack-section">
+  <div class="stack-title">THE EVOLVED TECH STACK</div>
+  <div class="stack-diagram">
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--green)">REAL-TIME STATE</div>
+      <div class="stack-tools">
+        <span class="stack-tool live green">GUN.js</span>
+        <span class="stack-tool new">Nostr relays</span>
+        <span class="stack-tool new">SSB pubs</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--cyan)">STORAGE</div>
+      <div class="stack-tools">
+        <span class="stack-tool live cyan">IPFS</span>
+        <span class="stack-tool live cyan">OpenTimestamps</span>
+        <span class="stack-tool new">IPFS Cluster</span>
+        <span class="stack-tool new">Filecoin (optional)</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--cyan)">COMMS</div>
+      <div class="stack-tools">
+        <span class="stack-tool live cyan">GUN.js chat</span>
+        <span class="stack-tool new">Matrix federation</span>
+        <span class="stack-tool new">Briar (high-risk 1:1)</span>
+        <span class="stack-tool new">tinySSB/LoRa</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--lora)">MESH / OFF-GRID</div>
+      <div class="stack-tools">
+        <span class="stack-tool live lora">LoRa (Circuit Lab)</span>
+        <span class="stack-tool new lora">Meshtastic firmware</span>
+        <span class="stack-tool new">LibreMesh WiFi</span>
+        <span class="stack-tool new">SMS Bridge</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--gold)">IDENTITY</div>
+      <div class="stack-tools">
+        <span class="stack-tool new gold">Nostr keypairs</span>
+        <span class="stack-tool new gold">zkMe ZK proofs</span>
+        <span class="stack-tool new">Shamir key backup</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--gold)">GOVERNANCE</div>
+      <div class="stack-tools">
+        <span class="stack-tool new gold">Semaphore ZK voting</span>
+        <span class="stack-tool new gold">MACI anti-coercion</span>
+        <span class="stack-tool new">IPFS proposal store</span>
+        <span class="stack-tool new">Nostr NIP-69</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--amber)">EVIDENCE</div>
+      <div class="stack-tools">
+        <span class="stack-tool live amber">Bitcoin OTS</span>
+        <span class="stack-tool new amber">ProofMode</span>
+        <span class="stack-tool new amber">ATECC608A hw-sig</span>
+        <span class="stack-tool new">Nostr signed events</span>
+        <span class="stack-tool new">Helia Verified Fetch</span>
+      </div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label" style="color:var(--cyan-d)">INTELLIGENCE</div>
+      <div class="stack-tools">
+        <span class="stack-tool new">OONI API</span>
+        <span class="stack-tool new">Hamilton Dashboard</span>
+        <span class="stack-tool new">Info Laundromat</span>
+        <span class="stack-tool new">Protect Democracy</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GOVERNANCE -->
+<div class="gov-section">
+  <div class="gov-title">ZK GOVERNANCE — VOTE WITHOUT BEING SEEN</div>
+  <div class="gov-grid">
+    <div class="gov-tier t0">
+      <div class="gov-tier-head">
+        <div class="gov-tier-name">OBSERVER</div>
+        <div class="gov-tier-badge">TIER 0</div>
+      </div>
+      <div class="gov-desc">No identity required. Read evidence, learn concepts, complete quests.</div>
+      <div class="gov-tech">Can: <span>read, browse, signal (unweighted)</span></div>
+    </div>
+    <div class="gov-tier t1">
+      <div class="gov-tier-head">
+        <div class="gov-tier-name">GUARDIAN</div>
+        <div class="gov-tier-badge">TIER 1</div>
+      </div>
+      <div class="gov-desc">Nostr keypair (no personal info). 100+ XP from completed quests. Sybil-resistant via proof-of-work.</div>
+      <div class="gov-tech">Can: <span>submit evidence, join chain, Semaphore vote (1 vote)</span></div>
+    </div>
+    <div class="gov-tier t2">
+      <div class="gov-tier-head">
+        <div class="gov-tier-name">VERIFIED GUARDIAN</div>
+        <div class="gov-tier-badge">TIER 2</div>
+      </div>
+      <div class="gov-desc">Nostr keypair + zkMe ZK proof of "real human" — no identity revealed. Math proves you exist without proving who you are.</div>
+      <div class="gov-tech">Can: <span>mint org-signed witness receipts, Semaphore vote (weighted), hardware submissions</span></div>
+    </div>
+    <div class="gov-tier t3">
+      <div class="gov-tier-head">
+        <div class="gov-tier-name">CHAPTER ANCHOR</div>
+        <div class="gov-tier-badge">TIER 3</div>
+      </div>
+      <div class="gov-desc">Known to other anchors, not the public. Holds chapter keys. Runs Democracy Box. MACI voting for hard forks.</div>
+      <div class="gov-tech">Can: <span>2/3 multisig on platform forks, chapter key custody, IPFS cluster admin</span></div>
+    </div>
+  </div>
+
+  <div class="semaphore-box">
+    <div class="semaphore-title">SEMAPHORE VOTE FLOW — ANONYMOUS DEMOCRATIC DECISION</div>
+    <div class="semaphore-flow">
+      <div class="semaphore-step">READ PROPOSAL<br><span style="font-size:8px;color:var(--green-d)">(IPFS CID)</span></div>
+      <div class="semaphore-arrow">→</div>
+      <div class="semaphore-step">GENERATE ZK PROOF<br><span style="font-size:8px;color:var(--green-d)">(local, ~2s WASM)</span></div>
+      <div class="semaphore-arrow">→</div>
+      <div class="semaphore-step">SUBMIT NULLIFIER + VOTE<br><span style="font-size:8px;color:var(--green-d)">(GUN.js relay)</span></div>
+      <div class="semaphore-arrow">→</div>
+      <div class="semaphore-step">VERIFY PROOF<br><span style="font-size:8px;color:var(--green-d)">(IPFS Merkle tree)</span></div>
+      <div class="semaphore-arrow">→</div>
+      <div class="semaphore-step">RESULT TALLIED<br><span style="font-size:8px;color:var(--green-d)">(publicly verifiable,<br>individually anonymous)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASES -->
+<div class="phases">
+  <div class="phases-title">IMPLEMENTATION PHASES</div>
+  <div class="phase-row">
+    <div class="phase-label">PHASE 2<br>Q1 2026</div>
+    <div class="phase-items">
+      <span class="phase-item done">✓ Mission Control Dashboard</span>
+      <span class="phase-item done">✓ Quest System + Threat Models</span>
+      <span class="phase-item done">✓ Tools Library</span>
+      <span class="phase-item done">✓ Archive Missions</span>
+      <span class="phase-item active">→ Hardware v2 schematics</span>
+      <span class="phase-item active">→ Nostr heartbeat integration</span>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-label">PHASE 3<br>Q2 2026</div>
+    <div class="phase-items">
+      <span class="phase-item next">evidence.html pipeline</span>
+      <span class="phase-item next">hardware.html + build log</span>
+      <span class="phase-item next">Guardian Node v2 PCB → IPFS</span>
+      <span class="phase-item next">Proof Witness Device prototype</span>
+      <span class="phase-item next">Democracy Box setup guide</span>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-label">PHASE 4<br>Q3 2026</div>
+    <div class="phase-items">
+      <span class="phase-item next">chapter.html + keys.html</span>
+      <span class="phase-item next">Nostr identity (Tier 1)</span>
+      <span class="phase-item next">zkMe Tier 2 verification</span>
+      <span class="phase-item next">SSB bridge (offline content)</span>
+      <span class="phase-item next">First hardware workshops</span>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-label">PHASE 5<br>Q4 2026</div>
+    <div class="phase-items">
+      <span class="phase-item next">intel.html (OONI + disinfo radar)</span>
+      <span class="phase-item next">Semaphore vote.html</span>
+      <span class="phase-item next">tinySSB LoRa content relay</span>
+      <span class="phase-item next">Feature Phone Bridge v1</span>
+      <span class="phase-item next">Succession protocol generator</span>
+    </div>
+  </div>
+</div>
+
+<div class="principle">
+  <div class="principle-text">
+    <strong>The censors are centralized. We should not be.</strong><br>
+    Every chapter that runs its own node, pins its own archive, and holds its own keys<br>
+    is a chapter that cannot be silenced by taking down one server, one domain, one organization.<br><br>
+    <span style="color:var(--cyan-d)">This is not a product. It is a protocol for democratic survival.</span>
+  </div>
+</div>
+
+</body>
+</html>
