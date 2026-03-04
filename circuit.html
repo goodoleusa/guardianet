@@ -6,103 +6,104 @@
   <title>CIRCUIT LAB — Guardian Network</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#060916; --panel:#0b1120; --deep:#030810;
-      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
-      --amber:#ffaa00; --red:#ff3344; --lora:#ff66ff; --edge:#152035;
-      --font:'Share Tech Mono','Courier New',monospace;
-      --glow-g:0 0 10px rgba(0,255,65,0.5);
-      --glow-c:0 0 10px rgba(0,204,255,0.5);
-      --glow-a:0 0 10px rgba(255,170,0,0.5);
+      --bg:#060a12; --panel:#0c1422; --deep:#040810;
+      --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
+      --amber:#f59e0b; --red:#ef4444; --lora:#c084fc; --edge:#1a2840;
+      --text:#cbd5e1; --text-dim:#64748b;
+      --font:'Courier Prime','Courier New',monospace;
+      --glow-g:0 0 12px rgba(34,197,94,0.5);
+      --glow-c:0 0 12px rgba(56,189,248,0.5);
+      --glow-a:0 0 12px rgba(245,158,11,0.5);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px;overflow:hidden}
-    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;overflow:hidden}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
 
     /* ── Toolbar ── */
-    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:0 14px;display:flex;align-items:center;gap:10px;height:40px;flex-shrink:0}
-    .logo{font-size:13px;color:var(--amber);text-shadow:var(--glow-a);letter-spacing:2px;white-space:nowrap}
-    .tb-title{flex:1;font-size:11px;color:var(--cyan);letter-spacing:1px;cursor:pointer;border:none;background:transparent;font-family:var(--font);outline:none;min-width:0}
+    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:0 16px;display:flex;align-items:center;gap:10px;height:52px;flex-shrink:0}
+    .logo{font-size:16px;color:var(--amber);text-shadow:var(--glow-a);letter-spacing:2px;white-space:nowrap}
+    .tb-title{flex:1;font-size:15px;color:var(--cyan);letter-spacing:1px;cursor:pointer;border:none;background:transparent;font-family:var(--font);outline:none;min-width:0}
     .tb-title:focus{border-bottom:1px solid var(--cyan)}
-    .tb-btn{background:rgba(0,204,255,0.06);border:1px solid var(--cyan-d);color:var(--cyan-d);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
+    .tb-btn{background:rgba(56,189,248,0.06);border:1px solid var(--edge);color:var(--text-dim);font-family:var(--font);font-size:13px;padding:5px 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
     .tb-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow-c)}
-    .tb-btn.active{background:rgba(0,204,255,0.15);border-color:var(--cyan);color:var(--cyan)}
-    .tb-sep{width:1px;height:20px;background:var(--edge)}
-    .tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-    .tb-right a{color:var(--cyan-d);text-decoration:none;font-size:9px}
+    .tb-btn.active{background:rgba(56,189,248,0.15);border-color:var(--cyan);color:var(--cyan)}
+    .tb-sep{width:1px;height:24px;background:var(--edge)}
+    .tb-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .tb-right a{color:var(--text-dim);text-decoration:none;font-size:13px}
     .tb-right a:hover{color:var(--cyan)}
-    .cid-pill{background:rgba(0,255,65,0.07);border:1px solid var(--green-d);color:var(--green-d);font-size:8px;padding:2px 7px;letter-spacing:.5px;white-space:nowrap;cursor:pointer}
+    .cid-pill{background:rgba(34,197,94,0.07);border:1px solid var(--green-d);color:var(--green-d);font-size:12px;padding:3px 9px;letter-spacing:.5px;white-space:nowrap;cursor:pointer}
     .cid-pill:hover{border-color:var(--green);color:var(--green)}
 
     /* ── Layout ── */
-    .layout{display:flex;height:calc(100vh - 40px);overflow:hidden}
+    .layout{display:flex;height:calc(100vh - 52px);overflow:hidden}
 
     /* ── Sidebar ── */
-    .sidebar{width:200px;min-width:200px;border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
+    .sidebar{width:420px;min-width:420px;border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
     .sidebar-tabs{display:flex;border-bottom:1px solid var(--edge);flex-shrink:0}
-    .stab{flex:1;padding:5px 4px;font-size:9px;color:var(--cyan-d);cursor:pointer;text-align:center;letter-spacing:.5px;border-bottom:2px solid transparent}
+    .stab{flex:1;padding:8px 4px;font-size:12px;color:var(--text-dim);cursor:pointer;text-align:center;letter-spacing:.5px;border-bottom:2px solid transparent}
     .stab:hover{color:var(--cyan)}
     .stab.active{color:var(--amber);border-bottom-color:var(--amber)}
     .sidebar-pane{flex:1;overflow-y:auto;display:none;flex-direction:column}
     .sidebar-pane.active{display:flex}
 
     /* Catalog */
-    .cat-hdr{padding:5px 9px;font-size:8px;color:var(--cyan-d);letter-spacing:2px;background:rgba(0,0,0,0.2);cursor:pointer;display:flex;justify-content:space-between;user-select:none;flex-shrink:0}
+    .cat-hdr{padding:8px 12px;font-size:11px;color:var(--text-dim);letter-spacing:2px;background:rgba(0,0,0,0.2);cursor:pointer;display:flex;justify-content:space-between;user-select:none;flex-shrink:0}
     .cat-hdr:hover{color:var(--cyan)}
     .cat-body{display:flex;flex-direction:column}
-    .comp-entry{padding:5px 12px;font-size:10px;color:var(--cyan-d);cursor:pointer;display:flex;align-items:center;gap:7px;border-left:2px solid transparent}
-    .comp-entry:hover{color:var(--green);border-left-color:var(--green);background:rgba(0,255,65,0.04)}
-    .comp-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
-    .comp-name{flex:1;font-size:9px;letter-spacing:.5px}
+    .comp-entry{padding:8px 14px;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;border-left:2px solid transparent}
+    .comp-entry:hover{color:var(--green);border-left-color:var(--green);background:rgba(34,197,94,0.04)}
+    .comp-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+    .comp-name{flex:1;font-size:13px;letter-spacing:.5px}
 
     /* Properties */
-    .prop-section{padding:10px 10px 4px}
-    .prop-title{font-size:8px;color:var(--cyan-d);letter-spacing:2px;margin-bottom:8px;border-bottom:1px solid var(--edge);padding-bottom:4px}
-    .prop-row{margin-bottom:6px}
-    .prop-label{font-size:8px;color:var(--cyan-d);margin-bottom:2px}
-    .prop-val{font-size:10px;color:var(--amber);letter-spacing:.5px}
-    .prop-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--green);font-family:var(--font);font-size:10px;padding:3px 5px;outline:none}
+    .prop-section{padding:14px 14px 6px}
+    .prop-title{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid var(--edge);padding-bottom:5px}
+    .prop-row{margin-bottom:10px}
+    .prop-label{font-size:12px;color:var(--text-dim);margin-bottom:3px}
+    .prop-val{font-size:14px;color:var(--amber);letter-spacing:.5px}
+    .prop-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:5px 8px;outline:none}
     .prop-input:focus{border-color:var(--cyan)}
-    .pin-list{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
-    .pin-chip{background:rgba(0,204,255,0.08);border:1px solid var(--cyan-d);color:var(--cyan-d);font-size:8px;padding:1px 5px;letter-spacing:.5px}
-    .no-sel{padding:16px 10px;text-align:center;font-size:9px;color:var(--cyan-d);line-height:2;opacity:0.6}
+    .pin-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+    .pin-chip{background:rgba(56,189,248,0.08);border:1px solid var(--edge);color:var(--cyan);font-size:12px;padding:2px 7px;letter-spacing:.5px}
+    .no-sel{padding:20px 14px;text-align:center;font-size:14px;color:var(--text-dim);line-height:2;opacity:0.6}
 
     /* ── Canvas ── */
     .canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
-    .canvas-toolbar{padding:3px 8px;background:var(--panel);border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:9px;color:var(--cyan-d)}
+    .canvas-toolbar{padding:5px 12px;background:var(--panel);border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:12px;color:var(--text-dim)}
     .canvas-toolbar span{white-space:nowrap}
     .canvas-spacer{flex:1}
-    .legend-item{display:flex;align-items:center;gap:3px}
-    .legend-dot{width:8px;height:2px;flex-shrink:0}
+    .legend-item{display:flex;align-items:center;gap:4px}
+    .legend-dot{width:10px;height:2px;flex-shrink:0}
     #circuitSvg{flex:1;width:100%;cursor:default}
 
     /* ── JSON panel ── */
     .json-panel{background:var(--panel);border-top:1px solid var(--edge);flex-shrink:0;display:flex;flex-direction:column;transition:height .2s}
-    .json-panel.collapsed{height:26px}
-    .json-panel.expanded{height:200px}
-    .json-bar{height:26px;padding:0 8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--edge);flex-shrink:0;font-size:9px;color:var(--cyan-d)}
-    .json-bar .tb-btn{padding:1px 6px;font-size:8px}
-    .json-editor{flex:1;background:var(--deep);border:none;color:var(--green);font-family:var(--font);font-size:10px;padding:6px 10px;outline:none;resize:none;tab-size:2;display:none}
+    .json-panel.collapsed{height:34px}
+    .json-panel.expanded{height:220px}
+    .json-bar{height:34px;padding:0 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--edge);flex-shrink:0;font-size:12px;color:var(--text-dim)}
+    .json-bar .tb-btn{padding:2px 8px;font-size:12px}
+    .json-editor{flex:1;background:var(--deep);border:none;color:var(--green);font-family:var(--font);font-size:13px;padding:8px 12px;outline:none;resize:none;tab-size:2;display:none}
     .json-panel.expanded .json-editor{display:block}
 
     /* ── Status bar ── */
-    .statusbar{height:22px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 14px;gap:16px;font-size:8px;color:var(--cyan-d);flex-shrink:0}
+    .statusbar{height:28px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 16px;gap:16px;font-size:12px;color:var(--text-dim);flex-shrink:0}
     .sv{color:var(--green)}
 
     /* ── D3 node styles (set on SVG elements) ── */
     .node-group{cursor:pointer}
     .node-group:hover .node-rect{filter:brightness(1.3)}
     .link-line{stroke-width:1.5;fill:none;opacity:0.8}
-    .link-label{font-size:8px;font-family:var(--font);fill:rgba(0,204,255,0.6);pointer-events:none}
+    .link-label{font-size:11px;font-family:var(--font);fill:rgba(56,189,248,0.6);pointer-events:none}
     .node-rect{rx:3;ry:3;stroke-width:1}
     .node-label-id{font-family:var(--font);font-weight:bold;pointer-events:none}
-    .node-label-name{font-family:var(--font);pointer-events:none;fill:#8aaecc}
+    .node-label-name{font-family:var(--font);pointer-events:none;fill:#94a3b8}
 
-    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:var(--panel)}
-    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+    ::-webkit-scrollbar-thumb{background:var(--edge)}
     @keyframes blink{50%{opacity:0}}
     .blink{animation:blink 1.1s step-end infinite}
   </style>
@@ -120,6 +121,7 @@
   <button class="tb-btn" onclick="loadExample('temp-monitor')">Temp Monitor</button>
   <button class="tb-btn" onclick="clearCanvas()">Clear</button>
   <button class="tb-btn" onclick="autoLayout()">Auto Layout</button>
+  <button class="tb-btn" onclick="showPowerBudget()">Power Budget</button>
   <div class="tb-sep"></div>
   <button class="tb-btn" onclick="shareCircuit()">Share via IPFS…</button>
   <div class="tb-sep"></div>
@@ -138,6 +140,8 @@
     <div class="sidebar-tabs">
       <div class="stab active" id="stab-catalog" onclick="switchSTab('catalog')">CATALOG</div>
       <div class="stab" id="stab-props" onclick="switchSTab('props')">PROPS</div>
+      <div class="stab" id="stab-power" onclick="switchSTab('power')">POWER</div>
+      <div class="stab" id="stab-problem" onclick="switchSTab('problem')">PROBLEM</div>
       <div class="stab" id="stab-wiki" onclick="switchSTab('wiki')">WIKI</div>
     </div>
 
@@ -169,21 +173,86 @@
       </div>
     </div>
 
+    <!-- Power pane -->
+    <div class="sidebar-pane" id="spane-power">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🔋 POWER BUDGET</div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">BATTERY TYPE</label>
+          <select id="batteryType" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:6px 8px">
+            <option value="lipo_1000">LiPo 1000mAh (3.7V)</option>
+            <option value="lipo_2000">LiPo 2000mAh (3.7V)</option>
+            <option value="lipo_3000">LiPo 3000mAh (3.7V)</option>
+            <option value="lipo_5000">LiPo 5000mAh (3.7V)</option>
+            <option value="vape_400">Vape 400mAh (3.7V)</option>
+            <option value="vape_800">Vape 800mAh (3.7V)</option>
+            <option value="vape_1200">Vape 1200mAh (3.7V)</option>
+            <option value="cr2032">CR2032 Coin Cell (3V)</option>
+            <option value="cr123a">CR123A (3V)</option>
+            <option value="aa_alkaline">AA Alkaline (1.5V x 2)</option>
+            <option value="aaa_alkaline">AAA Alkaline (1.5V x 2)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">OPERATING MODE</label>
+          <select id="operatingMode" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:6px 8px">
+            <option value="continuous">Continuous (24/7)</option>
+            <option value="periodic">Periodic (every 10min)</option>
+            <option value="low_power">Low Power (sleep 90%)</option>
+            <option value="ultra_low">Ultra Low (sleep 99%)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <button class="tb-btn" onclick="calculatePowerBudget()" style="width:100%;font-size:14px;padding:8px">Calculate Budget</button>
+        </div>
+        <div id="powerResults" style="background:var(--deep);border:1px solid var(--edge);padding:12px;font-size:13px;line-height:1.8">
+          <div style="color:var(--green);margin-bottom:6px">Results will appear here</div>
+          <div style="color:var(--text-dim)">Select battery and mode, then click Calculate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem pane -->
+    <div class="sidebar-pane" id="spane-problem">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🎯 PROBLEM & SOLUTION</div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">PROBLEM STATEMENT</label>
+          <textarea id="problemStatement" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:90px;resize:vertical" placeholder="Describe the problem this circuit is solving..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">CONSTRAINTS & REQUIREMENTS</label>
+          <textarea id="constraints" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:70px;resize:vertical" placeholder="Power budget, size limits, environmental conditions, cost targets..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">FEATURE REQUESTS</label>
+          <textarea id="features" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:70px;resize:vertical" placeholder="Specific capabilities, interfaces, performance targets..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <button class="tb-btn" onclick="saveProblemDefinition()" style="width:100%;font-size:14px;padding:8px">Save Problem Definition</button>
+        </div>
+        <div id="problemResults" style="background:var(--deep);border:1px solid var(--edge);padding:12px;font-size:13px;line-height:1.8">
+          <div style="color:var(--green);margin-bottom:6px">Problem definition will be saved with circuit</div>
+          <div style="color:var(--text-dim)">This information travels with the design when exported</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Wiki pane -->
     <div class="sidebar-pane" id="spane-wiki">
-      <div id="wikiContent" style="padding:10px;font-size:9px;color:var(--cyan-d);line-height:2">
-        <div style="color:var(--amber);margin-bottom:8px;font-size:10px">📚 COMPONENT WIKI</div>
+      <div id="wikiContent" style="padding:14px;font-size:14px;color:var(--text);line-height:1.9">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">📚 COMPONENT WIKI</div>
         <div>Click a component in the catalog to see its datasheet links and usage notes.</div>
-        <div style="margin-top:12px;color:var(--cyan-d)">Or paste an IPFS CID in chat to share a schematic file.</div>
-        <div style="margin-top:12px;border-top:1px solid var(--edge);padding-top:8px">
-          <div style="color:var(--green);margin-bottom:4px">QUICK LINKS</div>
+        <div style="margin-top:14px;color:var(--text-dim)">Or paste an IPFS CID in chat to share a schematic file.</div>
+        <div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px">
+          <div style="color:var(--green);margin-bottom:8px;letter-spacing:1px">QUICK LINKS</div>
           <div>• Arduino pinout: <span style="color:var(--amber)">ipfs add pinout.pdf</span></div>
           <div>• DHT22 datasheet</div>
           <div>• ESP32 dev board</div>
           <div>• KiCad files via IPFS</div>
         </div>
-        <div style="margin-top:12px;border-top:1px solid var(--edge);padding-top:8px">
-          <div style="color:var(--lora);margin-bottom:4px">NECTO / MIKROC</div>
+        <div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px">
+          <div style="color:var(--lora);margin-bottom:8px;letter-spacing:1px">NECTO / MIKROC</div>
           <div>Export NECTO project → zip → ipfs add → share CID in #hardware-lab</div>
         </div>
       </div>
@@ -237,77 +306,80 @@
 
 <script>
 // ── COMPONENT CATALOG ─────────────────────────────────────────────────────────
+// price: typical USD from North American suppliers (Adafruit/SparkFun/DigiKey/Amazon)
+// buy: search URL — opens results, not a specific product (links stay valid)
 const CATALOG = {
   MCU: [
-    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#00ccff', pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
-    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#00ccff', pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
-    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#00ccff', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
-    { type:'esp32',         label:'ESP32',          icon:'📡', color:'#00bbff', pins:['GPIO0-39','3V3','GND','EN','VIN'] },
-    { type:'esp8266',       label:'ESP8266',        icon:'📡', color:'#00bbff', pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
-    { type:'attiny85',      label:'ATtiny85',       icon:'▪',  color:'#0088aa', pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
-    { type:'stm32f103',     label:'STM32F103',      icon:'🔲', color:'#4488ff', pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
-    { type:'raspberry_pi',  label:'Raspberry Pi',   icon:'🍓', color:'#cc3377', pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
+    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#38bdf8', price:28.00, buy:'https://www.adafruit.com/search?q=arduino+uno',      pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
+    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#38bdf8', price:22.00, buy:'https://www.adafruit.com/search?q=arduino+nano',     pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
+    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#38bdf8', price:48.00, buy:'https://www.digikey.com/en/products/filter?q=arduino+mega', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
+    { type:'esp32',         label:'ESP32 Dev Board',icon:'📡', color:'#22c55e', price: 9.00, buy:'https://www.adafruit.com/search?q=esp32+dev+board',  pins:['GPIO0-39','3V3','GND','EN','VIN'] },
+    { type:'esp8266',       label:'ESP8266 NodeMCU',icon:'📡', color:'#22c55e', price: 8.00, buy:'https://www.adafruit.com/search?q=esp8266+nodemcu',  pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
+    { type:'attiny85',      label:'ATtiny85',        icon:'▪',  color:'#0ea5e9', price: 2.50, buy:'https://www.digikey.com/en/products/filter?q=attiny85',  pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
+    { type:'stm32f103',     label:'STM32F103 Blue Pill',icon:'🔲',color:'#6366f1',price:8.00, buy:'https://www.amazon.com/s?k=stm32+blue+pill',       pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
+    { type:'raspberry_pi',  label:'Raspberry Pi 4B',icon:'🍓', color:'#ec4899', price:55.00, buy:'https://www.adafruit.com/search?q=raspberry+pi+4',  pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
   ],
   SENSOR: [
-    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#00ff41', pins:['VCC','DATA','NC','GND'] },
-    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#00ff41', pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
-    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#00ff41', pins:['VCC','TRIG','ECHO','GND'] },
-    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#00cc44', pins:['VCC','OUT','GND'] },
-    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#00cc44', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
-    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#00ff41', pins:['GND','DQ','VDD'] },
-    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#00cc44', pins:['VCC','GND','SCL','SDA','INT'] },
-    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#88cc00', pins:['1','2'] },
+    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=dht22',     pins:['VCC','DATA','NC','GND'] },
+    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=bmp280',     pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
+    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#22c55e', price: 3.95, buy:'https://www.adafruit.com/search?q=hc-sr04',   pins:['VCC','TRIG','ECHO','GND'] },
+    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#22c55e', price: 7.95, buy:'https://www.adafruit.com/search?q=pir+motion', pins:['VCC','OUT','GND'] },
+    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#22c55e', price: 6.95, buy:'https://www.sparkfun.com/search/results?term=mpu6050', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
+    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=ds18b20',   pins:['GND','DQ','VDD'] },
+    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#22c55e', price: 6.95, buy:'https://www.amazon.com/s?k=gy-521+mpu6050',   pins:['VCC','GND','SCL','SDA','INT'] },
+    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#84cc16', price: 0.95, buy:'https://www.adafruit.com/search?q=photoresistor', pins:['1','2'] },
   ],
   DISPLAY: [
-    { type:'oled_128x64', label:'OLED 128×64',    icon:'🖥', color:'#ffaa00', pins:['VCC','GND','SCL','SDA'] },
-    { type:'lcd_16x2',    label:'LCD 16×2 I2C',   icon:'🖥', color:'#ffaa00', pins:['VCC','GND','SDA','SCL'] },
-    { type:'tft_240x320', label:'TFT 240×320',     icon:'🖥', color:'#ff8800', pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
-    { type:'neopixel',    label:'NeoPixel Strip',  icon:'💡', color:'#ff6644', pins:['5V','DIN','GND'] },
-    { type:'max7219',     label:'LED Matrix',      icon:'⊞',  color:'#ff6644', pins:['VCC','GND','DIN','CS','CLK'] },
-    { type:'sevenseg',    label:'7-Segment',       icon:'7️⃣', color:'#ff8800', pins:['a','b','c','d','e','f','g','dp','GND'] },
+    { type:'oled_128x64', label:'OLED 128×64 I2C', icon:'🖥', color:'#f59e0b', price:13.95, buy:'https://www.adafruit.com/search?q=oled+128x64',    pins:['VCC','GND','SCL','SDA'] },
+    { type:'lcd_16x2',    label:'LCD 16×2 I2C',    icon:'🖥', color:'#f59e0b', price: 9.95, buy:'https://www.adafruit.com/search?q=lcd+16x2+i2c',   pins:['VCC','GND','SDA','SCL'] },
+    { type:'tft_240x320', label:'TFT 240×320',      icon:'🖥', color:'#f97316', price:14.95, buy:'https://www.adafruit.com/search?q=tft+240x320',    pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
+    { type:'neopixel',    label:'NeoPixel Strip',   icon:'💡', color:'#ef4444', price: 9.95, buy:'https://www.adafruit.com/search?q=neopixel+strip',  pins:['5V','DIN','GND'] },
+    { type:'max7219',     label:'LED Matrix 8×8',   icon:'⊞',  color:'#ef4444', price: 7.95, buy:'https://www.amazon.com/s?k=max7219+led+matrix',    pins:['VCC','GND','DIN','CS','CLK'] },
+    { type:'sevenseg',    label:'7-Segment 4-digit',icon:'7️⃣', color:'#f97316', price: 5.95, buy:'https://www.adafruit.com/search?q=7+segment+display', pins:['a','b','c','d','e','f','g','dp','GND'] },
   ],
   POWER: [
-    { type:'battery_9v',  label:'9V Battery',     icon:'🔋', color:'#ffcc00', pins:['+','-'] },
-    { type:'lm7805',      label:'LM7805 5V Reg',  icon:'⚡', color:'#ffcc00', pins:['IN','GND','OUT'] },
-    { type:'lipo_3v7',    label:'LiPo 3.7V',      icon:'🔋', color:'#ffcc00', pins:['+','-'] },
-    { type:'tp4056',      label:'TP4056 Charger',  icon:'⚡', color:'#ffcc00', pins:['IN+','IN-','BAT+','BAT-','OUT+','OUT-'] },
-    { type:'usb_power',   label:'USB Power',       icon:'🔌', color:'#ffcc00', pins:['5V','GND'] },
+    { type:'battery_9v',  label:'9V Battery',       icon:'🔋', color:'#fbbf24', price: 2.95, buy:'https://www.amazon.com/s?k=9v+alkaline+battery',    pins:['+','-'] },
+    { type:'lm7805',      label:'LM7805 5V Reg',    icon:'⚡', color:'#fbbf24', price: 1.50, buy:'https://www.digikey.com/en/products/filter?q=lm7805', pins:['IN','GND','OUT'] },
+    { type:'lipo_3v7',    label:'LiPo 3.7V 1000mAh',icon:'🔋',color:'#fbbf24', price: 9.95, buy:'https://www.adafruit.com/search?q=lipo+battery+3.7v', pins:['+','-'] },
+    { type:'tp4056',      label:'TP4056 LiPo Charger',icon:'⚡',color:'#fbbf24',price: 2.95, buy:'https://www.amazon.com/s?k=tp4056+lipo+charger',    pins:['IN+','IN-','BAT+','BAT-','OUT+','OUT-'] },
+    { type:'usb_power',   label:'USB 5V Power Bank', icon:'🔌', color:'#fbbf24', price: 8.00, buy:'https://www.amazon.com/s?k=usb+power+bank+5v',      pins:['5V','GND'] },
+    { type:'solar_panel', label:'Solar Panel 6V/2W', icon:'☀',  color:'#fbbf24', price:12.95, buy:'https://www.adafruit.com/search?q=solar+panel+6v',  pins:['+','-'] },
   ],
   PASSIVE: [
-    { type:'resistor',    label:'Resistor',        icon:'▭', color:'#888888', pins:['1','2'] },
-    { type:'capacitor',   label:'Capacitor',       icon:'⊢', color:'#888888', pins:['+','-'] },
-    { type:'led',         label:'LED',             icon:'●', color:'#ff6666', pins:['+','-'] },
-    { type:'button',      label:'Push Button',     icon:'⊙', color:'#aaaaaa', pins:['1','2'] },
-    { type:'pot',         label:'Potentiometer',   icon:'↻', color:'#888888', pins:['1','WIPER','2'] },
-    { type:'relay_5v',    label:'5V Relay',        icon:'⏻', color:'#888888', pins:['VCC','GND','IN','NO','COM','NC'] },
+    { type:'resistor',  label:'Resistors (assorted)', icon:'▭', color:'#94a3b8', price: 5.95, buy:'https://www.adafruit.com/search?q=resistor+kit',    pins:['1','2'] },
+    { type:'capacitor', label:'Capacitors (assorted)', icon:'⊢', color:'#94a3b8', price: 5.95, buy:'https://www.amazon.com/s?k=capacitor+assortment+kit', pins:['+','-'] },
+    { type:'led',       label:'LEDs (assorted 5mm)',  icon:'●',  color:'#f87171', price: 4.95, buy:'https://www.adafruit.com/search?q=led+assortment',   pins:['+','-'] },
+    { type:'button',    label:'Tactile Buttons',      icon:'⊙',  color:'#94a3b8', price: 2.50, buy:'https://www.adafruit.com/search?q=tactile+button',  pins:['1','2'] },
+    { type:'pot',       label:'10kΩ Potentiometer',   icon:'↻',  color:'#94a3b8', price: 0.95, buy:'https://www.sparkfun.com/search/results?term=potentiometer+10k', pins:['1','WIPER','2'] },
+    { type:'relay_5v',  label:'5V Relay Module',      icon:'⏻',  color:'#94a3b8', price: 3.95, buy:'https://www.amazon.com/s?k=5v+relay+module+arduino', pins:['VCC','GND','IN','NO','COM','NC'] },
   ],
   CELLULAR: [
-    { type:'sim800l',  label:'SIM800L GSM/GPRS', icon:'📱', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
-    { type:'sim7600e', label:'SIM7600E 4G LTE',  icon:'📱', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
-    { type:'a9g',      label:'A9G GSM+GPS Combo',icon:'🛰',  color:'#ff8844', pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
-    { type:'sim7000g', label:'SIM7000G NB-IoT',  icon:'📡', color:'#ff6633', pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
-    { type:'ec21',     label:'EC21 LTE Cat-1',   icon:'📱', color:'#ff5522', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
+    { type:'sim800l',  label:'SIM800L GSM/GPRS',  icon:'📱', color:'#f97316', price:12.00, buy:'https://www.amazon.com/s?k=sim800l+gsm+module',   pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
+    { type:'sim7600e', label:'SIM7600E 4G LTE',   icon:'📱', color:'#f97316', price:55.00, buy:'https://www.amazon.com/s?k=sim7600e+4g+module',   pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
+    { type:'a9g',      label:'A9G GSM+GPS',        icon:'🛰',  color:'#fb923c', price:15.00, buy:'https://www.amazon.com/s?k=a9g+gsm+gps+module',  pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
+    { type:'sim7000g', label:'SIM7000G NB-IoT',   icon:'📡', color:'#f97316', price:45.00, buy:'https://www.amazon.com/s?k=sim7000g+nb-iot',      pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
+    { type:'ec21',     label:'EC21 LTE Cat-1',    icon:'📱', color:'#ea580c', price:65.00, buy:'https://www.digikey.com/en/products/filter?q=ec21+quectel', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
   ],
   GPS: [
-    { type:'neo6m',    label:'NEO-6M GPS',       icon:'🛰',  color:'#44ffaa', pins:['VCC','GND','TX','RX','PPS'] },
-    { type:'neo8m',    label:'NEO-8M GPS',        icon:'🛰',  color:'#44ffaa', pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
-    { type:'l76k',     label:'L76K GPS',          icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
-    { type:'gtu7',     label:'GT-U7 GPS',         icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TX','RX','PPS'] },
-    { type:'atgm336h', label:'ATGM336H GPS/BDS',  icon:'🛰',  color:'#22ddaa', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
+    { type:'neo6m',    label:'NEO-6M GPS',        icon:'🛰',  color:'#4ade80', price:10.00, buy:'https://www.amazon.com/s?k=neo-6m+gps+module',   pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'neo8m',    label:'NEO-8M GPS',         icon:'🛰',  color:'#4ade80', price:12.00, buy:'https://www.amazon.com/s?k=neo-8m+gps+module',   pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
+    { type:'l76k',     label:'L76K GPS (Quectel)', icon:'🛰',  color:'#22d3ee', price:20.00, buy:'https://www.digikey.com/en/products/filter?q=l76k+quectel', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
+    { type:'gtu7',     label:'GT-U7 GPS',          icon:'🛰',  color:'#22d3ee', price: 8.00, buy:'https://www.amazon.com/s?k=gt-u7+gps+module',    pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'atgm336h', label:'ATGM336H GPS/BDS',   icon:'🛰',  color:'#22d3ee', price:10.00, buy:'https://www.amazon.com/s?k=atgm336h+gps+module', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
   ],
   LORA: [
-    { type:'sx1276',        label:'SX1276 LoRa 868',   icon:'📻', color:'#cc44ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
-    { type:'sx1278',        label:'SX1278 LoRa 433',   icon:'📻', color:'#cc44ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
-    { type:'rfm95w',        label:'RFM95W LoRa',        icon:'📻', color:'#aa33ff', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
-    { type:'ra02',          label:'Ra-02 LoRa 433',     icon:'📻', color:'#cc44ff', pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
-    { type:'rylr896',       label:'RYLR896 LoRa UART',  icon:'📻', color:'#dd55ff', pins:['VCC','GND','TXD','RXD','RST'] },
-    { type:'e32_433',       label:'E32-433T LoRa',      icon:'📻', color:'#bb33ee', pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
-    { type:'heltec_lora32', label:'Heltec LoRa32 V2',   icon:'📟', color:'#9922dd', pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
+    { type:'sx1276',        label:'SX1276 Ra-02 868MHz',  icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+sx1276+lora+module', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'sx1278',        label:'SX1278 Ra-02 433MHz',  icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+sx1278+lora+433',   pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'rfm95w',        label:'RFM95W LoRa (Adafruit)',icon:'📻',color:'#a855f7', price:19.95, buy:'https://www.adafruit.com/search?q=rfm95w',             pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
+    { type:'ra02',          label:'Ra-02 LoRa 433',       icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+433mhz+lora',        pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
+    { type:'rylr896',       label:'RYLR896 LoRa UART',    icon:'📻', color:'#d946ef', price:20.00, buy:'https://www.amazon.com/s?k=rylr896+lora+module',      pins:['VCC','GND','TXD','RXD','RST'] },
+    { type:'e32_433',       label:'E32-433T LoRa',        icon:'📻', color:'#a855f7', price:12.00, buy:'https://www.amazon.com/s?k=e32-433+lora+module',      pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
+    { type:'heltec_lora32', label:'Heltec LoRa32 V2',     icon:'📟', color:'#9333ea', price:24.95, buy:'https://www.amazon.com/s?k=heltec+lora32+v2',        pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
   ],
   RADIO: [
-    { type:'hc05',     label:'HC-05 Bluetooth', icon:'📶', color:'#4488ff', pins:['VCC','GND','TXD','RXD','KEY','STATE'] },
-    { type:'nrf24l01', label:'nRF24L01 2.4GHz', icon:'📶', color:'#4488ff', pins:['GND','VCC','CE','CSN','SCK','MOSI','MISO','IRQ'] },
-    { type:'hc12',     label:'HC-12 433MHz',    icon:'📶', color:'#6699ff', pins:['VCC','GND','TXD','RXD','SET'] },
+    { type:'hc05',     label:'HC-05 Bluetooth',  icon:'📶', color:'#60a5fa', price: 7.00, buy:'https://www.amazon.com/s?k=hc-05+bluetooth+module', pins:['VCC','GND','TXD','RXD','KEY','STATE'] },
+    { type:'nrf24l01', label:'nRF24L01 2.4GHz',  icon:'📶', color:'#60a5fa', price: 4.95, buy:'https://www.sparkfun.com/search/results?term=nrf24l01', pins:['GND','VCC','CE','CSN','SCK','MOSI','MISO','IRQ'] },
+    { type:'hc12',     label:'HC-12 433MHz',     icon:'📶', color:'#818cf8', price: 8.00, buy:'https://www.amazon.com/s?k=hc-12+433+wireless',    pins:['VCC','GND','TXD','RXD','SET'] },
   ],
 };
 
@@ -423,20 +495,97 @@ function renderCircuit(circ) {
   linkAll.select('path').attr('stroke', d=>d.color).attr('marker-end', d=>'url(#arr-def)');
   linkAll.select('text').text(d => [d.fromPin,d.toPin].filter(Boolean).join('→')||d.label||'');
 
-  // Draw nodes
+  // Draw nodes with improved visuals
   const node = nodesG.selectAll('.node-group').data(nodes, d=>d.id);
   node.exit().remove();
   const nodeEnter = node.enter().append('g').attr('class','node-group')
     .call(d3.drag().on('start', dragStart).on('drag', dragged).on('end', dragEnd))
     .on('click', (event, d) => { event.stopPropagation(); selectComp(d.id); });
 
-  nodeEnter.append('rect').attr('class','node-rect').attr('width',NODE_W).attr('height',NODE_H).attr('x',-NODE_W/2).attr('y',-NODE_H/2);
-  nodeEnter.append('text').attr('class','node-label-id').attr('y',-5).attr('text-anchor','middle').attr('font-size',11);
-  nodeEnter.append('text').attr('class','node-label-name').attr('y',12).attr('text-anchor','middle').attr('font-size',9);
-  nodeEnter.append('text').attr('class','node-label-cat').attr('y',24).attr('text-anchor','middle').attr('font-size',8).attr('opacity',0.5);
+  // Create realistic component shapes based on type
+  nodeEnter.each(function(d) {
+    const g = d3.select(this);
+    const def = getCompDef(d.type);
+    const cat = getCatForType(d.type);
+    const color = getCatColor(cat);
+    
+    // Determine component shape and size
+    let shape = 'rect', width = NODE_W, height = NODE_H;
+    if (def?.type.includes('resistor') || def?.type.includes('capacitor') || def?.type.includes('led')) {
+      shape = 'rect';
+      width = 80; height = 30;
+    } else if (def?.type.includes('button')) {
+      shape = 'circle';
+      width = height = 40;
+    } else if (def?.type.includes('battery')) {
+      shape = 'rect';
+      width = 60; height = 80;
+    } else if (def?.type.includes('relay')) {
+      shape = 'rect';
+      width = 100; height = 60;
+    }
+
+    // Draw main shape
+    if (shape === 'rect') {
+      g.append('rect')
+        .attr('class','node-rect')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('x', -width/2)
+        .attr('y', -height/2)
+        .attr('rx', def?.type.includes('battery') ? 4 : 6)
+        .attr('ry', def?.type.includes('battery') ? 4 : 6)
+        .attr('fill', color + '18')
+        .attr('stroke', color)
+        .attr('stroke-width', 1);
+    } else {
+      g.append('circle')
+        .attr('class','node-rect')
+        .attr('r', width/2)
+        .attr('fill', color + '18')
+        .attr('stroke', color)
+        .attr('stroke-width', 1);
+    }
+
+    // Add component-specific details
+    if (def?.type.includes('resistor')) {
+      // Resistor zigzag pattern
+      const path = `M${-width/2+10},0 L${-width/2+20},-10 L${-width/2+30},10 L${-width/2+40},-10 L${-width/2+50},10 L${-width/2+60},-10 L${-width/2+70},0`;
+      g.append('path')
+        .attr('d', path)
+        .attr('fill', 'none')
+        .attr('stroke', '#ffaa00')
+        .attr('stroke-width', 2);
+    } else if (def?.type.includes('capacitor')) {
+      // Capacitor plates
+      g.append('line').attr('x1', -15).attr('y1', -10).attr('x2', -15).attr('y2', 10).attr('stroke', '#00ccff').attr('stroke-width', 2);
+      g.append('line').attr('x1', 15).attr('y1', -10).attr('x2', 15).attr('y2', 10).attr('stroke', '#00ccff').attr('stroke-width', 2);
+      g.append('line').attr('x1', -15).attr('y1', 0).attr('x2', 15).attr('y2', 0).attr('stroke', '#00ccff').attr('stroke-width', 1).attr('stroke-dasharray', '2,2');
+    } else if (def?.type.includes('led')) {
+      // LED symbol
+      g.append('path').attr('d', `M${-width/2+10},0 L${width/2-10},0`).attr('stroke', '#ff6666').attr('stroke-width', 2);
+      g.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 8).attr('fill', '#ff6666').attr('opacity', 0.3);
+      g.append('text').attr('x', 0).attr('y', 4).attr('text-anchor','middle').attr('font-size', 10).attr('fill', '#ff6666').text('LED');
+    } else if (def?.type.includes('battery')) {
+      // Battery terminals
+      g.append('rect').attr('x', -width/2-4).attr('y', -10).attr('width', 4).attr('height', 20).attr('fill', '#ffcc00');
+      g.append('rect').attr('x', width/2).attr('y', -10).attr('width', 4).attr('height', 20).attr('fill', '#ffcc00');
+      g.append('text').attr('x', 0).attr('y', 4).attr('text-anchor','middle').attr('font-size', 10).attr('fill', color).text('BATT');
+    } else if (def?.type.includes('button')) {
+      // Button press indicator
+      g.append('circle').attr('r', 12).attr('fill', '#aaaaaa').attr('opacity', 0.5);
+      g.append('circle').attr('r', 8).attr('fill', '#ffffff');
+    }
+  });
+
+  // Add labels
+  nodeEnter.append('text').attr('class','node-label-id').attr('y', -5).attr('text-anchor','middle').attr('font-size',11);
+  nodeEnter.append('text').attr('class','node-label-name').attr('y', 12).attr('text-anchor','middle').attr('font-size',9);
+  nodeEnter.append('text').attr('class','node-label-cat').attr('y', 24).attr('text-anchor','middle').attr('font-size',8).attr('opacity',0.5);
 
   const nodeAll = nodeEnter.merge(node);
-  nodeAll.select('.node-rect').attr('fill', d=>{const cat=getCatForType(d.type);const col=getCatColor(cat);return col+'18';}).attr('stroke',d=>{const cat=getCatForType(d.type);return getCatColor(cat);});
+  
+  // Update existing nodes
   nodeAll.select('.node-label-id').text(d=>d.id).attr('fill',d=>getCatColor(getCatForType(d.type)));
   nodeAll.select('.node-label-name').text(d=>d.label||d.type);
   nodeAll.select('.node-label-cat').text(d=>getCatForType(d.type)).attr('fill',d=>getCatColor(getCatForType(d.type)));
@@ -761,6 +910,205 @@ function loadExample(key) {
   renderCircuit(JSON.parse(JSON.stringify(ex)));
   setStatus(`Loaded example: ${ex.title}`);
 }
+
+// ── POWER BUDGET CALCULATOR ───────────────────────────────────────────────────
+const BATTERY_SPECS = {
+  lipo_1000: { name:'LiPo 1000mAh', voltage:3.7, capacity:1000, form:'small' },
+  lipo_2000: { name:'LiPo 2000mAh', voltage:3.7, capacity:2000, form:'small' },
+  lipo_3000: { name:'LiPo 3000mAh', voltage:3.7, capacity:3000, form:'small' },
+  lipo_5000: { name:'LiPo 5000mAh', voltage:3.7, capacity:5000, form:'medium' },
+  vape_400:  { name:'Vape 400mAh', voltage:3.7, capacity:400,  form:'vape' },
+  vape_800:  { name:'Vape 800mAh', voltage:3.7, capacity:800,  form:'vape' },
+  vape_1200: { name:'Vape 1200mAh', voltage:3.7, capacity:1200, form:'vape' },
+  cr2032:   { name:'CR2032 Coin', voltage:3.0, capacity:225,  form:'coin' },
+  cr123a:   { name:'CR123A', voltage:3.0, capacity:1500, form:'camera' },
+  aa_alkaline: { name:'AA Alkaline', voltage:3.0, capacity:2800, form:'aa' },
+  aaa_alkaline: { name:'AAA Alkaline', voltage:3.0, capacity:1200, form:'aaa' },
+};
+
+const COMPONENT_POWER = {
+  // MCU
+  arduino_uno: { active:50, sleep:15, deep:0.1 },
+  arduino_nano: { active:20, sleep:10, deep:0.05 },
+  arduino_mega: { active:80, sleep:20, deep:0.2 },
+  esp32: { active:180, sleep:10, deep:0.01 },
+  esp8266: { active:70, sleep:15, deep:0.02 },
+  attiny85: { active:5, sleep:1, deep:0.001 },
+  stm32f103: { active:30, sleep:5, deep:0.01 },
+  raspberry_pi: { active:500, sleep:100, deep:10 },
+
+  // Sensors
+  dht22: { active:0.5, sleep:0.01, deep:0.001 },
+  bmp280: { active:1, sleep:0.5, deep:0.001 },
+  hcsr04: { active:15, sleep:0.1, deep:0.001 },
+  pir: { active:60, sleep:10, deep:0.001 },
+  mpu6050: { active:3, sleep:1, deep:0.001 },
+  ds18b20: { active:1, sleep:0.01, deep:0.001 },
+  gy521: { active:3, sleep:1, deep:0.001 },
+  photores: { active:0.1, sleep:0.01, deep:0.001 },
+
+  // Displays
+  oled_128x64: { active:20, sleep:0.1, deep:0.001 },
+  lcd_16x2: { active:10, sleep:0.5, deep:0.001 },
+  tft_240x320: { active:100, sleep:5, deep:0.001 },
+  neopixel: { active:60, sleep:0.1, deep:0.001 },
+  max7219: { active:5, sleep:0.1, deep:0.001 },
+  sevenseg: { active:10, sleep:0.1, deep:0.001 },
+
+  // Power
+  battery_9v: { active:0, sleep:0, deep:0 },
+  lm7805: { active:0, sleep:0, deep:0 },
+  lipo_3v7: { active:0, sleep:0, deep:0 },
+  tp4056: { active:0, sleep:0, deep:0 },
+  usb_power: { active:0, sleep:0, deep:0 },
+
+  // Passive
+  resistor: { active:0, sleep:0, deep:0 },
+  capacitor: { active:0, sleep:0, deep:0 },
+  led: { active:5, sleep:0, deep:0 },
+  button: { active:0, sleep:0, deep:0 },
+  pot: { active:0, sleep:0, deep:0 },
+  relay_5v: { active:70, sleep:0, deep:0 },
+
+  // Cellular
+  sim800l: { active:400, sleep:10, deep:0.1 },
+  sim7600e: { active:800, sleep:20, deep:0.5 },
+  a9g: { active:300, sleep:15, deep:0.2 },
+  sim7000g: { active:200, sleep:5, deep:0.1 },
+  ec21: { active:350, sleep:10, deep:0.2 },
+
+  // GPS
+  neo6m: { active:45, sleep:10, deep:0.1 },
+  neo8m: { active:40, sleep:8, deep:0.1 },
+  l76k: { active:25, sleep:5, deep:0.1 },
+  gtu7: { active:45, sleep:10, deep:0.1 },
+  atgm336h: { active:20, sleep:5, deep:0.1 },
+
+  // LoRa
+  sx1276: { active:120, sleep:0.1, deep:0.01 },
+  sx1278: { active:120, sleep:0.1, deep:0.01 },
+  rfm95w: { active:100, sleep:0.1, deep:0.01 },
+  ra02: { active:120, sleep:0.1, deep:0.01 },
+  rylr896: { active:80, sleep:0.1, deep:0.01 },
+  e32_433: { active:100, sleep:0.1, deep:0.01 },
+  heltec_lora32: { active:180, sleep:10, deep:0.01 },
+
+  // Radio
+  hc05: { active:30, sleep:1, deep:0.01 },
+  nrf24l01: { active:12, sleep:0.1, deep:0.001 },
+  hc12: { active:15, sleep:1, deep:0.01 },
+};
+
+function calculatePowerBudget() {
+  const batteryType = document.getElementById('batteryType').value;
+  const mode = document.getElementById('operatingMode').value;
+  const battery = BATTERY_SPECS[batteryType];
+  const resultsDiv = document.getElementById('powerResults');
+
+  if (!battery) {
+    resultsDiv.innerHTML = '<div style="color:var(--red)">Please select a battery type</div>';
+    return;
+  }
+
+  // Calculate total power consumption
+  let totalActive = 0;
+  let totalSleep = 0;
+  let totalDeep = 0;
+
+  circuit.components.forEach(comp => {
+    const spec = COMPONENT_POWER[comp.type];
+    if (spec) {
+      totalActive += spec.active;
+      totalSleep += spec.sleep;
+      totalDeep += spec.deep;
+    }
+  });
+
+  // Apply duty cycles based on mode
+  let dutyActive = 1.0, dutySleep = 0.0, dutyDeep = 0.0;
+  let modeName = 'Continuous';
+
+  switch(mode) {
+    case 'periodic':
+      dutyActive = 0.01; // 1% active, 99% sleep
+      dutySleep = 0.99;
+      modeName = 'Periodic (10min intervals)';
+      break;
+    case 'low_power':
+      dutyActive = 0.1; // 10% active, 90% sleep
+      dutySleep = 0.9;
+      modeName = 'Low Power (90% sleep)';
+      break;
+    case 'ultra_low':
+      dutyActive = 0.01; // 1% active, 99% deep sleep
+      dutyDeep = 0.99;
+      modeName = 'Ultra Low (99% deep sleep)';
+      break;
+  }
+
+  const avgCurrent = (totalActive * dutyActive) + (totalSleep * dutySleep) + (totalDeep * dutyDeep);
+  const batteryWh = (battery.voltage * battery.capacity) / 1000; // Watt-hours
+  const runtimeHours = batteryWh / (avgCurrent / 1000); // Hours
+  const runtimeDays = runtimeHours / 24;
+
+  // Calculate form factor constraints
+  const formFactor = battery.form;
+  const maxComponents = {
+    'coin': 5, 'vape': 8, 'small': 12, 'aa': 15, 'aaa': 10, 'camera': 10, 'medium': 20
+  };
+  const componentCount = circuit.components.length;
+  const formOk = componentCount <= maxComponents[formFactor];
+
+  // Generate results HTML
+  const resultsHTML = `
+    <div style="color:var(--green);margin-bottom:6px">🔋 Power Budget Results</div>
+    <div style="font-size:8px;color:var(--cyan-d);margin-bottom:6px">Mode: ${modeName} | Battery: ${battery.name}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:9px">
+      <div style="background:var(--deep);padding:6px;border-radius:4px">
+        <div style="color:var(--amber)">📊 Power Consumption</div>
+        <div>Active: ${totalActive.toFixed(1)}mA</div>
+        <div>Sleep: ${totalSleep.toFixed(1)}mA</div>
+        <div>Deep: ${totalDeep.toFixed(3)}mA</div>
+        <div style="color:var(--green)">Avg: ${avgCurrent.toFixed(2)}mA</div>
+      </div>
+      <div style="background:var(--deep);padding:6px;border-radius:4px">
+        <div style="color:var(--amber)">⏱️ Runtime Estimate</div>
+        <div>Battery: ${battery.capacity}mAh @ ${battery.voltage}V</div>
+        <div>Energy: ${batteryWh.toFixed(2)}Wh</div>
+        <div style="color:var(--green)">Runtime: ${runtimeDays.toFixed(1)} days</div>
+        <div style="color:var(--green)">${Math.floor(runtimeHours)} hours</div>
+      </div>
+    </div>
+    <div style="margin-top:6px;font-size:8px;color:var(--cyan-d)">
+      <div>Components: ${componentCount} (max ${maxComponents[formFactor]} for ${formFactor})</div>
+      <div style="color:${formOk?'var(--green)':'var(--red)'}">Form factor: ${formOk?'✓ OK':'✗ Too large'}</div>
+      <div style="margin-top:4px;color:var(--lora)">Tip: Use sleep modes and efficient regulators for longer battery life</div>
+    </div>
+  `;
+
+  resultsDiv.innerHTML = resultsHTML;
+}
+
+function showPowerBudget() {
+  switchSTab('power');
+}
+
+// ── PROBLEM DEFINITION ────────────────────────────────────────────────────────
+function saveProblemDefinition() {
+  const problem = {
+    problemStatement: document.getElementById('problemStatement').value.trim(),
+    constraints: document.getElementById('constraints').value.trim(),
+    features: document.getElementById('features').value.trim()
+  };
+  circuit.problemDefinition = problem;
+  updateJson();
+  document.getElementById('problemResults').innerHTML = `
+    <div style="color:var(--green);margin-bottom:6px">✅ Problem definition saved</div>
+    <div style="font-size:8px;color:var(--cyan-d)">This information will be included when exporting the circuit</div>
+  `;
+  setStatus('Problem definition saved with circuit');
+}
+
 
 // ── STARTUP ───────────────────────────────────────────────────────────────────
 buildCatalog();
