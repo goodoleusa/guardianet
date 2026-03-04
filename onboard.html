@@ -10,7 +10,7 @@
       --bg:#060a12; --panel:#0c1422; --deep:#040810; --edge:#1a2840;
       --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
       --amber:#f59e0b; --lora:#c084fc; --red:#ef4444; --gold:#fbbf24;
-      --text:#cbd5e1; --text-dim:#64748b;
+      --text:#cbd5e1; --text-dim:#94a3b8;
       --font:'Courier Prime','Courier New',monospace;
       --glow-g:0 0 12px rgba(34,197,94,0.5);
       --glow-c:0 0 12px rgba(56,189,248,0.5);
@@ -18,117 +18,136 @@
       --glow-l:0 0 12px rgba(192,132,252,0.4);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6}
-    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
+    html{background:var(--bg)}
+    body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9998}
 
     /* ─── HEADER ─── */
-    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-    .hdr-left{display:flex;align-items:center;gap:12px}
-    .logo-icon{width:34px;height:34px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--cyan);animation:pulse 3s ease-in-out infinite}
-    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(56,189,248,0.4)}50%{box-shadow:0 0 20px rgba(56,189,248,0.8)}}
-    .logo-text{font-size:16px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
-    .logo-sub{font-size:11px;color:var(--text-dim);letter-spacing:2px}
-    .blink{animation:blink 1.1s step-end infinite}
-    @keyframes blink{50%{opacity:0}}
-    .hdr-back{font-size:13px;color:var(--text-dim);text-decoration:none;border:1px solid var(--edge);padding:5px 10px;letter-spacing:1px}
-    .hdr-back:hover{color:var(--cyan);border-color:var(--edge)}
+    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100}
+    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(56,189,248,0.3)}50%{box-shadow:0 0 16px rgba(56,189,248,0.7)}}
+    .logo-icon{width:32px;height:32px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--cyan);animation:pulse 3s ease-in-out infinite;flex-shrink:0}
+    .logo-text{font-size:15px;color:var(--cyan);letter-spacing:3px;white-space:nowrap}
+    .hdr-xp{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .hdr-codename{font-size:12px;color:var(--text-dim);white-space:nowrap;display:none}
+    @media(min-width:500px){.hdr-codename{display:block}}
+    .hdr-rank{font-size:11px;letter-spacing:2px;padding:2px 8px;border:1px solid currentColor;white-space:nowrap}
+    .hdr-xp-num{font-size:13px;color:var(--gold);white-space:nowrap}
+    .hdr-back{font-size:12px;color:var(--text-dim);text-decoration:none;border:1px solid var(--edge);padding:4px 10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+    .hdr-back:hover{color:var(--cyan);border-color:var(--cyan-d)}
 
-    /* ─── XP BAR ─── */
-    .xp-strip{background:var(--panel);border-bottom:1px solid var(--edge);padding:10px 24px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
-    .xp-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-    .xp-name{font-size:14px;color:var(--green)}
-    .rank-badge{font-size:12px;letter-spacing:2px;padding:3px 10px;border:1px solid currentColor;display:inline-block}
-    .xp-bar-wrap{flex:1;min-width:140px}
-    .xp-bar-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px}
-    .xp-bar-track{height:5px;background:#0a1628;border:1px solid var(--edge)}
-    .xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:var(--glow-g);transition:width 0.8s ease}
-    .xp-total{font-size:15px;color:var(--gold);text-shadow:0 0 8px rgba(251,191,36,0.4)}
+    /* ─── XP PROGRESS BAR ─── */
+    .xp-track{height:3px;background:var(--deep)}
+    .xp-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));transition:width 0.8s ease}
+
+    /* ─── MAIN CONTAINER ─── */
+    .main{max-width:720px;margin:0 auto;padding:0 16px 48px}
 
     /* ─── PATH SELECTOR ─── */
-    .path-wrap{padding:20px 24px 0;display:flex;gap:8px;flex-wrap:wrap}
-    .path-btn{background:var(--panel);border:1px solid var(--edge);padding:9px 18px;cursor:pointer;font-family:var(--font);font-size:13px;letter-spacing:2px;color:var(--text-dim);transition:all 0.15s;display:flex;align-items:center;gap:6px}
-    .path-btn:hover,.path-btn.active{border-color:currentColor}
+    .path-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--edge);padding:0;margin:0 -16px;padding:0 16px}
+    .path-scroll::-webkit-scrollbar{height:0}
+    .path-row{display:flex;gap:8px;min-width:max-content;padding:12px 0}
+    @media(min-width:600px){.path-row{min-width:unset;flex-wrap:wrap;padding:14px 0}}
+    .path-btn{background:transparent;border:1px solid var(--edge);padding:10px 18px;cursor:pointer;font-family:var(--font);font-size:13px;letter-spacing:2px;color:var(--text-dim);transition:all 0.15s;display:flex;align-items:center;gap:8px;white-space:nowrap;min-height:48px;flex-shrink:0}
+    .path-btn:hover{color:var(--text);border-color:var(--text-dim)}
     .path-btn.active{background:#0d1e38}
-    .path-btn[data-path="archivist"].active{color:var(--green);border-color:var(--green);text-shadow:var(--glow-g)}
-    .path-btn[data-path="communicator"].active{color:var(--cyan);border-color:var(--cyan);text-shadow:var(--glow-c)}
-    .path-btn[data-path="hardware"].active{color:var(--lora);border-color:var(--lora);text-shadow:var(--glow-l)}
-    .path-btn[data-path="explorer"].active{color:var(--amber);border-color:var(--amber);text-shadow:var(--glow-a)}
-    .path-desc{padding:10px 24px;font-size:14px;color:var(--text);border-bottom:1px solid var(--edge);line-height:1.7}
+    .path-btn[data-path="archivist"].active{color:var(--green);border-color:var(--green)}
+    .path-btn[data-path="communicator"].active{color:var(--cyan);border-color:var(--cyan)}
+    .path-btn[data-path="hardware"].active{color:var(--lora);border-color:var(--lora)}
+    .path-btn[data-path="explorer"].active{color:var(--amber);border-color:var(--amber)}
+    .path-desc{padding:14px 0 18px;font-size:15px;color:var(--text);line-height:1.75;border-bottom:1px solid var(--edge)}
 
     /* ─── QUEST LIST ─── */
-    .quests{padding:16px 24px;display:flex;flex-direction:column;gap:12px;max-width:900px}
+    .quests{padding:12px 0;display:flex;flex-direction:column;gap:8px}
+    .quest-card{background:var(--panel);border:1px solid var(--edge);border-left:3px solid var(--edge);display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:border-color 0.15s,background 0.15s;min-height:64px;user-select:none}
+    .quest-card:hover:not(.card-locked){background:#0f1c30;border-color:rgba(56,189,248,0.2)}
+    .quest-card.card-available{border-left-color:var(--green)}
+    .quest-card.card-complete{border-left-color:var(--green-d);opacity:0.75}
+    .quest-card.card-locked{border-left-color:var(--edge);opacity:0.5;cursor:default}
+    .quest-card.card-threat{border-left-color:var(--amber)}
+    .quest-icon{width:22px;font-size:16px;flex-shrink:0;text-align:center}
+    .quest-title{flex:1;font-size:15px;letter-spacing:1px;line-height:1.4}
+    .quest-title.col-green{color:var(--green)}
+    .quest-title.col-cyan{color:var(--cyan)}
+    .quest-title.col-amber{color:var(--amber)}
+    .quest-title.col-lora{color:var(--lora)}
+    .quest-title.col-locked{color:var(--text-dim)}
+    .quest-xp-badge{font-size:12px;color:var(--gold);white-space:nowrap;flex-shrink:0}
+    .quest-arrow{font-size:11px;color:var(--text-dim);margin-left:4px;flex-shrink:0}
 
-    .quest-card{background:var(--panel);border:1px solid var(--edge);transition:border-color 0.2s}
-    .quest-card.available{border-left:3px solid var(--green)}
-    .quest-card.complete{border-left:3px solid var(--green-d);opacity:0.7}
-    .quest-card.locked{border-left:3px solid var(--edge);opacity:0.5}
-    .quest-card.threat{border-left:3px solid var(--amber)}
+    /* ─── QUEST MODAL ─── */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(4,8,16,0.85);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s}
+    .modal-backdrop.open{opacity:1;pointer-events:auto}
 
-    .quest-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
-    .quest-status-icon{width:22px;height:22px;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .quest-title{flex:1;font-size:15px;letter-spacing:1px}
-    .quest-title.green{color:var(--green)}
-    .quest-title.cyan{color:var(--cyan)}
-    .quest-title.amber{color:var(--amber)}
-    .quest-title.lora{color:var(--lora)}
-    .quest-title.locked-color{color:var(--edge)}
-    .quest-xp{font-size:13px;color:var(--gold);white-space:nowrap}
-    .quest-toggle{font-size:13px;color:var(--text-dim);margin-left:8px;transition:transform 0.2s}
-    .quest-toggle.open{transform:rotate(180deg)}
+    /* Mobile: bottom sheet */
+    .quest-modal{position:fixed;bottom:0;left:0;right:0;max-height:92vh;background:var(--panel);border-top:1px solid var(--edge);border-radius:16px 16px 0 0;z-index:201;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)}
+    .quest-modal.open{transform:translateY(0)}
 
-    .quest-body{padding:0 18px 18px;display:none}
-    .quest-body.visible{display:block}
+    /* Desktop: centered overlay */
+    @media(min-width:640px){
+      .quest-modal{top:50%;left:50%;bottom:auto;right:auto;transform:translate(-50%,-44%);width:calc(100% - 48px);max-width:640px;max-height:85vh;border-radius:8px;border:1px solid var(--edge);opacity:0;transition:transform 0.25s ease,opacity 0.25s ease}
+      .quest-modal.open{transform:translate(-50%,-50%);opacity:1}
+    }
 
-    .quest-section{margin-top:14px}
-    .quest-section-label{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--edge)}
-    .quest-text{font-size:14px;color:var(--text);line-height:1.8}
-    .quest-text em{color:var(--cyan);font-style:normal}
-    .quest-text strong{color:var(--gold)}
+    .modal-hdr{padding:16px 20px 14px;border-bottom:1px solid var(--edge);display:flex;align-items:flex-start;gap:12px;position:sticky;top:0;background:var(--panel);z-index:1;border-radius:inherit;flex-shrink:0}
+    .modal-hdr-bar{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:20px}
+    .modal-hdr-text{flex:1}
+    .modal-hdr-title{font-size:16px;letter-spacing:1px;line-height:1.4;margin-bottom:4px}
+    .modal-hdr-xp{font-size:13px;color:var(--gold)}
+    .modal-close{background:none;border:1px solid var(--edge);color:var(--text-dim);width:32px;height:32px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font)}
+    .modal-close:hover{border-color:var(--red);color:var(--red)}
 
-    .irl-box{background:#0a1628;border:1px solid var(--edge);border-left:3px solid var(--cyan);padding:12px 16px;margin-top:10px}
-    .irl-label{font-size:11px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:6px}
-    .irl-text{font-size:14px;color:var(--cyan);line-height:1.7}
+    .modal-body{overflow-y:auto;padding:0 20px;flex:1;-webkit-overflow-scrolling:touch}
+    .modal-body::-webkit-scrollbar{width:3px}
+    .modal-body::-webkit-scrollbar-track{background:var(--panel)}
+    .modal-body::-webkit-scrollbar-thumb{background:var(--edge)}
 
-    .threat-box{background:#100808;border:1px solid #442200;border-left:3px solid var(--amber);padding:12px 16px;margin-top:10px}
-    .threat-label{font-size:11px;letter-spacing:3px;color:var(--amber);margin-bottom:6px}
-    .threat-text{font-size:14px;color:#d09840;line-height:1.7}
+    .m-section{padding:16px 0;border-bottom:1px solid var(--edge)}
+    .m-section:last-child{border-bottom:none;padding-bottom:4px}
+    .m-label{font-size:12px;letter-spacing:3px;color:var(--text-dim);margin-bottom:10px}
+    .m-text{font-size:15px;color:var(--text);line-height:1.85}
+    .m-text em{color:var(--cyan);font-style:normal}
+    .m-text strong{color:var(--gold)}
+    .m-irl{background:#070f1e;border-left:3px solid var(--cyan);padding:12px 16px;border-radius:0 4px 4px 0}
+    .m-irl .m-text{color:var(--cyan)}
+    .m-threat{background:#0d0800;border-left:3px solid var(--amber);padding:12px 16px;border-radius:0 4px 4px 0}
+    .m-threat .m-text{color:#d4a04a}
+    .m-links{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .m-link{color:var(--green);text-decoration:none;font-size:15px;display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid rgba(34,197,94,0.2);transition:border-color 0.15s,background 0.15s}
+    .m-link::before{content:'▸';color:var(--green-d);flex-shrink:0}
+    .m-link:hover{border-color:var(--green);background:rgba(34,197,94,0.05)}
 
-    .mission-box{background:#060e16;border:1px solid var(--green-d);border-left:3px solid var(--green);padding:12px 16px;margin-top:12px}
-    .mission-label{font-size:11px;letter-spacing:3px;color:var(--green-d);margin-bottom:8px}
-    .mission-links{display:flex;flex-direction:column;gap:6px}
-    .mission-link{color:var(--green);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:8px}
-    .mission-link::before{content:'▸';color:var(--green-d)}
-    .mission-link:hover{text-shadow:var(--glow-g)}
-
-    .complete-btn{margin-top:14px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:14px;letter-spacing:2px;padding:10px 20px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:8px}
+    .modal-ftr{padding:14px 20px;border-top:1px solid var(--edge);flex-shrink:0}
+    .complete-btn{width:100%;background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:15px;letter-spacing:2px;padding:14px 20px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
     .complete-btn:hover{background:rgba(34,197,94,0.1);box-shadow:var(--glow-g)}
-    .complete-btn:disabled{border-color:var(--green-d);color:var(--green-d);cursor:default;background:rgba(22,163,74,0.1)}
-
-    /* ─── CONGRATS / UNLOCK FLASH ─── */
-    .xp-flash{position:fixed;top:60px;right:20px;background:#0d1e38;border:1px solid var(--gold);color:var(--gold);padding:12px 18px;font-size:14px;letter-spacing:2px;z-index:1000;animation:fadeOut 3s ease forwards;pointer-events:none}
-    @keyframes fadeOut{0%,60%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-20px)}}
+    .complete-btn:disabled{border-color:var(--green-d);color:var(--green-d);cursor:default;background:rgba(22,163,74,0.08)}
+    .complete-btn.locked-btn{border-color:var(--edge);color:var(--text-dim);cursor:default}
 
     /* ─── INTRO MODAL ─── */
-    .modal-overlay{position:fixed;inset:0;background:rgba(4,8,16,0.96);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
-    .modal-overlay.hidden{display:none}
-    .modal{background:var(--panel);border:1px solid var(--edge);max-width:540px;width:100%;padding:32px}
-    .modal-title{font-size:18px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px;margin-bottom:18px}
-    .modal-text{font-size:14px;color:var(--text);line-height:1.9;margin-bottom:22px}
-    .modal-text a{color:var(--cyan);text-decoration:none}
-    .modal-paths{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
-    .modal-path{background:var(--deep);border:1px solid var(--edge);padding:14px;cursor:pointer;transition:all 0.15s;text-align:left;font-family:var(--font)}
-    .modal-path:hover{border-color:currentColor}
-    .modal-path-icon{font-size:20px;margin-bottom:8px}
-    .modal-path-name{font-size:14px;letter-spacing:2px;margin-bottom:5px}
-    .modal-path-sub{font-size:12px;color:var(--text-dim);line-height:1.6}
-    .modal-path[data-path="archivist"]{color:var(--green)}
-    .modal-path[data-path="communicator"]{color:var(--cyan)}
-    .modal-path[data-path="hardware"]{color:var(--lora)}
-    .modal-path[data-path="explorer"]{color:var(--amber)}
-    .modal-skip{font-size:12px;color:var(--text-dim);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-    .modal-skip:hover{color:var(--cyan)}
+    .intro-overlay{position:fixed;inset:0;background:rgba(4,8,16,0.97);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+    .intro-overlay.hidden{display:none}
+    .intro-box{background:var(--panel);border:1px solid var(--edge);max-width:520px;width:100%;padding:32px 28px}
+    .intro-title{font-size:18px;color:var(--cyan);letter-spacing:3px;margin-bottom:16px}
+    .intro-text{font-size:15px;color:var(--text);line-height:1.85;margin-bottom:24px}
+    .intro-text em{color:var(--cyan);font-style:normal}
+    .intro-text strong{color:var(--gold)}
+    .intro-paths{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+    @media(max-width:460px){.intro-paths{grid-template-columns:1fr}}
+    .intro-path{background:var(--deep);border:1px solid var(--edge);padding:16px;cursor:pointer;transition:all 0.15s;text-align:left;font-family:var(--font)}
+    .intro-path:hover{border-color:currentColor;background:#0a1628}
+    .intro-path-icon{font-size:22px;margin-bottom:8px}
+    .intro-path-name{font-size:14px;letter-spacing:2px;margin-bottom:5px}
+    .intro-path-sub{font-size:13px;color:var(--text-dim);line-height:1.6}
+    .intro-path[data-path="archivist"]{color:var(--green)}
+    .intro-path[data-path="communicator"]{color:var(--cyan)}
+    .intro-path[data-path="hardware"]{color:var(--lora)}
+    .intro-path[data-path="explorer"]{color:var(--amber)}
+    .intro-skip{font-size:13px;color:var(--text-dim);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .intro-skip:hover{color:var(--cyan)}
 
-    /* ─── SCROLLBAR ─── */
+    /* ─── XP TOAST ─── */
+    .xp-flash{position:fixed;top:64px;right:16px;background:#0d1e38;border:1px solid var(--gold);color:var(--gold);padding:10px 16px;font-size:14px;letter-spacing:2px;z-index:300;animation:fadeOut 3s ease forwards;pointer-events:none}
+    @keyframes fadeOut{0%,60%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-16px)}}
+
     ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:var(--panel)}
     ::-webkit-scrollbar-thumb{background:var(--edge)}
@@ -137,82 +156,86 @@
 <body>
 
 <!-- INTRO MODAL -->
-<div class="modal-overlay" id="introModal">
-  <div class="modal">
-    <div class="modal-title">◈ GUARDIAN QUESTS <span class="blink">_</span></div>
-    <div class="modal-text">
+<div class="intro-overlay" id="introModal">
+  <div class="intro-box">
+    <div class="intro-title">◈ GUARDIAN QUESTS</div>
+    <div class="intro-text">
       Political reality is being erased in real time. Documents disappear. Data gets purged.
       History gets rewritten.<br><br>
       GuardianNet fights back with <em>math</em>: content-addressed files on IPFS,
       off-grid LoRa mesh networks, and Bitcoin-anchored timestamps.<br><br>
       Each quest teaches one real concept — and ends with a <strong>real action</strong>.
-      No account needed. You earn XP stored in your browser.
+      No account needed. XP is stored in your browser.
     </div>
-    <div class="modal-paths">
-      <button class="modal-path" data-path="archivist" onclick="pickPath('archivist')">
-        <div class="modal-path-icon">📦</div>
-        <div class="modal-path-name">ARCHIVIST</div>
-        <div class="modal-path-sub">Pin files, timestamp evidence,<br>make truth permanent</div>
+    <div class="intro-paths">
+      <button class="intro-path" data-path="archivist" onclick="pickPath('archivist')">
+        <div class="intro-path-icon">📦</div>
+        <div class="intro-path-name">ARCHIVIST</div>
+        <div class="intro-path-sub">Pin files, timestamp evidence, make truth permanent</div>
       </button>
-      <button class="modal-path" data-path="communicator" onclick="pickPath('communicator')">
-        <div class="modal-path-icon">📡</div>
-        <div class="modal-path-name">COMMUNICATOR</div>
-        <div class="modal-path-sub">P2P chat, LoRa mesh,<br>censorship-proof channels</div>
+      <button class="intro-path" data-path="communicator" onclick="pickPath('communicator')">
+        <div class="intro-path-icon">📡</div>
+        <div class="intro-path-name">COMMUNICATOR</div>
+        <div class="intro-path-sub">P2P chat, LoRa mesh, censorship-proof channels</div>
       </button>
-      <button class="modal-path" data-path="hardware" onclick="pickPath('hardware')">
-        <div class="modal-path-icon">⚡</div>
-        <div class="modal-path-name">HARDWARE OPS</div>
-        <div class="modal-path-sub">Build LoRa nodes, design<br>off-grid mesh circuits</div>
+      <button class="intro-path" data-path="hardware" onclick="pickPath('hardware')">
+        <div class="intro-path-icon">⚡</div>
+        <div class="intro-path-name">HARDWARE OPS</div>
+        <div class="intro-path-sub">Build LoRa nodes, design off-grid mesh circuits</div>
       </button>
-      <button class="modal-path" data-path="explorer" onclick="pickPath('explorer')">
-        <div class="modal-path-icon">🔭</div>
-        <div class="modal-path-name">JUST EXPLORING</div>
-        <div class="modal-path-sub">Learn the concepts,<br>no commitment required</div>
+      <button class="intro-path" data-path="explorer" onclick="pickPath('explorer')">
+        <div class="intro-path-icon">🔭</div>
+        <div class="intro-path-name">JUST EXPLORING</div>
+        <div class="intro-path-sub">Learn the concepts, no commitment required</div>
       </button>
     </div>
-    <div class="modal-skip" onclick="pickPath('explorer')">skip intro → default to exploring</div>
+    <div class="intro-skip" onclick="pickPath('explorer')">skip → start exploring</div>
   </div>
+</div>
+
+<!-- QUEST MODAL BACKDROP -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+
+<!-- QUEST MODAL -->
+<div class="quest-modal" id="questModal">
+  <div class="modal-hdr">
+    <div class="modal-hdr-bar" id="modalBar"></div>
+    <div class="modal-hdr-text">
+      <div class="modal-hdr-title" id="modalTitle"></div>
+      <div class="modal-hdr-xp" id="modalXP"></div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+  <div class="modal-ftr" id="modalFtr"></div>
 </div>
 
 <!-- HEADER -->
 <header class="hdr">
-  <div class="hdr-left">
-    <div class="logo-icon">◈</div>
-    <div>
-      <div class="logo-text">GUARDIAN QUESTS <span class="blink">_</span></div>
-      <div class="logo-sub">MISSION: DEFEND DEMOCRACY</div>
-    </div>
+  <div class="logo-icon">◈</div>
+  <div class="logo-text">GUARDIAN QUESTS</div>
+  <div class="hdr-xp">
+    <span class="hdr-codename" id="displayName">—</span>
+    <span class="hdr-rank" id="rankBadge" style="color:var(--cyan-d)">OBSERVER</span>
+    <span class="hdr-xp-num"><span id="xpDisplay">0</span> XP</span>
   </div>
-  <a href="index.html" class="hdr-back">← MISSION CONTROL</a>
+  <a href="index.html" class="hdr-back">← BACK</a>
 </header>
+<div class="xp-track"><div class="xp-fill" id="xpBarFill" style="width:0%"></div></div>
 
-<!-- XP BAR -->
-<div class="xp-strip">
-  <div class="xp-left">
-    <span class="xp-name">OPERATIVE: <span id="displayName" style="color:var(--green)">—</span></span>
-    <span class="rank-badge" id="rankBadge" style="color:var(--cyan-d)">OBSERVER</span>
-    <div class="xp-bar-wrap">
-      <div class="xp-bar-meta">
-        <span id="xpBarLabel">XP PROGRESS</span>
-        <span id="xpNextLabel">100 XP → ARCHIVIST</span>
-      </div>
-      <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+<!-- MAIN -->
+<div class="main">
+  <div class="path-scroll">
+    <div class="path-row">
+      <button class="path-btn" data-path="archivist" onclick="switchPath('archivist')">📦 ARCHIVIST</button>
+      <button class="path-btn" data-path="communicator" onclick="switchPath('communicator')">📡 COMMUNICATOR</button>
+      <button class="path-btn" data-path="hardware" onclick="switchPath('hardware')">⚡ HARDWARE OPS</button>
+      <button class="path-btn" data-path="explorer" onclick="switchPath('explorer')">🔭 EXPLORING</button>
     </div>
   </div>
-  <div class="xp-total"><span id="xpDisplay">0</span> XP</div>
+  <div class="path-desc" id="pathDesc"></div>
+  <div class="quests" id="questList"></div>
 </div>
-
-<!-- PATH SELECTOR -->
-<div class="path-wrap">
-  <button class="path-btn" data-path="archivist" onclick="switchPath('archivist')">📦 ARCHIVIST</button>
-  <button class="path-btn" data-path="communicator" onclick="switchPath('communicator')">📡 COMMUNICATOR</button>
-  <button class="path-btn" data-path="hardware" onclick="switchPath('hardware')">⚡ HARDWARE OPS</button>
-  <button class="path-btn" data-path="explorer" onclick="switchPath('explorer')">🔭 EXPLORING</button>
-</div>
-<div class="path-desc" id="pathDesc"></div>
-
-<!-- QUEST LIST -->
-<div class="quests" id="questList"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 <script>
@@ -221,16 +244,16 @@
 ════════════════════════════════════════════════════ */
 function uid() { return 'gn_' + Math.random().toString(36).slice(2,10); }
 const STATE = {
-  userId: localStorage.getItem('gn_uid') || uid(),
-  xp: parseInt(localStorage.getItem('gn_xp') || '0'),
-  completed: new Set(JSON.parse(localStorage.getItem('gn_completed') || '[]')),
-  path: localStorage.getItem('gn_path') || null,
+  userId:   localStorage.getItem('gn_uid') || uid(),
+  xp:       parseInt(localStorage.getItem('gn_xp') || '0'),
+  completed:new Set(JSON.parse(localStorage.getItem('gn_completed') || '[]')),
+  path:     localStorage.getItem('gn_path') || null,
   codename: localStorage.getItem('gn_codename') || generateCodename()
 };
 localStorage.setItem('gn_uid', STATE.userId);
 
 function generateCodename() {
-  const adj = ['CIPHER','VECTOR','GHOST','ECHO','PROXY','RAZOR','NEON','HELIX','APEX','SIGMA'];
+  const adj  = ['CIPHER','VECTOR','GHOST','ECHO','PROXY','RAZOR','NEON','HELIX','APEX','SIGMA'];
   const noun = ['HAWK','FOX','WOLF','RAVEN','LYNX','OWL','BEAR','CRANE','VIPER','MOTH'];
   const name = adj[Math.floor(Math.random()*adj.length)] + noun[Math.floor(Math.random()*noun.length)];
   localStorage.setItem('gn_codename', name);
@@ -254,7 +277,7 @@ const RANKS = [
   { name:'NODE OPERATOR',min:800,  color:'var(--amber)' },
   { name:'MESH PIONEER', min:1200, color:'var(--lora)' }
 ];
-function getRank(xp) { return [...RANKS].reverse().find(r => xp >= r.min) || RANKS[0]; }
+function getRank(xp)     { return [...RANKS].reverse().find(r => xp >= r.min) || RANKS[0]; }
 function getNextRank(xp) { return RANKS.find(r => r.min > xp); }
 
 /* ════════════════════════════════════════════════════
@@ -533,36 +556,30 @@ These three often operate together — surveillance enables targeting, censorshi
 let gun;
 try {
   gun = Gun(['https://gun-manhattan.herokuapp.com/gun','wss://relay.peer.ooo/gun']);
-  // Sync XP to GUN for community leaderboard (pseudonymous)
   function syncToGun() {
     const rank = getRank(STATE.xp);
     gun.get('guardian-quests-v1').get('leaderboard').get(STATE.userId).put({
-      codename: STATE.codename, xp: STATE.xp, rank: rank.name,
-      t: Date.now()
+      codename: STATE.codename, xp: STATE.xp, rank: rank.name, t: Date.now()
     });
   }
-} catch(e) { /* GUN unavailable — localStorage fallback is fine */ }
+} catch(e) {}
 
 /* ════════════════════════════════════════════════════
-   UI
+   UI — XP BAR
 ════════════════════════════════════════════════════ */
 function updateXPBar() {
-  const rank = getRank(STATE.xp);
-  const next = getNextRank(STATE.xp);
+  const rank    = getRank(STATE.xp);
+  const next    = getNextRank(STATE.xp);
   const prevMin = rank.min;
   const nextMin = next ? next.min : rank.min + 1;
-  const pct = next ? Math.round((STATE.xp - prevMin) / (nextMin - prevMin) * 100) : 100;
+  const pct     = next ? Math.round((STATE.xp - prevMin) / (nextMin - prevMin) * 100) : 100;
 
   document.getElementById('xpDisplay').textContent = STATE.xp;
-  document.getElementById('rankBadge').textContent = rank.name;
-  document.getElementById('rankBadge').style.color = rank.color;
+  document.getElementById('rankBadge').textContent  = rank.name;
+  document.getElementById('rankBadge').style.color  = rank.color;
   document.getElementById('rankBadge').style.borderColor = rank.color;
-  document.getElementById('xpBarFill').style.width = pct + '%';
-  document.getElementById('xpBarFill').style.background = `linear-gradient(90deg, ${rank.color}88, ${rank.color})`;
-  document.getElementById('xpBarLabel').textContent = 'RANK PROGRESS';
-  document.getElementById('xpNextLabel').textContent = next
-    ? `${STATE.xp}/${next.min} XP → ${next.name}`
-    : `MAX RANK: ${rank.name}`;
+  document.getElementById('xpBarFill').style.width  = pct + '%';
+  document.getElementById('xpBarFill').style.background = `linear-gradient(90deg,${rank.color}88,${rank.color})`;
   document.getElementById('displayName').textContent = STATE.codename;
 }
 
@@ -574,6 +591,81 @@ function flashXP(amount, questTitle) {
   setTimeout(() => el.remove(), 3000);
 }
 
+/* ════════════════════════════════════════════════════
+   UI — QUEST MODAL
+════════════════════════════════════════════════════ */
+const COLOR_VAR = { green:'var(--green)', cyan:'var(--cyan)', amber:'var(--amber)', lora:'var(--lora)' };
+
+function openModal(questId) {
+  const path   = STATE.path || 'explorer';
+  const quests = QUESTS[path] || [];
+  const q      = quests.find(x => x.id === questId);
+  if (!q) return;
+
+  const done   = STATE.completed.has(q.id);
+  const locked = q.requires.length > 0 && !q.requires.every(r => STATE.completed.has(r));
+  // Threat quests override color
+  const isThreat = (q.id === 'C4' || q.id === 'E2') && !locked;
+  const barColor = locked ? 'var(--edge)' : isThreat ? 'var(--amber)' : (COLOR_VAR[q.color] || 'var(--green)');
+
+  document.getElementById('modalBar').style.background    = barColor;
+  document.getElementById('modalTitle').textContent       = q.title;
+  document.getElementById('modalTitle').style.color       = barColor;
+  document.getElementById('modalXP').textContent          = `+${q.xp} XP`;
+
+  // Build modal body
+  document.getElementById('modalBody').innerHTML = `
+    <div class="m-section">
+      <div class="m-label">THE CONCEPT</div>
+      <div class="m-text">${q.concept.replace(/\n/g,'<br>')}</div>
+    </div>
+    <div class="m-section">
+      <div class="m-label">IRL APPLICATION</div>
+      <div class="m-irl"><div class="m-text">${q.irl}</div></div>
+    </div>
+    ${q.threat ? `<div class="m-section">
+      <div class="m-label">⚠ THREAT MODEL</div>
+      <div class="m-threat"><div class="m-text">${q.threat}</div></div>
+    </div>` : ''}
+    <div class="m-section">
+      <div class="m-label">YOUR MISSION</div>
+      <div class="m-text" style="margin-bottom:12px">${q.mission}</div>
+      <div class="m-links">
+        ${q.links.map(l=>`<a class="m-link" href="${l.url}" target="${l.url.startsWith('http')?'_blank':'_self'}" rel="noopener">${l.label}</a>`).join('')}
+      </div>
+    </div>
+  `;
+
+  // Footer button
+  let ftrHTML;
+  if (locked) {
+    const needs = q.requires.filter(r => !STATE.completed.has(r)).join(', ');
+    ftrHTML = `<button class="complete-btn locked-btn" disabled>🔒 Complete ${needs} first</button>`;
+  } else if (done) {
+    ftrHTML = `<button class="complete-btn" disabled>✓ QUEST COMPLETE — +${q.xp} XP EARNED</button>`;
+  } else {
+    ftrHTML = `<button class="complete-btn" onclick="completeQuest('${q.id}',${q.xp},'${q.title.replace(/'/g,"\\'")}')">▸ MARK COMPLETE — +${q.xp} XP</button>`;
+  }
+  document.getElementById('modalFtr').innerHTML = ftrHTML;
+
+  // Open
+  document.getElementById('modalBackdrop').classList.add('open');
+  document.getElementById('questModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('open');
+  document.getElementById('questModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ════════════════════════════════════════════════════
+   UI — QUEST LIST
+════════════════════════════════════════════════════ */
 function completeQuest(questId, xp, title) {
   if (STATE.completed.has(questId)) return;
   STATE.completed.add(questId);
@@ -582,77 +674,37 @@ function completeQuest(questId, xp, title) {
   updateXPBar();
   renderQuests();
   flashXP(xp, title);
+  closeModal();
   if (gun) try { syncToGun(); } catch(e) {}
 }
 
-function toggleQuest(id) {
-  const body = document.getElementById('qbody_' + id);
-  const toggle = document.getElementById('qtoggle_' + id);
-  if (!body) return;
-  body.classList.toggle('visible');
-  toggle.classList.toggle('open');
-}
-
 function renderQuests() {
-  const path = STATE.path || 'explorer';
-  const quests = QUESTS[path] || [];
+  const path    = STATE.path || 'explorer';
+  const quests  = QUESTS[path] || [];
   const container = document.getElementById('questList');
   container.innerHTML = '';
 
   quests.forEach(q => {
-    const done = STATE.completed.has(q.id);
+    const done   = STATE.completed.has(q.id);
     const locked = q.requires.length > 0 && !q.requires.every(r => STATE.completed.has(r));
-    let status = locked ? 'locked' : (done ? 'complete' : 'available');
-    if (q.id.startsWith('C4') || q.id === 'E2') status = (status === 'locked' ? 'locked' : 'threat');
+    const isThreat = (q.id === 'C4' || q.id === 'E2') && !locked;
+
+    let statusClass = 'card-locked';
+    if (!locked) statusClass = done ? 'card-complete' : isThreat ? 'card-threat' : 'card-available';
+
+    const icon   = done ? '✓' : locked ? '🔒' : '▸';
+    const colCls = locked ? 'col-locked' : done ? 'col-green' : isThreat ? 'col-amber' : `col-${q.color}`;
 
     const card = document.createElement('div');
-    card.className = `quest-card ${status}`;
-
-    const icon = done ? '✓' : (locked ? '🔒' : '▸');
-    const colorCls = locked ? 'locked-color' : (done ? 'green' : q.color);
-
+    card.className = `quest-card ${statusClass}`;
+    if (!locked) card.onclick = () => openModal(q.id);
     card.innerHTML = `
-      <div class="quest-header" onclick="toggleQuest('${q.id}')">
-        <div class="quest-status-icon" style="${done?'color:var(--green-d)':locked?'color:var(--edge)':'color:var(--green)'}">${icon}</div>
-        <div class="quest-title ${colorCls}">${q.title}</div>
-        <div class="quest-xp">+${q.xp} XP</div>
-        <div class="quest-toggle" id="qtoggle_${q.id}">▾</div>
-      </div>
-      <div class="quest-body" id="qbody_${q.id}">
-        <div class="quest-section">
-          <div class="quest-section-label">THE CONCEPT</div>
-          <div class="quest-text">${q.concept.replace(/\n/g,'<br>')}</div>
-        </div>
-        <div class="irl-box">
-          <div class="irl-label">IRL APPLICATION</div>
-          <div class="irl-text">${q.irl}</div>
-        </div>
-        ${q.threat ? `<div class="threat-box">
-          <div class="threat-label">⚠ THREAT MODEL</div>
-          <div class="threat-text">${q.threat}</div>
-        </div>` : ''}
-        <div class="mission-box">
-          <div class="mission-label">YOUR MISSION</div>
-          <div class="quest-text" style="margin-bottom:10px">${q.mission}</div>
-          <div class="mission-links">
-            ${q.links.map(l=>`<a class="mission-link" href="${l.url}" target="${l.url.startsWith('http')?'_blank':'_self'}">${l.label}</a>`).join('')}
-          </div>
-        </div>
-        ${locked
-          ? `<div class="complete-btn" style="border-color:var(--edge);color:var(--edge);cursor:default">🔒 COMPLETE PREREQUISITES FIRST</div>`
-          : done
-          ? `<button class="complete-btn" disabled>✓ QUEST COMPLETE — +${q.xp} XP EARNED</button>`
-          : `<button class="complete-btn" onclick="completeQuest('${q.id}',${q.xp},'${q.title.replace(/'/g,"\\'")}')">▸ MARK COMPLETE — +${q.xp} XP</button>`
-        }
-      </div>
+      <div class="quest-icon">${icon}</div>
+      <div class="quest-title ${colCls}">${q.title}</div>
+      <div class="quest-xp-badge">+${q.xp} XP</div>
+      ${!locked ? '<div class="quest-arrow">▶</div>' : ''}
     `;
     container.appendChild(card);
-
-    // Auto-open first available quest
-    if (!locked && !done && container.querySelectorAll('.quest-body.visible').length === 0) {
-      card.querySelector('.quest-body').classList.add('visible');
-      card.querySelector('.quest-toggle').classList.add('open');
-    }
   });
 }
 
@@ -674,18 +726,15 @@ function pickPath(path) {
 ════════════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
   updateXPBar();
-
-  // Handle ?path= query param from index.html CTAs
   const urlPath = new URLSearchParams(location.search).get('path');
   if (urlPath && QUESTS[urlPath]) {
     document.getElementById('introModal').classList.add('hidden');
     switchPath(urlPath);
   } else if (STATE.path) {
-    // Returning user — skip intro
     document.getElementById('introModal').classList.add('hidden');
     switchPath(STATE.path);
   }
-  // else: show intro modal (default state)
+  // else: show intro modal (default for new users)
 });
 </script>
 </body>

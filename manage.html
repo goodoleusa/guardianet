@@ -125,6 +125,34 @@
     ::-webkit-scrollbar{width:3px}
     ::-webkit-scrollbar-track{background:var(--panel)}
     ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+
+    /* ── Quest editor ── */
+    .quest-path-hdr{padding:6px 16px;font-size:8px;color:var(--amber);letter-spacing:3px;background:#090f1e;border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:10px}
+    .qe-table{border-collapse:collapse;width:100%;font-size:10px}
+    .qe-table th{background:#0a1628;border-bottom:1px solid var(--edge);padding:5px 10px;text-align:left;font-size:8px;color:var(--cyan-d);letter-spacing:1px;position:sticky;top:0;white-space:nowrap}
+    .qe-table td{border-bottom:1px solid rgba(21,32,53,0.8);padding:5px 10px;color:#8aaecc;vertical-align:middle}
+    .qe-table tr:hover td{background:rgba(0,204,255,0.03)}
+    .qe-path-sep td{background:#080f1e;color:var(--amber);font-size:8px;letter-spacing:2px;padding:4px 10px;border-bottom:1px solid var(--edge)}
+    .q-edit-form{background:#07101e;border:1px solid var(--cyan-d);padding:14px 16px;margin:8px 16px;display:none}
+    .q-edit-form.visible{display:block}
+    .q-edit-title{font-size:9px;color:var(--amber);letter-spacing:2px;margin-bottom:10px}
+    .q-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+    .q-edit-label{font-size:8px;color:var(--cyan-d);margin-bottom:3px}
+    .q-edit-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--green);font-family:var(--font);font-size:10px;padding:4px 8px;outline:none}
+    .q-edit-input:focus{border-color:var(--cyan)}
+    .q-edit-ta{width:100%;background:var(--deep);border:1px solid var(--edge);color:#8aaecc;font-family:var(--font);font-size:10px;padding:6px 8px;outline:none;resize:vertical;min-height:60px;margin-bottom:8px}
+    .q-edit-ta:focus{border-color:var(--cyan)}
+    .q-link-row{display:flex;gap:6px;margin-bottom:4px;align-items:center}
+    .q-link-row input{flex:1}
+    .q-export-box{background:var(--deep);border:1px solid var(--edge);padding:10px 12px;font-size:9px;color:var(--green);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;margin-top:10px;display:none}
+    .color-sel{display:flex;gap:6px;flex-wrap:wrap}
+    .color-chip{font-size:8px;padding:2px 8px;border:1px solid;cursor:pointer;letter-spacing:1px}
+    .color-chip.green{color:var(--green);border-color:var(--green-d)}
+    .color-chip.cyan{color:var(--cyan);border-color:var(--cyan-d)}
+    .color-chip.amber{color:var(--amber);border-color:#886600}
+    .color-chip.lora{color:var(--lora);border-color:#7040aa}
+    .color-chip.active{opacity:1;box-shadow:0 0 6px currentColor}
+    .color-chip:not(.active){opacity:0.5}
   </style>
 </head>
 <body style="display:flex;flex-direction:column;height:100vh">
@@ -150,6 +178,7 @@
   <div class="mtab" id="mtab-network"  onclick="switchTab('network')">LIVE NETWORK</div>
   <div class="mtab" id="mtab-cids"     onclick="switchTab('cids')">CID VAULT</div>
   <div class="mtab" id="mtab-broadcast" onclick="switchTab('broadcast')">BROADCAST</div>
+  <div class="mtab" id="mtab-quests"   onclick="switchTab('quests')">QUESTS</div>
 </div>
 
 <div class="content">
@@ -291,6 +320,89 @@ This message will appear as a system message in the selected room."></textarea>
           <div class="room-chip" onclick="quickBcast('✅ Guardian network status: ALL SYSTEMS OPERATIONAL.')">✅ Status OK</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── QUESTS TAB ── -->
+  <div class="tab-pane" id="tpane-quests">
+    <div class="sec-hdr">
+      <span>QUEST EDITOR</span>
+      <span style="color:var(--green)" id="questCount">— quests</span>
+      <div class="sec-hdr-right">
+        <button class="tb-btn" onclick="addNewQuest()">+ New Quest</button>
+        <button class="tb-btn" onclick="exportQuestsJS()">Export JS</button>
+      </div>
+    </div>
+    <div class="table-wrap" id="questEditorWrap">
+      <table class="qe-table">
+        <thead>
+          <tr>
+            <th>PATH</th><th>ID</th><th>TITLE</th><th>XP</th><th>REQUIRES</th><th>COLOR</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="questEditorBody"></tbody>
+      </table>
+    </div>
+    <!-- Inline edit form (shown below selected row) -->
+    <div class="q-edit-form" id="questEditForm">
+      <div class="q-edit-title" id="qefTitle">EDIT QUEST</div>
+      <div class="q-edit-grid">
+        <div>
+          <div class="q-edit-label">TITLE</div>
+          <input class="q-edit-input" id="qef_title" style="width:100%">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div class="q-edit-label">XP</div>
+            <input class="q-edit-input" id="qef_xp" type="number" min="0" max="500">
+          </div>
+          <div>
+            <div class="q-edit-label">PATH</div>
+            <select class="q-edit-input" id="qef_path">
+              <option value="archivist">archivist</option>
+              <option value="communicator">communicator</option>
+              <option value="hardware">hardware</option>
+              <option value="explorer">explorer</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="q-edit-grid">
+        <div>
+          <div class="q-edit-label">ID (e.g. A1, C3)</div>
+          <input class="q-edit-input" id="qef_id" maxlength="4">
+        </div>
+        <div>
+          <div class="q-edit-label">REQUIRES (comma-sep IDs)</div>
+          <input class="q-edit-input" id="qef_requires" placeholder="A1,A2">
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div class="q-edit-label">COLOR</div>
+        <div class="color-sel" id="qef_colorsel">
+          <span class="color-chip green" data-color="green" onclick="selectColor('green')">GREEN</span>
+          <span class="color-chip cyan" data-color="cyan" onclick="selectColor('cyan')">CYAN</span>
+          <span class="color-chip amber" data-color="amber" onclick="selectColor('amber')">AMBER</span>
+          <span class="color-chip lora" data-color="lora" onclick="selectColor('lora')">LORA</span>
+        </div>
+      </div>
+      <div class="q-edit-label">CONCEPT</div>
+      <textarea class="q-edit-ta" id="qef_concept" rows="4"></textarea>
+      <div class="q-edit-label">IRL APPLICATION</div>
+      <textarea class="q-edit-ta" id="qef_irl" rows="3"></textarea>
+      <div class="q-edit-label">THREAT MODEL</div>
+      <textarea class="q-edit-ta" id="qef_threat" rows="3"></textarea>
+      <div class="q-edit-label">MISSION</div>
+      <textarea class="q-edit-ta" id="qef_mission" rows="2"></textarea>
+      <div class="q-edit-label">LINKS</div>
+      <div id="qef_links"></div>
+      <button class="tb-btn" onclick="addLinkRow()" style="margin-bottom:10px">+ Add Link</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="tb-btn" onclick="saveQuestEdit()" style="border-color:var(--green);color:var(--green)">✓ Save</button>
+        <button class="tb-btn" onclick="cancelQuestEdit()">Cancel</button>
+        <button class="tb-btn" onclick="deleteQuest()" style="border-color:var(--red);color:var(--red);margin-left:auto">✕ Delete</button>
+      </div>
+      <div class="q-export-box" id="questExportBox"></div>
     </div>
   </div>
 
@@ -626,9 +738,221 @@ function initGun() {
   setStatus('P2P connected');
 }
 
+// ── QUEST EDITOR ──────────────────────────────────────────────────────────────
+let QUEST_DATA = {
+  archivist:[
+    {id:'A1',title:'THE INDESTRUCTIBLE FILE',xp:50,requires:[],color:'green',concept:'Files on IPFS are addressed by what they are — a cryptographic fingerprint of their content.',irl:'constitution.congress.gov returned 403 errors; 40+ IPFS nodes kept serving the same content.',threat:'IPFS is not anonymous. Your node reveals which CIDs you request.',mission:'Open an IPFS gateway URL and confirm the file loads.',links:[{label:'Open IPFS file via public gateway',url:'https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/'},{label:'What is IPFS? (official docs)',url:'https://docs.ipfs.tech/concepts/what-is-ipfs/'}]},
+    {id:'A2',title:'PIN YOUR FIRST FILE',xp:100,requires:['A1'],color:'green',concept:'Pinning means your device commits to hosting a specific file. Every person who pins is a mirror.',irl:'Hong Kong 2019–2020: activists pinned police documentation before accounts were suspended.',threat:'Pinning services are US companies subject to law enforcement requests.',mission:'Create a free Pinata account and pin the GuardianNet archive CID.',links:[{label:'Create free Pinata account',url:'https://app.pinata.cloud/register'},{label:'IPFS Cluster',url:'https://ipfscluster.io/'}]},
+    {id:'A3',title:'THE BITCOIN WITNESS',xp:150,requires:['A1'],color:'green',concept:'OpenTimestamps anchors a document hash in Bitcoin, proving existence forever without trusting anyone.',irl:'Journalists use Bitcoin timestamps to prove documents existed before stories were published.',threat:'The Bitcoin transaction is public. Anyone can see that a timestamp occurred.',mission:'Open the Witness Chamber and complete a timestamping ceremony. Download your receipt.',links:[{label:'Open Witness Chamber →',url:'witness.html'},{label:'OpenTimestamps explained',url:'https://opentimestamps.org/'}]},
+    {id:'A4',title:'ARCHIVE A MISSION FILE',xp:125,requires:['A2'],color:'green',concept:'Active archive missions are documents that need more mirrors right now.',irl:"Gene Sharp's From Dictatorship to Democracy must never be unavailable.",threat:'In some jurisdictions, hosting specific political documents carries legal risk.',mission:'Choose a mission, download the file, add to IPFS, verify CID, post in #investigation.',links:[{label:'View Active Archive Missions →',url:'index.html#missions'},{label:'Open Guardian Chat →',url:'chat.html'}]}
+  ],
+  communicator:[
+    {id:'C1',title:"THE MESH THAT CAN'T BE KILLED",xp:50,requires:[],color:'cyan',concept:'P2P networks have no center. GUN.js stores every message on every connected peer.',irl:'Iran blocked Signal 2021: Briar worked over BT/WiFi. Myanmar 2021: Meshtastic kept activists connected.',threat:'P2P is not anonymous. Your IP is visible to relay peers.',mission:'Join Guardian Chat — no account, no server.',links:[{label:'Open Guardian Chat →',url:'chat.html'},{label:'GUN.js',url:'https://gun.eco/'}]},
+    {id:'C2',title:"THE DEAD MAN'S SWITCH",xp:100,requires:['C1'],color:'cyan',concept:'Heartbeat every 48h. If silent, successor inherits. Chain heals itself.',irl:"Journalists use dead man's switches for evidence auto-release if detained.",threat:'Chain is public — positions and timing visible. Use codenames.',mission:"Join the Dead Man's Chain. Add yourself. Set your successor. Send first heartbeat.",links:[{label:"Open Dead Man's Chain →",url:'chain.html'}]},
+    {id:'C3',title:'WHEN THE INTERNET DISAPPEARS',xp:100,requires:[],color:'cyan',concept:'LoRa radio: 10–40km range, $20–30 chip, no infrastructure. Meshtastic builds encrypted mesh.',irl:'Myanmar 2021 coup: LoRa mesh kept activists connected when military cut internet.',threat:'LoRa signals are detectable and triangulatable. Transmit briefly, move location.',mission:'Explore the LoRa hardware catalog in Circuit Lab.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'Meshtastic docs',url:'https://meshtastic.org'}]},
+    {id:'C4',title:'CENSORSHIP-PROOF COMMS: THE HONEST GUIDE',xp:100,requires:['C1'],color:'amber',concept:'Threat model first, tool second. Signal for 1:1. Tor is circumvention, not secure comms.',irl:'Belarus activists exposed via Matrix homeserver seizure. Signal 1:1 users not compromised.',threat:'The safest tool is the one your contacts will actually use.',mission:'Review the Tools of Resistance library. Identify your backup comms stack.',links:[{label:'Browse Tools of Resistance →',url:'index.html#tools'},{label:'EFF SSD',url:'https://ssd.eff.org/'}]}
+  ],
+  hardware:[
+    {id:'H1',title:'THE $30 BROADCAST TOWER',xp:100,requires:[],color:'lora',concept:'ESP32 ($5) + SX1278 LoRa ($8–15) = community-owned mesh node. No license, no infrastructure.',irl:'Cumbre Vieja volcano 2021: LoRa networks kept coordination alive.',threat:'Check local regulations for radio equipment operation.',mission:'Open Circuit Lab, load Guardian Node example, explore component catalog.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'RadioLib',url:'https://github.com/jgromes/RadioLib'}]},
+    {id:'H2',title:'FLASH A MESHTASTIC NODE',xp:175,requires:['H1'],color:'lora',concept:'Meshtastic = open-source firmware for $30 hardware. Flash once, works indefinitely without internet.',irl:'Ukrainian defense units used Meshtastic when military radio was unavailable.',threat:'Meshtastic encrypts content but broadcasts GPS by default. Disable if needed.',mission:'Use ESP Terminator to flash Meshtastic, or identify hardware to acquire.',links:[{label:'ESP Terminator',url:'https://espterminator.com'},{label:'Meshtastic getting started',url:'https://meshtastic.org/docs/getting-started/'}]},
+    {id:'H3',title:'DESIGN A CIRCUIT — SHARE VIA IPFS',xp:150,requires:['H1'],color:'lora',concept:'Circuit Lab → export JSON → IPFS. Permanent content-addressed hardware design anyone can build.',irl:'Arduino/ESP32 exist because designs were shared freely. GuardianNet extends this to resistance hardware.',threat:'Publishing certain radio designs may have legal implications.',mission:'Modify Guardian Node in Circuit Lab, export JSON, share via IPFS, post CID in #hardware-lab.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'Guardian Chat (#hardware-lab) →',url:'chat.html'}]},
+    {id:'H4',title:'THE SOLAR SENTINEL',xp:200,requires:['H2','H3'],color:'amber',concept:'Solar + LiPo = indefinite operation without grid. BOM: ~$40–60.',irl:'Puerto Rico 2017: pre-deployed solar mesh nodes had comms when no one else did.',threat:'Always-on transmitters are more detectable. Consider transmit-on-demand in high-repression environments.',mission:'Design solar Guardian Node variant (add TP4056 + LiPo + solar). Export, pin to IPFS.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'disaster.radio',url:'https://disaster.radio'}]}
+  ],
+  explorer:[
+    {id:'E1',title:'WHY THIS EXISTS',xp:25,requires:[],color:'amber',concept:'Since Jan 2025: federal transparency data removed, 130+ CISA layoffs, constitutional pages returning 403s.',irl:'Authoritarian governments let records decay. The time to archive is before the deletion.',threat:'Decentralization raises costs for adversaries but does not make content invulnerable.',mission:'Read the Protect Democracy threat index. Note the current level.',links:[{label:'Protect Democracy Threat Index',url:'https://protectdemocracy.org/threat-index/'}]},
+    {id:'E2',title:'THE THREE THREATS',xp:25,requires:['E1'],color:'amber',concept:'CENSORSHIP: block access. SURVEILLANCE: monitor access. INFO WARFARE: flood with disinfo.',irl:'OONI Explorer tracks real-time censorship in 200+ countries.',threat:'Proportionate response: match tools to your actual threat model.',mission:'Check OONI Explorer for censorship in your country in the last 90 days.',links:[{label:'OONI Explorer',url:'https://explorer.ooni.org/'}]},
+    {id:'E3',title:'YOUR 5-MINUTE CONTRIBUTION',xp:50,requires:['E1'],color:'green',concept:'Easiest: pin a file via Pinata. Easy: install IPFS Companion. Medium: share a gateway link.',irl:'Internet Archive: 866 billion pages archived because people decided history mattered.',threat:'None. This is low-risk, high-impact.',mission:'Do one action from the list above. Then join Guardian Chat and tell us.',links:[{label:'Pinata',url:'https://app.pinata.cloud/register'},{label:'Guardian Chat →',url:'chat.html'}]}
+  ]
+};
+
+let qefCurrentId   = null;
+let qefCurrentPath = null;
+let qefColor       = 'green';
+
+function renderQuestEditor() {
+  const paths = ['archivist','communicator','hardware','explorer'];
+  const tbody = document.getElementById('questEditorBody');
+  let total = 0;
+  tbody.innerHTML = '';
+  paths.forEach(path => {
+    const quests = QUEST_DATA[path] || [];
+    total += quests.length;
+    const sep = document.createElement('tr');
+    sep.className = 'qe-path-sep';
+    sep.innerHTML = `<td colspan="7">▸ ${path.toUpperCase()}</td>`;
+    tbody.appendChild(sep);
+    quests.forEach(q => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--cyan-d)">${path}</td>
+        <td style="color:var(--amber)">${esc(q.id)}</td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${esc(q.title)}</td>
+        <td style="color:var(--gold)">${q.xp}</td>
+        <td style="color:var(--cyan-d)">${(q.requires||[]).join(', ')||'—'}</td>
+        <td style="color:var(--${q.color||'green'})">${q.color||'green'}</td>
+        <td><button class="tbl-btn edit" onclick="openQuestEdit('${path}','${esc(q.id)}')">Edit</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+  document.getElementById('questCount').textContent = `${total} quest${total!==1?'s':''}`;
+}
+
+function openQuestEdit(path, id) {
+  const q = (QUEST_DATA[path]||[]).find(x => x.id === id);
+  if (!q) return;
+  qefCurrentId   = id;
+  qefCurrentPath = path;
+  qefColor       = q.color || 'green';
+
+  document.getElementById('qefTitle').textContent = `EDIT: ${id} — ${q.title}`;
+  document.getElementById('qef_id').value         = q.id;
+  document.getElementById('qef_title').value      = q.title;
+  document.getElementById('qef_xp').value         = q.xp;
+  document.getElementById('qef_path').value       = path;
+  document.getElementById('qef_requires').value   = (q.requires||[]).join(',');
+  document.getElementById('qef_concept').value    = q.concept||'';
+  document.getElementById('qef_irl').value        = q.irl||'';
+  document.getElementById('qef_threat').value     = q.threat||'';
+  document.getElementById('qef_mission').value    = q.mission||'';
+  selectColor(qefColor);
+  renderLinkRows(q.links||[]);
+
+  const form = document.getElementById('questEditForm');
+  form.classList.add('visible');
+  form.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('questExportBox').style.display = 'none';
+}
+
+function addNewQuest() {
+  qefCurrentId   = null;
+  qefCurrentPath = 'archivist';
+  qefColor       = 'green';
+  const newId    = 'X' + Date.now().toString(36).slice(-3).toUpperCase();
+
+  document.getElementById('qefTitle').textContent = 'NEW QUEST';
+  document.getElementById('qef_id').value         = newId;
+  document.getElementById('qef_title').value      = '';
+  document.getElementById('qef_xp').value         = 100;
+  document.getElementById('qef_path').value       = 'archivist';
+  document.getElementById('qef_requires').value   = '';
+  document.getElementById('qef_concept').value    = '';
+  document.getElementById('qef_irl').value        = '';
+  document.getElementById('qef_threat').value     = '';
+  document.getElementById('qef_mission').value    = '';
+  selectColor('green');
+  renderLinkRows([{label:'',url:''}]);
+
+  const form = document.getElementById('questEditForm');
+  form.classList.add('visible');
+  form.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('questExportBox').style.display = 'none';
+}
+
+function cancelQuestEdit() {
+  document.getElementById('questEditForm').classList.remove('visible');
+  document.getElementById('questExportBox').style.display = 'none';
+}
+
+function saveQuestEdit() {
+  const path  = document.getElementById('qef_path').value;
+  const newId = document.getElementById('qef_id').value.trim().toUpperCase();
+  if (!newId) { alert('ID required'); return; }
+
+  const links = [];
+  document.querySelectorAll('.q-link-row').forEach(row => {
+    const label = row.querySelector('.ql-label').value.trim();
+    const url   = row.querySelector('.ql-url').value.trim();
+    if (label || url) links.push({label, url});
+  });
+
+  const updated = {
+    id:       newId,
+    title:    document.getElementById('qef_title').value.trim(),
+    xp:       parseInt(document.getElementById('qef_xp').value)||0,
+    requires: document.getElementById('qef_requires').value.split(',').map(s=>s.trim()).filter(Boolean),
+    color:    qefColor,
+    concept:  document.getElementById('qef_concept').value,
+    irl:      document.getElementById('qef_irl').value,
+    threat:   document.getElementById('qef_threat').value,
+    mission:  document.getElementById('qef_mission').value,
+    links
+  };
+
+  if (qefCurrentId) {
+    Object.keys(QUEST_DATA).forEach(p => {
+      QUEST_DATA[p] = QUEST_DATA[p].filter(q => !(q.id === qefCurrentId && p === qefCurrentPath));
+    });
+  }
+  if (!QUEST_DATA[path]) QUEST_DATA[path] = [];
+  QUEST_DATA[path].push(updated);
+
+  qefCurrentId   = newId;
+  qefCurrentPath = path;
+  renderQuestEditor();
+  logFeed(`<span class="g">✓ Quest ${esc(newId)} saved (${path})</span>`);
+  setStatus(`Quest ${newId} saved`);
+}
+
+function deleteQuest() {
+  if (!qefCurrentId) return;
+  if (!confirm(`Delete quest ${qefCurrentId}?`)) return;
+  QUEST_DATA[qefCurrentPath] = (QUEST_DATA[qefCurrentPath]||[]).filter(q => q.id !== qefCurrentId);
+  cancelQuestEdit();
+  renderQuestEditor();
+  logFeed(`<span class="a">- Quest ${esc(qefCurrentId)} deleted</span>`);
+}
+
+function selectColor(color) {
+  qefColor = color;
+  document.querySelectorAll('.color-chip').forEach(c => c.classList.toggle('active', c.dataset.color === color));
+}
+
+function renderLinkRows(links) {
+  const wrap = document.getElementById('qef_links');
+  wrap.innerHTML = '';
+  (links.length ? links : [{label:'',url:''}]).forEach(l => addLinkRow(l.label, l.url));
+}
+
+function addLinkRow(label='', url='') {
+  const wrap = document.getElementById('qef_links');
+  const row  = document.createElement('div');
+  row.className = 'q-link-row';
+  row.innerHTML = `
+    <input class="q-edit-input ql-label" placeholder="Link label" value="${esc(label)}" style="flex:1">
+    <input class="q-edit-input ql-url" placeholder="URL or path" value="${esc(url)}" style="flex:1.5">
+    <button class="tbl-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>
+  `;
+  wrap.appendChild(row);
+}
+
+function exportQuestsJS() {
+  const js = 'const QUESTS = ' + JSON.stringify(QUEST_DATA, null, 2) + ';\n';
+  const box = document.getElementById('questExportBox');
+  box.textContent = js;
+  box.style.display = 'block';
+  const form = document.getElementById('questEditForm');
+  if (!form.classList.contains('visible')) { form.classList.add('visible'); }
+  box.scrollIntoView({behavior:'smooth'});
+  logFeed('<span class="c">📋 QUESTS JS exported — copy from box below</span>');
+  setStatus('QUESTS JS ready to copy');
+}
+
 // ── STARTUP ───────────────────────────────────────────────────────────────────
 loadRegistry();
 initGun();
+
+(function(){
+  const hash = location.hash.replace('#','');
+  const valid = ['registry','network','cids','broadcast','quests'];
+  if (valid.includes(hash)) {
+    switchTab(hash);
+    if (hash === 'quests') renderQuestEditor();
+  }
+  document.getElementById('mtab-quests').addEventListener('click', () => {
+    if (!document.getElementById('questEditorBody').children.length) renderQuestEditor();
+  }, {once:true});
+})();
 </script>
 </body>
 </html>
