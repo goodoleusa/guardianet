@@ -524,7 +524,7 @@
       <div class="stat-row"><span class="stat-lbl">DARK</span>     <span class="stat-val r"  id="sDark">--</span></div>
       <hr class="stat-divider">
       <div class="stat-row"><span class="stat-lbl">SENTINELS</span><span class="stat-val c"  id="sSent">--</span></div>
-      <div class="stat-row"><span class="stat-lbl">GUARDIANS</span><span class="stat-val g"  id="sGuard">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">MEMBERS</span><span class="stat-val g"  id="sGuard">--</span></div>
       <div class="stat-row"><span class="stat-lbl">LORA NODES <span class="globe-status-badge sim">SIMULATED</span></span><span class="stat-val lo" id="sLora">--</span></div>
       <hr class="stat-divider">
       <div class="stat-row"><span class="stat-lbl">CHAIN LEN</span><span class="stat-val g"  id="sChain">--</span></div>
@@ -590,7 +590,7 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  GUARDIAN GLOBE — CyberTemplate v2.0
+//  GN GLOBE — [redacted project name]
 //  D3 v7 orthographic projection + AOL retro aesthetic
 // ═══════════════════════════════════════════════════════════════
 
@@ -824,7 +824,7 @@ function showTip(ev, n) {
 
   const hoursAgo = Math.round((Date.now() - new Date(n.last_seen)) / 3.6e6);
   const tierLabel = n.tier === 'sentinel' ? '◈◈◈ SENTINEL'
-                  : n.type === 'lora'     ? '◉ LORA MESH' : '◈ GUARDIAN';
+                  : n.type === 'lora'     ? '◉ LORA MESH' : '◈ MEMBER';
 
   const loraExtra = n.lora ? `
     <div class="tip-lora">FREQ: ${n.lora.freq_mhz} MHz  SF:${n.lora.spreading_factor}</div>
@@ -950,7 +950,7 @@ function buildNodeList() {
 
     const tierLabel = n.tier === 'sentinel' ? '◈◈ SENTINEL'
                     : isLora                ? '◉ LORA'
-                    : '◈ GUARDIAN';
+                    : '◈ MEMBER';
     const tierClass = n.tier === 'sentinel' ? 'sentinel'
                     : isLora                ? 'lora-t' : '';
     const idClass   = isLora ? 'ni-id lora-node' : 'ni-id';

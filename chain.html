@@ -262,7 +262,7 @@
     <button class="chain-toggle-btn" onclick="document.getElementById('chainCol').classList.toggle('collapsed-mobile');this.textContent=this.textContent.includes('SHOW')?'▲ HIDE RELAY CHAIN':'▼ SHOW RELAY CHAIN'">▼ SHOW RELAY CHAIN</button>
     <div class="col-head">
       <span>RELAY CHAIN</span>
-      <span id="chainCount" style="color:var(--cyan-d)">0 guardians</span>
+      <span id="chainCount" style="color:var(--cyan-d)">0 members</span>
     </div>
     <div class="chain-scroll" id="chainScroll">
       <div class="empty-state">
@@ -304,15 +304,15 @@
         </div>
         <div class="guide-section">
           <div class="guide-section-title">THE 48-HOUR RULE</div>
-          Every guardian in the chain must send a heartbeat — clicking "I AM ALIVE" — at least once every 48 hours. If your node goes dark (no heartbeat for 48h), the system automatically notifies your successor in the chain. They then become responsible for continuing the relay. This creates redundancy: no single point of failure can silence the network.
+          Every member in the chain must send a heartbeat — clicking "I AM ALIVE" — at least once every 48 hours. If your node goes dark (no heartbeat for 48h), the system automatically notifies your successor in the chain. They then become responsible for continuing the relay. This creates redundancy: no single point of failure can silence the network.
         </div>
         <div class="guide-section">
           <div class="guide-section-title">HOW SUCCESSION WORKS</div>
-          Guardians are listed in order (#1, #2, #3…). When #2 goes dark, #3 is notified and becomes active. When #1 returns, they reclaim their position. The chain "heals" around absent nodes. This mirrors the structure of press freedom organizations like the Committee to Protect Journalists or Reporters Without Borders — multiple layers of people who can carry a message forward.
+          Members are listed in order (#1, #2, #3…). When #2 goes dark, #3 is notified and becomes active. When #1 returns, they reclaim their position. The chain "heals" around absent nodes. This mirrors the structure of press freedom organizations like the Committee to Protect Journalists or Reporters Without Borders — multiple layers of people who can carry a message forward.
         </div>
         <div class="guide-section">
           <div class="guide-section-title">THREAT MODEL</div>
-          This system protects against: detention (can't send heartbeat in custody), technical failure (device dies), travel to blackout zones, coercion (but you can warn successors via side-channel). It does NOT protect against: simultaneous takedown of all guardians, legal orders requiring active suppression (in which case the trigger may be the legal action itself), or sabotage of the P2P network infrastructure.
+          This system protects against: detention (can't send heartbeat in custody), technical failure (device dies), travel to blackout zones, coercion (but you can warn successors via side-channel). It does NOT protect against: simultaneous takedown of all members, legal orders requiring active suppression (in which case the trigger may be the legal action itself), or sabotage of the P2P network infrastructure.
         </div>
         <div class="guide-section">
           <div class="guide-section-title">GETTING STARTED</div>
@@ -320,7 +320,7 @@
           2. Click "I AM ALIVE" to send your first heartbeat<br>
           3. Keep clicking every 24-48 hours<br>
           4. Recruit a trusted successor — they join independently<br>
-          5. Your chain is as strong as its weakest link. More guardians = more resilience.
+          5. Your chain is as strong as its weakest link. More members = more resilience.
         </div>
         <div class="guide-section">
           <div class="guide-section-title">THE P2P DATABASE — GUN.JS</div>
@@ -345,12 +345,12 @@
 
     <!-- Station -->
     <div class="station-panel" id="stationPanel">
-      <div class="station-head">MY GUARDIAN STATION</div>
+      <div class="station-head">MY RELAY STATION</div>
       <div class="not-in-chain" id="notInChain">
         <div class="big">⛓</div>
         <div>You are not in the relay chain.</div>
         <div>Join using the form on the left.</div>
-        <div style="color:var(--lora);margin-top:6px">Each guardian = one more layer of resilience.</div>
+        <div style="color:var(--lora);margin-top:6px">Each member = one more layer of resilience.</div>
       </div>
       <div id="inChain" style="display:none">
         <div class="station-grid">
@@ -550,7 +550,7 @@ function updateStats(nodes) {
     ? 'linear-gradient(90deg,#886600,var(--amber))'
     : 'linear-gradient(90deg,#550000,var(--red))';
 
-  document.getElementById('chainCount').textContent  = `${nodes.length} guardian${nodes.length !== 1 ? 's' : ''}`;
+  document.getElementById('chainCount').textContent  = `${nodes.length} member${nodes.length !== 1 ? 's' : ''}`;
   document.getElementById('tbNodes').textContent     = `${nodes.length} nodes`;
   document.getElementById('sbNodes').textContent     = nodes.length;
   document.getElementById('sbActive').textContent    = active;

@@ -153,6 +153,32 @@ const GN_GAME = (function() {
     _save();
   }
 
+  function _showXPToast(amount, reason, promoted, rankName) {
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:10000;background:rgba(6,10,18,0.95);border:1px solid #16a34a;color:#22c55e;font-family:var(--font,sans-serif);font-size:1rem;font-weight:700;padding:12px 24px;border-radius:8px;pointer-events:none;opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;text-align:center;box-shadow:0 0 20px rgba(34,197,94,0.3);';
+    toast.textContent = '+' + amount + ' XP';
+    if (reason) toast.textContent += ' — ' + reason;
+    document.body.appendChild(toast);
+    requestAnimationFrame(function() {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    if (promoted) {
+      setTimeout(function() {
+        toast.style.borderColor = '#c084fc';
+        toast.style.color = '#c084fc';
+        toast.style.boxShadow = '0 0 24px rgba(192,132,252,0.4)';
+        toast.textContent = 'RANK UP: ' + rankName;
+        if (typeof GN_FX !== 'undefined') GN_FX.levelUp();
+      }, 1200);
+    }
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(-20px)';
+      setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+    }, promoted ? 3000 : 1800);
+  }
+
   function addXP(amount, reason) {
     if (!_player) _load();
     _player.xp += amount;
@@ -160,6 +186,8 @@ const GN_GAME = (function() {
     const promoted = newRank.name !== _player.rank;
     _player.rank = newRank.name;
     _save();
+    _showXPToast(amount, reason, promoted, newRank.name);
+    if (typeof GN_FX !== 'undefined') GN_FX.xp();
     return { xp: _player.xp, rank: newRank, promoted, reason };
   }
 
@@ -169,6 +197,22 @@ const GN_GAME = (function() {
     if (_player.achievements.includes(key)) return null;
     _player.achievements.push(key);
     const ach = ACHIEVEMENTS[key];
+    setTimeout(function() {
+      if (typeof GN_FX !== 'undefined') GN_FX.achievement();
+      var achToast = document.createElement('div');
+      achToast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);z-index:10000;background:rgba(6,10,18,0.95);border:1px solid #f59e0b;color:#fbbf24;font-family:var(--font,sans-serif);font-size:0.95rem;font-weight:700;padding:14px 24px;border-radius:8px;pointer-events:none;opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);text-align:center;box-shadow:0 0 20px rgba(245,158,11,0.3);max-width:90vw;';
+      achToast.innerHTML = '<div style="font-size:1.3rem;margin-bottom:4px">' + ach.icon + '</div><div>' + ach.name + '</div><div style="font-size:0.78rem;color:#94a3b8;font-weight:500;margin-top:2px">' + ach.desc + '</div>';
+      document.body.appendChild(achToast);
+      requestAnimationFrame(function() {
+        achToast.style.opacity = '1';
+        achToast.style.transform = 'translateX(-50%) translateY(0)';
+      });
+      setTimeout(function() {
+        achToast.style.opacity = '0';
+        achToast.style.transform = 'translateX(-50%) translateY(20px)';
+        setTimeout(function() { if (achToast.parentNode) achToast.parentNode.removeChild(achToast); }, 400);
+      }, 2500);
+    }, 300);
     const result = addXP(ach.xp, ach.name);
     return { achievement: ach, ...result };
   }

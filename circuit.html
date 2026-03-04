@@ -386,6 +386,7 @@
   <span style="margin-left:auto" id="sbMsg">drag components · click to select · scroll to zoom</span>
 </div>
 
+<script src="js/particles.js"></script>
 <script src="js/gameplay.js"></script>
 <script>
 // ── COMPONENT CATALOG ─────────────────────────────────────────────────────────
@@ -840,9 +841,9 @@ function exportBOM() {
     csv += `"${r.label}",${r.qty},${r.price.toFixed(2)},${(r.price*r.qty).toFixed(2)},"${r.buy}"\n`;
   });
   const blob = new Blob([csv], {type:'text/csv'});
-  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'guardian-bom.csv'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'gn-bom.csv'});
   a.click(); URL.revokeObjectURL(a.href);
-  setStatus('BOM exported as guardian-bom.csv');
+  setStatus('BOM exported as gn-bom.csv');
 }
 
 // Common enclosures: [name, W, H, depth_mm, notes]
@@ -942,7 +943,7 @@ const WIKI = {
     lib: 'Arduino IDE built-in — no library needed. Wire.h for I2C, SPI.h for SPI.',
   },
   esp32: {
-    what: 'The ESP32 is a powerful dual-core 240MHz chip with built-in WiFi and Bluetooth. It\'s the workhorse of guardian nodes: connect to the internet, run BLE beacons, talk to sensors, and go deep-sleep on battery. 3.3V logic (NOT 5V tolerant — use level shifters for 5V sensors).',
+    what: 'The ESP32 is a powerful dual-core 240MHz chip with built-in WiFi and Bluetooth. It\'s the workhorse of GN nodes: connect to the internet, run BLE beacons, talk to sensors, and go deep-sleep on battery. 3.3V logic (NOT 5V tolerant — use level shifters for 5V sensors).',
     wiring: 'I2C: SDA GPIO21, SCL GPIO22 · SPI: MOSI GPIO23, MISO GPIO19, SCK GPIO18, CS GPIO5 · UART0: TX GPIO1/RX GPIO3 (USB), UART1: GPIO16/17 (use for GPS) · 3.3V on 3V3 pin, 5V in on VIN',
     tips: 'GPIO34-39 are INPUT-only (no pullup). Avoid GPIO0 (boot mode), GPIO2 (LED). Deep sleep: wake from GPIO33 or touch pins. ESP.deepSleep(uS) — 10µA idle.',
     lib: 'Arduino-ESP32 core. WiFiClient, HTTPClient, ArduinoJson, TinyGPS++.',
@@ -978,7 +979,7 @@ const WIKI = {
     lib: 'RF24 library by TMRh20 (most maintained fork).',
   },
   sx1276: {
-    what: 'The SX1276 is the LoRa radio chip behind most guardian-range links. LoRa (Long Range) uses a spread-spectrum chirp modulation — it trades data speed for incredible range. 5-15km line-of-sight, penetrates buildings. 868MHz (EU) or 915MHz (US/CA).',
+    what: 'The SX1276 is the LoRa radio chip behind most long-range mesh links. LoRa (Long Range) uses a spread-spectrum chirp modulation — it trades data speed for incredible range. 5-15km line-of-sight, penetrates buildings. 868MHz (EU) or 915MHz (US/CA).',
     wiring: 'SPI: MOSI, MISO, SCK, NSS (CS). Plus DIO0 (interrupt for TX/RX done), RST (optional). 3.3V only. Typical dev boards have all this broken out. IMPORTANT: never transmit without an antenna — can damage the RF front end.',
     tips: 'Spreading Factor (SF7-SF12): higher SF = longer range but slower. SF12 can take ~2.5 seconds per packet at 125kHz BW. Use SF7-SF9 for in-field node-to-base links. Pair with GPS for timestamped position packets.',
     lib: 'arduino-LoRa by sandeepmistry (simple). MCCI LMIC for full LoRaWAN stack.',
@@ -1014,7 +1015,7 @@ const WIKI = {
     lib: 'EByte LoRa E32 library by Renzo Mischianti.',
   },
   heltec_lora32: {
-    what: 'The Heltec WiFi LoRa 32 V2 combines an ESP32, a SX1276/SX1278 LoRa radio, and a 0.96" OLED display on a single development board. It\'s arguably the best all-in-one board for guardian network nodes: WiFi for internet backhaul, LoRa for long-range mesh, OLED for status display. USB-C charging.',
+    what: 'The Heltec WiFi LoRa 32 V2 combines an ESP32, a SX1276/SX1278 LoRa radio, and a 0.96" OLED display on a single development board. It\'s arguably the best all-in-one board for GN network nodes: WiFi for internet backhaul, LoRa for long-range mesh, OLED for status display. USB-C charging.',
     wiring: 'Self-contained — LoRa and OLED are wired internally. External connections: I2C on GPIO4/15, UART on GPIO39/37. LoRa antenna: REQUIRED on the IPEX connector (868 or 915MHz). A 8.2cm wire works as a quarter-wave for 868MHz.',
     tips: 'Use the "Heltec ESP32" board package, not generic ESP32. Built-in battery connector (PH 1.25mm). The LED is on GPIO25. Deep sleep with LoRa: radio.sleep() then ESP.deepSleep(). Wake via timer or external interrupt on GPIO39.',
     lib: 'Heltec library (includes LoRa + OLED). Also works with arduino-LoRa + Adafruit SSD1306.',
@@ -1032,7 +1033,7 @@ const WIKI = {
     lib: 'TinyGPS++. For full config: SparkFun u-blox GNSS library.',
   },
   l76k: {
-    what: 'The Quectel L76K is a compact, ultra-low-power GPS module (GPS+BeiDou). Its AlwaysLocate™ algorithm adaptively manages power — when the device isn\'t moving, it takes fewer satellite readings to save battery. Ideal for battery-powered guardian field nodes.',
+    what: 'The Quectel L76K is a compact, ultra-low-power GPS module (GPS+BeiDou). Its AlwaysLocate™ algorithm adaptively manages power — when the device isn\'t moving, it takes fewer satellite readings to save battery. Ideal for battery-powered GN field nodes.',
     wiring: '3.3V VCC (NOT 5V tolerant). UART TX/RX. FORCE_ON pin: pull LOW to disable power-save and force continuous tracking. NRESET active-low reset.',
     tips: 'Standby current <1mA with AlwaysLocate. Use 1PPS output for precision time sync between nodes. Small form factor (10.1×9.7mm) suits compact enclosures. Backup battery recommended for faster fix after sleep.',
     lib: 'TinyGPS++ works fine with standard NMEA output.',
@@ -1062,7 +1063,7 @@ const WIKI = {
     lib: 'TinyGSM (for AT control). Direct USB: standard Linux/Windows modem driver (appears as USB network interface).',
   },
   a9g: {
-    what: 'The AI-Thinker A9G combines GSM/GPRS cellular and GPS on one module — one chip handles both. Two separate UARTs: one for cellular AT commands, one for GPS NMEA data. Ideal when you want to minimize components: location + internet in a single module for guardian field nodes.',
+    what: 'The AI-Thinker A9G combines GSM/GPRS cellular and GPS on one module — one chip handles both. Two separate UARTs: one for cellular AT commands, one for GPS NMEA data. Ideal when you want to minimize components: location + internet in a single module for GN field nodes.',
     wiring: 'UART1 (GPIO11/10): cellular AT commands. UART2 (GPIO16/17): GPS NMEA sentences. VCC: 3.8V (LiPo direct). BOOT pin must be pulled LOW for 1 second on startup. PWRKEY: toggle to power on/off.',
     tips: 'GPS fix takes longer than dedicated GPS modules — shared antenna path. The module runs its own RTOS and has 4MB flash for custom firmware if needed. Comes with a small PCB antenna for GSM; GPS needs a clear sky view.',
     lib: 'Custom A9G library or raw AT commands. Use TinyGPS++ on the GPS UART.',
@@ -1076,7 +1077,7 @@ const WIKI = {
   ec21: {
     what: 'The Quectel EC21 is an LTE Cat-1 module — a step below Cat-4 in speed (10Mbps/5Mbps) but cheaper, lower power, and widely compatible. The EC21-G global variant covers all LTE bands worldwide. Has QuecOpen: you can run custom C applications directly on the module without a separate MCU.',
     wiring: 'Main UART at 115200. USB for debug/firmware. 3.3V I/O. Needs proper LTE antenna (included with most dev boards). Mini-PCIe form factor available for embedded designs.',
-    tips: 'QuecOpen means you can eliminate the Arduino/ESP32 entirely for simple tasks — the EC21 can run your sensor polling and cloud upload code internally. Cat-1 is ideal for guardian nodes that need reliable upload without the cost of Cat-4.',
+    tips: 'QuecOpen means you can eliminate the Arduino/ESP32 entirely for simple tasks — the EC21 can run your sensor polling and cloud upload code internally. Cat-1 is ideal for GN nodes that need reliable upload without the cost of Cat-4.',
     lib: 'TinyGSM works. For QuecOpen: Quectel OpenLinux SDK.',
   },
 };
@@ -1214,7 +1215,7 @@ const EXAMPLES = {
     ],
   },
   'guardian-node': {
-    title: 'Guardian Field Node (ESP32 + GPS + SIM800L + LoRa)',
+    title: 'GN Field Node (ESP32 + GPS + SIM800L + LoRa)',
     components: [
       { id:'U1', type:'esp32',    label:'ESP32 DevKit',    x:400, y:280 },
       { id:'G1', type:'neo6m',    label:'NEO-6M GPS',      x:160, y:150 },
@@ -1245,7 +1246,7 @@ const EXAMPLES = {
     ],
   },
   'lora-node': {
-    title: 'LoRa Guardian Node (ESP32 + SX1278)',
+    title: 'LoRa GN Node (ESP32 + SX1278)',
     components: [
       { id:'U1', type:'esp32',    label:'ESP32 DevKit',  x:400, y:300 },
       { id:'L1', type:'sx1278',   label:'LoRa SX1278',   x:650, y:200 },

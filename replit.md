@@ -23,6 +23,8 @@ pin.html                 - IPFS pinning operation
 roadmap.html             - Project roadmap
 server.py                - Python HTTP server with OTS proxy endpoints
 js/gameplay.js           - GN_GAME module (XP, ranks, achievements, profile export/import)
+js/particles.js          - GN_FX canvas particle effects (xp, achievement, mission, seal, levelUp, export)
+js/nav.js                - mddNav.open()/close(), swipe-to-close, backdrop click handler
 styles.css               - Shared CSS (gn- class prefix)
 config.json              - Site configuration
 data/missions.json       - Archive mission data

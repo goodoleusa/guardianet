@@ -429,7 +429,7 @@
       <div class="bcast-room">
         <div class="room-chip sel" data-room="general">#general</div>
         <div class="room-chip" data-room="investigation">#investigation</div>
-        <div class="room-chip" data-room="guardian-net">#guardian-net</div>
+        <div class="room-chip" data-room="gn-ops">#gn-ops</div>
         <div class="room-chip" data-room="hardware">#hardware-lab</div>
         <div class="room-chip" data-room="deadmans">#dead-mans-chain</div>
         <div class="room-chip" data-room="collab">#collab-coding</div>
@@ -449,7 +449,7 @@ This message will appear as a system message in the selected room."></textarea>
         <div class="bcast-label">QUICK MESSAGES</div>
         <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
           <div class="room-chip" onclick="quickBcast('🔴 ALERT: Network resilience check. All members please confirm heartbeat in Dead Man\'s Chain.')">🔴 Resilience Check</div>
-          <div class="room-chip" onclick="quickBcast('📦 New evidence CID pinned. See #guardian-net for details.')">📦 New CID Pinned</div>
+          <div class="room-chip" onclick="quickBcast('📦 New evidence CID pinned. See #gn-ops for details.')">📦 New CID Pinned</div>
           <div class="room-chip" onclick="quickBcast('⛓ Dead Man\'s Chain maintenance. Expect brief interruption.')">⛓ Chain Maintenance</div>
           <div class="room-chip" onclick="quickBcast('✅ GN network status: ALL SYSTEMS OPERATIONAL.')">✅ Status OK</div>
         </div>
@@ -827,7 +827,7 @@ function sendBroadcast() {
   if (!gun) { alert('P2P not connected'); return; }
   const key = `sys_${Date.now()}_${rndHex(2)}`;
   gun.get(CHAT_NS).get('rooms').get(selectedRoom).get('msgs').get(key).put({
-    from:'GUARDIAN-NET-ADMIN',
+    from:'GN-ADMIN',
     text,
     time:ts(),
     room:selectedRoom,
