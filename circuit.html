@@ -124,6 +124,7 @@
   <button class="tb-btn" onclick="showPowerBudget()">Power Budget</button>
   <div class="tb-sep"></div>
   <button class="tb-btn" onclick="shareCircuit()">Share via IPFS…</button>
+  <button class="tb-btn" id="liveBtn" onclick="toggleLive()" title="Enable P2P collaborative editing">LIVE: OFF</button>
   <div class="tb-sep"></div>
   <span class="cid-pill" id="cidPill" title="Circuit CID">CID: none</span>
   <div class="tb-right">
@@ -143,6 +144,7 @@
       <div class="stab" id="stab-power" onclick="switchSTab('power')">POWER</div>
       <div class="stab" id="stab-problem" onclick="switchSTab('problem')">PROBLEM</div>
       <div class="stab" id="stab-wiki" onclick="switchSTab('wiki')">WIKI</div>
+      <div class="stab" id="stab-bom" onclick="switchSTab('bom')">BOM</div>
     </div>
 
     <!-- Catalog pane -->
@@ -256,6 +258,41 @@
           <div>Export NECTO project → zip → ipfs add → share CID in #hardware-lab</div>
         </div>
       </div>
+    <!-- BOM pane -->
+    <div class="sidebar-pane" id="spane-bom">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🛒 BILL OF MATERIALS</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <button class="tb-btn" onclick="buildBOM();buildFit();" style="flex:1;padding:7px 0">Refresh BOM</button>
+          <button class="tb-btn" onclick="exportBOM()" style="flex:1;padding:7px 0">Export CSV</button>
+        </div>
+        <div id="bomEmpty" style="color:var(--text-dim);font-size:13px">Add components to the canvas, then click Refresh BOM.</div>
+        <div id="bomTable" style="display:none"></div>
+        <div id="bomTotal" style="display:none;margin-top:12px;padding:10px;background:var(--deep);border:1px solid var(--edge)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:var(--text-dim);font-size:12px;letter-spacing:1px">COMPONENT COST</span>
+            <span style="color:var(--green)" id="bomCompCost">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:var(--text-dim);font-size:12px;letter-spacing:1px">SHIPPING EST.</span>
+            <span style="color:var(--text-dim)" id="bomShipping">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid var(--edge);padding-top:6px;margin-top:4px">
+            <span style="color:var(--amber);font-size:13px;letter-spacing:1px">TOTAL EST.</span>
+            <span style="color:var(--amber);font-size:15px" id="bomTotalVal">$0.00</span>
+          </div>
+        </div>
+        <div id="fitEstimator" style="display:none;margin-top:14px"></div>
+        <div style="margin-top:14px;padding:10px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);font-size:12px;color:var(--text-dim);line-height:1.7">
+          <div style="color:var(--green);margin-bottom:4px;letter-spacing:1px">BUYING TIPS</div>
+          <div>• DigiKey: reliable, ships CA/US same day</div>
+          <div>• Adafruit: beginner-friendly, good docs</div>
+          <div>• SparkFun: maker-focused breakouts</div>
+          <div>• Amazon: fast shipping, mixed quality</div>
+          <div style="margin-top:6px;color:var(--cyan)">LTE+GPS combo modules save $10-20 vs separate</div>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -298,9 +335,10 @@
 <div class="statusbar">
   <span>CIRCUIT LAB v1</span>
   <span>|</span>
-  <span>D3 FORCE GRAPH</span>
+  <span>STATIC LAYOUT — drag to position</span>
   <span>|</span>
-  <span>P2P SHARE: GUN.JS + IPFS</span>
+  <span>P2P: GUN.JS</span>
+  <span id="peerCount" style="color:var(--text-dim)">· peers: 0</span>
   <span style="margin-left:auto" id="sbMsg">drag components · click to select · scroll to zoom</span>
 </div>
 
@@ -310,32 +348,32 @@
 // buy: search URL — opens results, not a specific product (links stay valid)
 const CATALOG = {
   MCU: [
-    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#38bdf8', price:28.00, buy:'https://www.adafruit.com/search?q=arduino+uno',      pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
-    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#38bdf8', price:22.00, buy:'https://www.adafruit.com/search?q=arduino+nano',     pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
-    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#38bdf8', price:48.00, buy:'https://www.digikey.com/en/products/filter?q=arduino+mega', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
-    { type:'esp32',         label:'ESP32 Dev Board',icon:'📡', color:'#22c55e', price: 9.00, buy:'https://www.adafruit.com/search?q=esp32+dev+board',  pins:['GPIO0-39','3V3','GND','EN','VIN'] },
-    { type:'esp8266',       label:'ESP8266 NodeMCU',icon:'📡', color:'#22c55e', price: 8.00, buy:'https://www.adafruit.com/search?q=esp8266+nodemcu',  pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
-    { type:'attiny85',      label:'ATtiny85',        icon:'▪',  color:'#0ea5e9', price: 2.50, buy:'https://www.digikey.com/en/products/filter?q=attiny85',  pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
-    { type:'stm32f103',     label:'STM32F103 Blue Pill',icon:'🔲',color:'#6366f1',price:8.00, buy:'https://www.amazon.com/s?k=stm32+blue+pill',       pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
-    { type:'raspberry_pi',  label:'Raspberry Pi 4B',icon:'🍓', color:'#ec4899', price:55.00, buy:'https://www.adafruit.com/search?q=raspberry+pi+4',  pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
+    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#38bdf8', price:28.00, dim:'69×53mm',  buy:'https://www.adafruit.com/search?q=arduino+uno',      pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
+    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#38bdf8', price:22.00, dim:'45×18mm',  buy:'https://www.adafruit.com/search?q=arduino+nano',     pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
+    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#38bdf8', price:48.00, dim:'102×53mm', buy:'https://www.digikey.com/en/products/filter?q=arduino+mega', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
+    { type:'esp32',         label:'ESP32 Dev Board',icon:'📡', color:'#22c55e', price: 9.00, dim:'51×25mm',  buy:'https://www.adafruit.com/search?q=esp32+dev+board',  pins:['GPIO0-39','3V3','GND','EN','VIN'] },
+    { type:'esp8266',       label:'ESP8266 NodeMCU',icon:'📡', color:'#22c55e', price: 8.00, dim:'49×26mm',  buy:'https://www.adafruit.com/search?q=esp8266+nodemcu',  pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
+    { type:'attiny85',      label:'ATtiny85',        icon:'▪',  color:'#0ea5e9', price: 2.50, dim:'9×7mm DIP8',buy:'https://www.digikey.com/en/products/filter?q=attiny85',  pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
+    { type:'stm32f103',     label:'STM32F103 Blue Pill',icon:'🔲',color:'#6366f1',price:8.00,dim:'52×23mm', buy:'https://www.amazon.com/s?k=stm32+blue+pill',       pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
+    { type:'raspberry_pi',  label:'Raspberry Pi 4B',icon:'🍓', color:'#ec4899', price:55.00, dim:'85×56mm',  buy:'https://www.adafruit.com/search?q=raspberry+pi+4',  pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
   ],
   SENSOR: [
-    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=dht22',     pins:['VCC','DATA','NC','GND'] },
-    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=bmp280',     pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
-    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#22c55e', price: 3.95, buy:'https://www.adafruit.com/search?q=hc-sr04',   pins:['VCC','TRIG','ECHO','GND'] },
-    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#22c55e', price: 7.95, buy:'https://www.adafruit.com/search?q=pir+motion', pins:['VCC','OUT','GND'] },
-    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#22c55e', price: 6.95, buy:'https://www.sparkfun.com/search/results?term=mpu6050', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
-    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#22c55e', price: 9.95, buy:'https://www.adafruit.com/search?q=ds18b20',   pins:['GND','DQ','VDD'] },
-    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#22c55e', price: 6.95, buy:'https://www.amazon.com/s?k=gy-521+mpu6050',   pins:['VCC','GND','SCL','SDA','INT'] },
-    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#84cc16', price: 0.95, buy:'https://www.adafruit.com/search?q=photoresistor', pins:['1','2'] },
+    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#22c55e', price: 9.95, dim:'27×14mm breakout', buy:'https://www.adafruit.com/search?q=dht22',     pins:['VCC','DATA','NC','GND'] },
+    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#22c55e', price: 9.95, dim:'18×18mm breakout', buy:'https://www.adafruit.com/search?q=bmp280',     pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
+    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#22c55e', price: 3.95, dim:'45×20×15mm',       buy:'https://www.adafruit.com/search?q=hc-sr04',   pins:['VCC','TRIG','ECHO','GND'] },
+    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#22c55e', price: 7.95, dim:'32×24mm + dome',   buy:'https://www.adafruit.com/search?q=pir+motion', pins:['VCC','OUT','GND'] },
+    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#22c55e', price: 6.95, dim:'20×16mm breakout', buy:'https://www.sparkfun.com/search/results?term=mpu6050', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
+    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#22c55e', price: 9.95, dim:'6mm dia TO-92',    buy:'https://www.adafruit.com/search?q=ds18b20',   pins:['GND','DQ','VDD'] },
+    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#22c55e', price: 6.95, dim:'20×16mm breakout', buy:'https://www.amazon.com/s?k=gy-521+mpu6050',   pins:['VCC','GND','SCL','SDA','INT'] },
+    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#84cc16', price: 0.95, dim:'5mm dia',          buy:'https://www.adafruit.com/search?q=photoresistor', pins:['1','2'] },
   ],
   DISPLAY: [
-    { type:'oled_128x64', label:'OLED 128×64 I2C', icon:'🖥', color:'#f59e0b', price:13.95, buy:'https://www.adafruit.com/search?q=oled+128x64',    pins:['VCC','GND','SCL','SDA'] },
-    { type:'lcd_16x2',    label:'LCD 16×2 I2C',    icon:'🖥', color:'#f59e0b', price: 9.95, buy:'https://www.adafruit.com/search?q=lcd+16x2+i2c',   pins:['VCC','GND','SDA','SCL'] },
-    { type:'tft_240x320', label:'TFT 240×320',      icon:'🖥', color:'#f97316', price:14.95, buy:'https://www.adafruit.com/search?q=tft+240x320',    pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
-    { type:'neopixel',    label:'NeoPixel Strip',   icon:'💡', color:'#ef4444', price: 9.95, buy:'https://www.adafruit.com/search?q=neopixel+strip',  pins:['5V','DIN','GND'] },
-    { type:'max7219',     label:'LED Matrix 8×8',   icon:'⊞',  color:'#ef4444', price: 7.95, buy:'https://www.amazon.com/s?k=max7219+led+matrix',    pins:['VCC','GND','DIN','CS','CLK'] },
-    { type:'sevenseg',    label:'7-Segment 4-digit',icon:'7️⃣', color:'#f97316', price: 5.95, buy:'https://www.adafruit.com/search?q=7+segment+display', pins:['a','b','c','d','e','f','g','dp','GND'] },
+    { type:'oled_128x64', label:'OLED 128×64 I2C', icon:'🖥', color:'#f59e0b', price:13.95, dim:'27×27mm breakout', buy:'https://www.adafruit.com/search?q=oled+128x64',    pins:['VCC','GND','SCL','SDA'] },
+    { type:'lcd_16x2',    label:'LCD 16×2 I2C',    icon:'🖥', color:'#f59e0b', price: 9.95, dim:'80×36mm',         buy:'https://www.adafruit.com/search?q=lcd+16x2+i2c',   pins:['VCC','GND','SDA','SCL'] },
+    { type:'tft_240x320', label:'TFT 240×320',      icon:'🖥', color:'#f97316', price:14.95, dim:'57×40mm',         buy:'https://www.adafruit.com/search?q=tft+240x320',    pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
+    { type:'neopixel',    label:'NeoPixel Strip',   icon:'💡', color:'#ef4444', price: 9.95, dim:'variable strip',  buy:'https://www.adafruit.com/search?q=neopixel+strip',  pins:['5V','DIN','GND'] },
+    { type:'max7219',     label:'LED Matrix 8×8',   icon:'⊞',  color:'#ef4444', price: 7.95, dim:'32×32mm',         buy:'https://www.amazon.com/s?k=max7219+led+matrix',    pins:['VCC','GND','DIN','CS','CLK'] },
+    { type:'sevenseg',    label:'7-Segment 4-digit',icon:'7️⃣', color:'#f97316', price: 5.95, dim:'43×19mm',         buy:'https://www.adafruit.com/search?q=7+segment+display', pins:['a','b','c','d','e','f','g','dp','GND'] },
   ],
   POWER: [
     { type:'battery_9v',  label:'9V Battery',       icon:'🔋', color:'#fbbf24', price: 2.95, buy:'https://www.amazon.com/s?k=9v+alkaline+battery',    pins:['+','-'] },
@@ -354,27 +392,27 @@ const CATALOG = {
     { type:'relay_5v',  label:'5V Relay Module',      icon:'⏻',  color:'#94a3b8', price: 3.95, buy:'https://www.amazon.com/s?k=5v+relay+module+arduino', pins:['VCC','GND','IN','NO','COM','NC'] },
   ],
   CELLULAR: [
-    { type:'sim800l',  label:'SIM800L GSM/GPRS',  icon:'📱', color:'#f97316', price:12.00, buy:'https://www.amazon.com/s?k=sim800l+gsm+module',   pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
-    { type:'sim7600e', label:'SIM7600E 4G LTE',   icon:'📱', color:'#f97316', price:55.00, buy:'https://www.amazon.com/s?k=sim7600e+4g+module',   pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
-    { type:'a9g',      label:'A9G GSM+GPS',        icon:'🛰',  color:'#fb923c', price:15.00, buy:'https://www.amazon.com/s?k=a9g+gsm+gps+module',  pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
-    { type:'sim7000g', label:'SIM7000G NB-IoT',   icon:'📡', color:'#f97316', price:45.00, buy:'https://www.amazon.com/s?k=sim7000g+nb-iot',      pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
-    { type:'ec21',     label:'EC21 LTE Cat-1',    icon:'📱', color:'#ea580c', price:65.00, buy:'https://www.digikey.com/en/products/filter?q=ec21+quectel', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
+    { type:'sim800l',  label:'SIM800L GSM/GPRS',  icon:'📱', color:'#f97316', price:12.00, dim:'23×23mm bare chip', buy:'https://www.amazon.com/s?k=sim800l+gsm+module',   pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
+    { type:'sim7600e', label:'SIM7600E 4G LTE',   icon:'📱', color:'#f97316', price:55.00, dim:'30×42mm (miniPCIe)', buy:'https://www.amazon.com/s?k=sim7600e+4g+module',   pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
+    { type:'a9g',      label:'A9G GSM+GPS',        icon:'🛰',  color:'#fb923c', price:15.00, dim:'27×32mm',          buy:'https://www.amazon.com/s?k=a9g+gsm+gps+module',  pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
+    { type:'sim7000g', label:'SIM7000G NB-IoT',   icon:'📡', color:'#f97316', price:45.00, dim:'24×24mm bare chip', buy:'https://www.amazon.com/s?k=sim7000g+nb-iot',      pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
+    { type:'ec21',     label:'EC21 LTE Cat-1',    icon:'📱', color:'#ea580c', price:65.00, dim:'33×28mm (miniPCIe)', buy:'https://www.digikey.com/en/products/filter?q=ec21+quectel', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
   ],
   GPS: [
-    { type:'neo6m',    label:'NEO-6M GPS',        icon:'🛰',  color:'#4ade80', price:10.00, buy:'https://www.amazon.com/s?k=neo-6m+gps+module',   pins:['VCC','GND','TX','RX','PPS'] },
-    { type:'neo8m',    label:'NEO-8M GPS',         icon:'🛰',  color:'#4ade80', price:12.00, buy:'https://www.amazon.com/s?k=neo-8m+gps+module',   pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
-    { type:'l76k',     label:'L76K GPS (Quectel)', icon:'🛰',  color:'#22d3ee', price:20.00, buy:'https://www.digikey.com/en/products/filter?q=l76k+quectel', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
-    { type:'gtu7',     label:'GT-U7 GPS',          icon:'🛰',  color:'#22d3ee', price: 8.00, buy:'https://www.amazon.com/s?k=gt-u7+gps+module',    pins:['VCC','GND','TX','RX','PPS'] },
-    { type:'atgm336h', label:'ATGM336H GPS/BDS',   icon:'🛰',  color:'#22d3ee', price:10.00, buy:'https://www.amazon.com/s?k=atgm336h+gps+module', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
+    { type:'neo6m',    label:'NEO-6M GPS',        icon:'🛰',  color:'#4ade80', price:10.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=neo-6m+gps+module',   pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'neo8m',    label:'NEO-8M GPS',         icon:'🛰',  color:'#4ade80', price:12.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=neo-8m+gps+module',   pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
+    { type:'l76k',     label:'L76K GPS (Quectel)', icon:'🛰',  color:'#22d3ee', price:20.00, dim:'10×10mm chip only',   buy:'https://www.digikey.com/en/products/filter?q=l76k+quectel', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
+    { type:'gtu7',     label:'GT-U7 GPS',          icon:'🛰',  color:'#22d3ee', price: 8.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=gt-u7+gps+module',    pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'atgm336h', label:'ATGM336H GPS/BDS',   icon:'🛰',  color:'#22d3ee', price:10.00, dim:'18×18mm bare module', buy:'https://www.amazon.com/s?k=atgm336h+gps+module', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
   ],
   LORA: [
-    { type:'sx1276',        label:'SX1276 Ra-02 868MHz',  icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+sx1276+lora+module', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
-    { type:'sx1278',        label:'SX1278 Ra-02 433MHz',  icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+sx1278+lora+433',   pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
-    { type:'rfm95w',        label:'RFM95W LoRa (Adafruit)',icon:'📻',color:'#a855f7', price:19.95, buy:'https://www.adafruit.com/search?q=rfm95w',             pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
-    { type:'ra02',          label:'Ra-02 LoRa 433',       icon:'📻', color:'#c084fc', price: 8.00, buy:'https://www.amazon.com/s?k=ra-02+433mhz+lora',        pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
-    { type:'rylr896',       label:'RYLR896 LoRa UART',    icon:'📻', color:'#d946ef', price:20.00, buy:'https://www.amazon.com/s?k=rylr896+lora+module',      pins:['VCC','GND','TXD','RXD','RST'] },
-    { type:'e32_433',       label:'E32-433T LoRa',        icon:'📻', color:'#a855f7', price:12.00, buy:'https://www.amazon.com/s?k=e32-433+lora+module',      pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
-    { type:'heltec_lora32', label:'Heltec LoRa32 V2',     icon:'📟', color:'#9333ea', price:24.95, buy:'https://www.amazon.com/s?k=heltec+lora32+v2',        pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
+    { type:'sx1276',        label:'SX1276 Ra-02 868MHz',  icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+sx1276+lora+module', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'sx1278',        label:'SX1278 Ra-02 433MHz',  icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+sx1278+lora+433',   pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'rfm95w',        label:'RFM95W LoRa (Adafruit)',icon:'📻',color:'#a855f7', price:19.95, dim:'16×17mm',  buy:'https://www.adafruit.com/search?q=rfm95w',             pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
+    { type:'ra02',          label:'Ra-02 LoRa 433',       icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+433mhz+lora',        pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
+    { type:'rylr896',       label:'RYLR896 LoRa UART',    icon:'📻', color:'#d946ef', price:20.00, dim:'46×24mm',  buy:'https://www.amazon.com/s?k=rylr896+lora+module',      pins:['VCC','GND','TXD','RXD','RST'] },
+    { type:'e32_433',       label:'E32-433T LoRa',        icon:'📻', color:'#a855f7', price:12.00, dim:'38×20mm',  buy:'https://www.amazon.com/s?k=e32-433+lora+module',      pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
+    { type:'heltec_lora32', label:'Heltec LoRa32 V2',     icon:'📟', color:'#9333ea', price:24.95, dim:'51×25×9mm',buy:'https://www.amazon.com/s?k=heltec+lora32+v2',        pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
   ],
   RADIO: [
     { type:'hc05',     label:'HC-05 Bluetooth',  icon:'📶', color:'#60a5fa', price: 7.00, buy:'https://www.amazon.com/s?k=hc-05+bluetooth+module', pins:['VCC','GND','TXD','RXD','KEY','STATE'] },
@@ -422,7 +460,7 @@ function getCompDef(type) {
 // ── CIRCUIT STATE ─────────────────────────────────────────────────────────────
 let circuit = { title:'Untitled Circuit', components:[], connections:[] };
 let selectedId = null;
-let simulation = null;
+let activeNodes = [], activeLinks = [], activeNodeAll = null, activeLinkAll = null;
 let gun;
 
 // ── D3 SETUP ──────────────────────────────────────────────────────────────────
@@ -463,9 +501,10 @@ function renderCircuit(circ) {
   document.getElementById('sbComps').textContent = circ.components.length;
   document.getElementById('sbConns').textContent = circ.connections.length;
   updateJson();
+  pushCollab(); // broadcast if live
 
   getSvgSize();
-  if (simulation) simulation.stop();
+  // clear any stale state
 
   const nodes = circ.components.map(c => ({
     ...c,
@@ -592,39 +631,37 @@ function renderCircuit(circ) {
 
   svg.on('click', () => deselect());
 
-  // Force sim
-  simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d=>d.id).distance(180).strength(0.3))
-    .force('charge', d3.forceManyBody().strength(-500))
-    .force('collision', d3.forceCollide(90))
-    .force('center', d3.forceCenter(W/2, H/2).strength(0.03))
-    .on('tick', ticked);
-
-  simulation.alphaTarget(0.05).restart();
-
-  function ticked() {
-    nodeAll.attr('transform', d=>`translate(${d.x},${d.y})`);
-    linkAll.select('path').attr('d', d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const len = Math.sqrt(dx*dx+dy*dy) || 1;
-      const sx  = d.source.x + dx/len*(NODE_W/2+2);
-      const sy  = d.source.y + dy/len*(NODE_H/2+2);
-      const tx  = d.target.x - dx/len*(NODE_W/2+8);
-      const ty  = d.target.y - dy/len*(NODE_H/2+8);
-      const mx  = (sx+tx)/2 - dy/len*20;
-      const my  = (sy+ty)/2 + dx/len*20;
-      return `M${sx},${sy} Q${mx},${my} ${tx},${ty}`;
-    });
-    linkAll.select('text').attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-8);
-    // Save positions back
-    nodes.forEach(n => { const orig=circuit.components.find(c=>c.id===n.id); if(orig){orig.x=Math.round(n.x);orig.y=Math.round(n.y);} });
-  }
+  // Static layout — no force simulation, pure drag-to-position
+  activeNodes = nodes;
+  activeLinks = links;
+  activeNodeAll = nodeAll;
+  activeLinkAll = linkAll;
+  redrawPositions();
 }
 
-function dragStart(event, d) { if(!event.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; }
-function dragged(event, d)   { d.fx=event.x; d.fy=event.y; }
-function dragEnd(event, d)   { if(!event.active) simulation.alphaTarget(0.05); d.fx=null; d.fy=null; }
+function redrawPositions() {
+  if (!activeNodeAll) return;
+  activeNodeAll.attr('transform', d=>`translate(${d.x},${d.y})`);
+  activeLinkAll.select('path').attr('d', d => {
+    const dx = d.target.x - d.source.x;
+    const dy = d.target.y - d.source.y;
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const sx  = d.source.x + dx/len*(NODE_W/2+2);
+    const sy  = d.source.y + dy/len*(NODE_H/2+2);
+    const tx  = d.target.x - dx/len*(NODE_W/2+8);
+    const ty  = d.target.y - dy/len*(NODE_H/2+8);
+    const mx  = (sx+tx)/2 - dy/len*20;
+    const my  = (sy+ty)/2 + dx/len*20;
+    return `M${sx},${sy} Q${mx},${my} ${tx},${ty}`;
+  });
+  activeLinkAll.select('text').attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-8);
+  // Persist positions
+  activeNodes.forEach(n => { const orig=circuit.components.find(c=>c.id===n.id); if(orig){orig.x=Math.round(n.x);orig.y=Math.round(n.y);} });
+}
+
+function dragStart(event, d) { d._dragX=d.x; d._dragY=d.y; }
+function dragged(event, d)   { d.x=event.x; d.y=event.y; redrawPositions(); }
+function dragEnd(event, d)   { redrawPositions(); updateJson(); }
 
 // ── SELECTION ─────────────────────────────────────────────────────────────────
 function selectComp(id) {
@@ -686,7 +723,9 @@ function buildCatalog() {
     items.forEach(item => {
       const el = document.createElement('div');
       el.className = 'comp-entry';
-      el.innerHTML = `<span class="comp-icon">${item.icon}</span><span class="comp-name" style="color:${item.color}">${item.label}</span>`;
+      const priceStr = item.price != null ? `<span style="color:var(--green);font-size:12px;margin-left:auto;white-space:nowrap">$${item.price.toFixed(2)}</span>` : '';
+      const buyBtn = item.buy ? `<a href="${item.buy}" target="_blank" title="Buy" onclick="event.stopPropagation()" style="color:var(--cyan);font-size:12px;text-decoration:none;white-space:nowrap;padding:1px 5px;border:1px solid rgba(56,189,248,0.3)">BUY</a>` : '';
+      el.innerHTML = `<span class="comp-icon">${item.icon||'▪'}</span><span class="comp-name" style="color:${item.color||'var(--text)'}">${item.label}</span>${priceStr}${buyBtn}`;
       el.title = `${item.type} — click to add`;
       el.addEventListener('click', () => addComponent(item));
       body.appendChild(el);
@@ -696,12 +735,152 @@ function buildCatalog() {
   });
 }
 
+function buildBOM() {
+  const comps = circuit.components;
+  const bomEmpty = document.getElementById('bomEmpty');
+  const bomTable = document.getElementById('bomTable');
+  const bomTotal = document.getElementById('bomTotal');
+  if (!comps.length) { bomEmpty.style.display=''; bomTable.style.display='none'; bomTotal.style.display='none'; return; }
+  bomEmpty.style.display = 'none';
+
+  // Tally by type
+  const tally = {};
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d => d.type===c.type);
+    if (!tally[c.type]) tally[c.type] = { label: c.label, qty:0, price: def?.price||0, buy: def?.buy||'' };
+    tally[c.type].qty++;
+  });
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <tr style="color:var(--text-dim);border-bottom:1px solid var(--edge)">
+      <th style="text-align:left;padding:4px 2px;letter-spacing:.5px">PART</th>
+      <th style="text-align:center;padding:4px 2px">QTY</th>
+      <th style="text-align:right;padding:4px 2px">EA</th>
+      <th style="text-align:right;padding:4px 2px">LINE</th>
+    </tr>`;
+  let compCost = 0;
+  Object.values(tally).forEach(row => {
+    const line = row.price * row.qty;
+    compCost += line;
+    const buyLink = row.buy ? `<a href="${row.buy}" target="_blank" style="color:var(--cyan);text-decoration:none"> ↗</a>` : '';
+    html += `<tr style="border-bottom:1px solid rgba(26,40,64,0.5)">
+      <td style="padding:5px 2px;color:var(--text)">${row.label}${buyLink}</td>
+      <td style="text-align:center;padding:5px 2px;color:var(--text-dim)">${row.qty}</td>
+      <td style="text-align:right;padding:5px 2px;color:var(--text-dim)">$${row.price.toFixed(2)}</td>
+      <td style="text-align:right;padding:5px 2px;color:var(--green)">$${line.toFixed(2)}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  bomTable.innerHTML = html;
+  bomTable.style.display = '';
+
+  const shipping = compCost < 25 ? 6.95 : compCost < 75 ? 9.95 : 0;
+  document.getElementById('bomCompCost').textContent = '$'+compCost.toFixed(2);
+  document.getElementById('bomShipping').textContent = shipping===0 ? 'FREE (est.)' : '$'+shipping.toFixed(2);
+  document.getElementById('bomTotalVal').textContent = '$'+(compCost+shipping).toFixed(2);
+  bomTotal.style.display = '';
+}
+
+function exportBOM() {
+  const comps = circuit.components;
+  if (!comps.length) { setStatus('No components to export.'); return; }
+  const tally = {};
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d => d.type===c.type);
+    if (!tally[c.type]) tally[c.type] = { label:c.label, qty:0, price:def?.price||0, buy:def?.buy||'' };
+    tally[c.type].qty++;
+  });
+  let csv = 'Part,Qty,Unit Price,Line Total,Buy Link\n';
+  Object.values(tally).forEach(r => {
+    csv += `"${r.label}",${r.qty},${r.price.toFixed(2)},${(r.price*r.qty).toFixed(2)},"${r.buy}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'guardian-bom.csv'});
+  a.click(); URL.revokeObjectURL(a.href);
+  setStatus('BOM exported as guardian-bom.csv');
+}
+
+// Common enclosures: [name, W, H, depth_mm, notes]
+const ENCLOSURES = [
+  { name:'Altoids Tin',        w:90,  h:58,  d:20, note:'Classic stealth — metal = RF shield bonus' },
+  { name:'Hammond 1591M',      w:80,  h:40,  d:20, note:'Slim ABS, no mounting, pocketable' },
+  { name:'Hammond 1591B',      w:111, h:62,  d:27, note:'Standard project box, most popular' },
+  { name:'Hammond 1591XXLBK', w:188, h:120, d:56, note:'Large — fits Raspberry Pi + shields' },
+  { name:'Pelican 1010',       w:88,  h:63,  d:29, note:'Waterproof, IP67, shockproof' },
+  { name:'Pelican 1015',       w:104, h:77,  d:37, note:'Waterproof, slightly larger' },
+  { name:'Serpac A20',         w:66,  h:38,  d:18, note:'Very compact, belt-clip available' },
+  { name:'PVC Conduit 40mm',   w:40,  h:40,  d:200,note:'Pipe housing — great for outdoor nodes' },
+];
+
+function parseDim(dimStr) {
+  if (!dimStr) return null;
+  const m = dimStr.match(/(\d+)[×x](\d+)/);
+  if (!m) return null;
+  return { w: parseInt(m[1]), h: parseInt(m[2]) };
+}
+
+function buildFit() {
+  const comps = circuit.components;
+  const el = document.getElementById('fitEstimator');
+  if (!comps.length) { el.style.display='none'; return; }
+
+  // Compute total area from component dims
+  let totalArea = 0;
+  const dimList = [];
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d=>d.type===c.type);
+    const d = parseDim(def?.dim);
+    if (d) {
+      totalArea += d.w * d.h;
+      dimList.push(`${c.label||c.type}: ${def.dim}`);
+    }
+  });
+
+  if (!totalArea) { el.style.display='none'; return; }
+
+  // Packing factor 1.4 (wires, spacing, connectors)
+  const neededArea = Math.round(totalArea * 1.4);
+  const neededSide = Math.round(Math.sqrt(neededArea));
+
+  const fits = ENCLOSURES.filter(e => e.w * e.h >= neededArea);
+  const tight = ENCLOSURES.filter(e => e.w * e.h >= totalArea && e.w * e.h < neededArea);
+
+  let html = `<div style="padding:10px;background:var(--deep);border:1px solid var(--edge);font-size:12px">
+    <div style="color:var(--amber);margin-bottom:8px;letter-spacing:1px">📐 PHYSICAL FIT ESTIMATOR</div>
+    <div style="color:var(--text-dim);margin-bottom:4px">Component footprint total: <span style="color:var(--text)">${totalArea} mm²</span></div>
+    <div style="color:var(--text-dim);margin-bottom:10px">With wiring/spacing (×1.4): <span style="color:var(--green)">${neededArea} mm² (~${neededSide}×${neededSide}mm square)</span></div>`;
+
+  if (fits.length) {
+    html += `<div style="color:var(--green);margin-bottom:4px;letter-spacing:.5px">✓ FITS IN:</div>`;
+    fits.slice(0,4).forEach(e => {
+      html += `<div style="margin-bottom:3px;padding:3px 0;border-bottom:1px solid rgba(26,40,64,0.5)"><span style="color:var(--text)">${e.name}</span> <span style="color:var(--text-dim)">${e.w}×${e.h}mm</span> <span style="color:var(--cyan);font-size:11px"> — ${e.note}</span></div>`;
+    });
+  }
+  if (tight.length) {
+    html += `<div style="color:var(--amber);margin:6px 0 4px;letter-spacing:.5px">⚠ TIGHT (no spacing):</div>`;
+    tight.forEach(e => {
+      html += `<div style="margin-bottom:2px;color:var(--text-dim)">${e.name} ${e.w}×${e.h}mm</div>`;
+    });
+  }
+  if (!fits.length && !tight.length) {
+    html += `<div style="color:var(--red)">Too large for common enclosures — consider splitting into multiple units or custom fabrication.</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
 function addComponent(def) {
   getSvgSize();
   const used = circuit.components.filter(c=>c.type===def.type).length;
   const prefix = def.type.toUpperCase().slice(0,1);
   const id = prefix + (circuit.components.length+1);
-  const comp = { id, type:def.type, label:def.label, x:W/2+(Math.random()-0.5)*160, y:H/2+(Math.random()-0.5)*100 };
+  // Place in next grid slot (180×140 cells), no random drift
+  const i = circuit.components.length;
+  const cols = Math.max(1, Math.floor((W - 80) / 180));
+  const gx = 90 + (i % cols) * 180;
+  const gy = 90 + Math.floor(i / cols) * 140;
+  const comp = { id, type:def.type, label:def.label, x:gx, y:gy };
   circuit.components.push(comp);
   renderCircuit(circuit);
   selectComp(id);
@@ -709,46 +888,173 @@ function addComponent(def) {
 }
 
 // ── WIKI ──────────────────────────────────────────────────────────────────────
+// Each entry: { what, wiring, tips, lib? }
 const WIKI = {
-  arduino_uno:    'Arduino Uno — 14 digital I/O (6 PWM), 6 analog inputs, 32KB flash, 16MHz. I2C on A4/A5, SPI on D10-13, UART on D0/D1.',
-  esp32:          'ESP32 — Dual-core 240MHz, WiFi+BT. 34 GPIO, 12-bit ADC, I2C/SPI/UART/I2S. 3.3V logic. GPIO16/17 good for GPS UART. EN pin for deep sleep wake.',
-  dht22:          'DHT22 — Temp: -40~80°C ±0.5°C, Humidity: 0~100% ±2-5%. Single-wire protocol. 10kΩ pullup on DATA. 3.3-5V. Min 2s sample interval.',
-  bmp280:         'BMP280 — Pressure: 300-1100hPa, Temp: -40~85°C. I2C addr: 0x76 (SDO→GND) or 0x77 (SDO→VCC). SPI also supported.',
-  oled_128x64:    'OLED 128×64 — SSD1306 controller. I2C addr: 0x3C or 0x3D. 3.3-5V. Use Adafruit SSD1306 library. Very low power.',
-  hcsr04:         'HC-SR04 — Ultrasonic range 2cm-400cm. TRIG: 10µs pulse. ECHO: pulse width = distance×58µs. Operates at 5V.',
-  nrf24l01:       'nRF24L01 — 2.4GHz SPI transceiver. CE=chip enable, CSN=chip select. 1.9-3.6V (use 3.3V). Add 100µF decoupling cap near VCC.',
-  // LoRa
-  sx1276:         'SX1276 LoRa — 868/915MHz. SPI. Range 5-15km LoS. 3.3V logic. Use with LMIC, RadioHead, or arduino-LoRa library. DIO0=TX/RX done interrupt.',
-  sx1278:         'SX1278 LoRa — 433MHz variant of SX1276. SPI. Range 2-8km LoS. 3.3V. Spreading factor SF7-SF12; higher SF = longer range, slower data.',
-  rfm95w:         'RFM95W — Hope RF LoRa module (SX1276 based). 868/915MHz. 3.3V SPI. Has DIO0-5. Popular on Feather boards. Use with LMIC for LoRaWAN.',
-  ra02:           'Ra-02 (AI-Thinker) — SX1278 module, 433MHz. SPI. 3.3V only — use level shifter with 5V MCUs. Comes with PCB antenna.',
-  rylr896:        'RYLR896 — UART LoRa module. AT command interface. No SPI needed. 3.3V. Set freq/SF/BW via AT+PARAMETER. Very easy to prototype with.',
-  e32_433:        'E32-433T — UART LoRa module (SX1278). M0/M1 pins set mode: 00=normal, 01=wake-up, 10=power-save, 11=sleep/config. AUX=busy indicator.',
-  heltec_lora32:  'Heltec LoRa32 V2 — ESP32 + SX1276/SX1278 + OLED 0.96" on one board. WiFi+BT+LoRa. USB-C. Good for guardian nodes. Arduino + LoRaWAN ready.',
-  // GPS
-  neo6m:          'NEO-6M GPS — u-blox, UART 9600 baud, NMEA sentences. 3.3-5V. Cold fix ~30s, hot fix <1s. PPS pin = 1Hz pulse when locked. Use TinyGPS++ library.',
-  neo8m:          'NEO-8M GPS — u-blox Gen 8. Multi-constellation (GPS+GLONASS+BeiDou). UART. Faster fix, better accuracy than NEO-6M. Same wiring.',
-  l76k:           'L76K GPS — Quectel, 3.3V UART. Ultra-low power. AlwaysLocate™ adaptive algorithm. FORCE_ON pin overrides power-save. Tiny package.',
-  gtu7:           'GT-U7 — Compatible NEO-6M clone. UART 9600. Built-in antenna socket. 3.3-5V. Works with TinyGPS++. Cheap and reliable for prototyping.',
-  atgm336h:       'ATGM336H — GPS+BeiDou, UART 9600. 3.3V. China-made, low cost. Similar to NEO-6M pinout. Includes PPS and NRESET. Ceramic patch antenna.',
-  // Cellular
-  sim800l:        'SIM800L — GSM/GPRS quad-band. UART. 3.4-4.4V (NOT 5V — use LiPo direct or 4V reg). Needs 2A peak current. AT commands. HTTP/TCP/SMS/Call.',
-  sim7600e:       'SIM7600E — 4G LTE Cat-4 + 3G + 2G. UART. 3.3-4.2V. AT command compatible with SIM800. LTE upload 50Mbps, download 150Mbps. USB also available.',
-  a9g:            'A9G (AI-Thinker) — GSM+GPRS+GPS combo module. Two UARTs (one for GSM, one for GPS). 3.8V. Good for single-module guardian nodes: location+comms in one chip.',
-  sim7000g:       'SIM7000G — NB-IoT + eMTC + GPRS global. UART. 3.3-4.2V. Multi-band NB-IoT. Very low power sleep mode (1µA). Good for battery-powered field nodes.',
-  ec21:           'EC21 — Quectel LTE Cat-1. 10Mbps down / 5Mbps up. UART + USB. 3.3V. QuecOpen platform for embedded apps. EC21-G global variant covers all bands.',
+  arduino_uno: {
+    what: 'The Arduino Uno is the classic beginner microcontroller board. It runs at 5V, has 14 digital pins (6 can do PWM — like dimming an LED), 6 analog input pins (read variable voltages), 32KB of flash memory to store your program, and a 16MHz clock. It\'s slow compared to modern boards but incredibly well-documented.',
+    wiring: 'I2C: SDA→A4, SCL→A5 · SPI: MOSI D11, MISO D12, SCK D13, SS D10 · UART: TX D1, RX D0 (shares USB — use SoftwareSerial on other pins during debug)',
+    tips: '5V logic — connect 3.3V sensors via a voltage divider or level shifter. Vin pin accepts 7-12V DC. Analog pins read 0-1023 for 0-5V. Reset button re-runs setup().',
+    lib: 'Arduino IDE built-in — no library needed. Wire.h for I2C, SPI.h for SPI.',
+  },
+  esp32: {
+    what: 'The ESP32 is a powerful dual-core 240MHz chip with built-in WiFi and Bluetooth. It\'s the workhorse of guardian nodes: connect to the internet, run BLE beacons, talk to sensors, and go deep-sleep on battery. 3.3V logic (NOT 5V tolerant — use level shifters for 5V sensors).',
+    wiring: 'I2C: SDA GPIO21, SCL GPIO22 · SPI: MOSI GPIO23, MISO GPIO19, SCK GPIO18, CS GPIO5 · UART0: TX GPIO1/RX GPIO3 (USB), UART1: GPIO16/17 (use for GPS) · 3.3V on 3V3 pin, 5V in on VIN',
+    tips: 'GPIO34-39 are INPUT-only (no pullup). Avoid GPIO0 (boot mode), GPIO2 (LED). Deep sleep: wake from GPIO33 or touch pins. ESP.deepSleep(uS) — 10µA idle.',
+    lib: 'Arduino-ESP32 core. WiFiClient, HTTPClient, ArduinoJson, TinyGPS++.',
+  },
+  dht22: {
+    what: 'The DHT22 measures temperature and humidity using a single data wire. It\'s accurate to ±0.5°C and ±2-5% RH. Great for environmental monitoring. The DHT11 is cheaper but less accurate — for field nodes, always use DHT22.',
+    wiring: 'VCC→3.3-5V, GND→GND, DATA→any digital pin. REQUIRED: 10kΩ pullup resistor between VCC and DATA pin. Without it the signal floats and you get garbage readings.',
+    tips: 'Wait 2 seconds minimum between readings — the sensor needs time to stabilize. If you get NaN, check your pullup. Library automatically handles the single-wire timing protocol.',
+    lib: 'DHT sensor library by Adafruit (install via Library Manager).',
+  },
+  bmp280: {
+    what: 'The BMP280 measures barometric pressure (300-1100hPa) and temperature (-40 to 85°C). Pressure data lets you calculate altitude (useful for drones or elevation tracking). It also functions as a weather sensor — falling pressure predicts rain.',
+    wiring: 'I2C mode: VCC→3.3V, GND→GND, SDA/SCL to MCU I2C pins. SDO pin sets I2C address: SDO→GND = 0x76, SDO→VCC = 0x77. CSB→VCC for I2C mode.',
+    tips: 'Run two BMP280s on the same I2C bus by using different SDO states. SPI mode is faster — useful if bus is crowded. Use sea-level pressure (101325 Pa) as reference for relative altitude.',
+    lib: 'Adafruit BMP280 library or Bosch BSEC library for BME280 (includes humidity).',
+  },
+  oled_128x64: {
+    what: 'The 0.96" OLED display has 128×64 pixels — no backlight needed, each pixel emits its own light. Contrast is excellent in the dark, power consumption is very low (~20mA active). Perfect for field device status displays: GPS coords, battery %, signal strength.',
+    wiring: 'I2C (most common): VCC→3.3-5V, GND→GND, SDA/SCL to MCU I2C. Address is 0x3C (most modules) or 0x3D. Some modules have SPI: MOSI, SCK, CS, DC, RST.',
+    tips: 'Displays white text on black background by default. Use display.invertDisplay(true) for black-on-white. Avoid drawing the entire screen every loop — only redraw changed regions for power savings. Leave it off when not needed.',
+    lib: 'Adafruit SSD1306 + Adafruit GFX libraries (both required).',
+  },
+  hcsr04: {
+    what: 'The HC-SR04 is an ultrasonic distance sensor — it emits a 40kHz sound pulse and measures how long the echo takes to return. Range: 2cm to 400cm with ±3mm accuracy. Used for proximity detection, level sensing, people detection.',
+    wiring: 'VCC→5V (important: needs 5V, not 3.3V), GND→GND, TRIG→digital output pin, ECHO→digital input pin. If using with 3.3V MCU (ESP32), add a voltage divider on the ECHO line: 1kΩ + 2kΩ to bring 5V down to 3.3V.',
+    tips: 'Send a 10µs HIGH pulse on TRIG. Measure pulse width on ECHO. Distance (cm) = pulse_µs / 58. Objects less than 2cm may give unreliable readings. Cone angle is ~15° — point carefully.',
+    lib: 'No library needed — use pulseIn(). Or use NewPing library for cleaner code.',
+  },
+  nrf24l01: {
+    what: 'The nRF24L01+ is a 2.4GHz radio transceiver — same frequency as WiFi but cheaper and lower power. Range is 30-100m indoors, up to 1km with the PA+LNA version and antenna. Creates point-to-point or mesh radio links without needing WiFi infrastructure.',
+    wiring: 'SPI: MOSI, MISO, SCK + CE (chip enable, any digital) + CSN (chip select, any digital). VCC must be 3.3V — 5V will destroy it. On 5V Arduinos, use a 3.3V regulator for this module only.',
+    tips: 'The nRF24 is notoriously noisy — add a 100µF electrolytic + 100nF ceramic cap right at VCC/GND pins. Set PA level to RF24_PA_LOW to reduce power and interference indoors. Use static addressing (setAutoAck) for reliability.',
+    lib: 'RF24 library by TMRh20 (most maintained fork).',
+  },
+  sx1276: {
+    what: 'The SX1276 is the LoRa radio chip behind most guardian-range links. LoRa (Long Range) uses a spread-spectrum chirp modulation — it trades data speed for incredible range. 5-15km line-of-sight, penetrates buildings. 868MHz (EU) or 915MHz (US/CA).',
+    wiring: 'SPI: MOSI, MISO, SCK, NSS (CS). Plus DIO0 (interrupt for TX/RX done), RST (optional). 3.3V only. Typical dev boards have all this broken out. IMPORTANT: never transmit without an antenna — can damage the RF front end.',
+    tips: 'Spreading Factor (SF7-SF12): higher SF = longer range but slower. SF12 can take ~2.5 seconds per packet at 125kHz BW. Use SF7-SF9 for in-field node-to-base links. Pair with GPS for timestamped position packets.',
+    lib: 'arduino-LoRa by sandeepmistry (simple). MCCI LMIC for full LoRaWAN stack.',
+  },
+  sx1278: {
+    what: 'The SX1278 is the 433MHz version of the SX1276 LoRa chip. Lower frequency means better building/wall penetration but a larger antenna (~17cm quarter-wave). Range 2-8km LoS. 433MHz is less congested than 868/915MHz in many areas.',
+    wiring: 'Same SPI pinout as SX1276. 3.3V only. Antenna: use a 17.3cm wire as a quarter-wave monopole or proper 433MHz dipole.',
+    tips: 'Check local regulations — 433MHz power limits vary by country. In Canada/US, 433MHz ISM band allows up to 1W but LoRa modules are far below that. Lower frequency = less affected by rain/humidity attenuation.',
+    lib: 'arduino-LoRa (set frequency to 433E6).',
+  },
+  rfm95w: {
+    what: 'The RFM95W is a complete LoRa module by Hope RF built around the SX1276 chipset. Popular on Adafruit Feather boards and compatible with The Things Network for LoRaWAN (internet connectivity without SIM card). 868/915MHz.',
+    wiring: 'SPI + DIO0/DIO1/DIO2 interrupt pins + RST. The Feather ecosystem makes this plug-and-play. Standalone: wire SPI + DIO0 minimum. 3.3V supply.',
+    tips: 'For LoRaWAN (connecting to TTN/Helium), you need DIO0+DIO1+DIO2 connected. For simple point-to-point LoRa, DIO0 alone is enough. The onboard u.FL connector works with SMA adapters for external antennas.',
+    lib: 'MCCI LMIC for LoRaWAN. arduino-LoRa for P2P.',
+  },
+  ra02: {
+    what: 'The Ra-02 is a cheap SX1278 module from AI-Thinker at 433MHz. Comes with a small PCB trace antenna and U.FL connector. Popular in Chinese maker kits. 3.3V only — it will be damaged by 5V. Range up to 5km LoS with good antennas.',
+    wiring: 'SPI: MOSI, MISO, SCK, NSS + RST + DIO0. 3.3V VCC only. If using with 5V Arduino, put level shifters on all SPI lines and NSS.',
+    tips: 'The module\'s castellated edges make soldering to a PCB easy. The default PCB antenna is short — for better range, solder a 17.3cm wire to the IPEX/U.FL connector. Use a 100nF decoupling cap at VCC.',
+    lib: 'arduino-LoRa (set 433E6).',
+  },
+  rylr896: {
+    what: 'The RYLR896 is a LoRa module with a built-in UART AT command interface — no SPI coding needed. Just send text commands over serial: AT+SEND, AT+RECEIVE. Great for prototypers who aren\'t comfortable with SPI. 915MHz, up to 15km range.',
+    wiring: 'TX/RX to MCU UART (cross them: module TX → MCU RX). 3.3V VCC. Baud rate default 115200. VDD→3.3V only.',
+    tips: 'Set network parameters: AT+NETWORKID=6 (match on all nodes), AT+ADDRESS=1 (unique per node), AT+PARAMETER=9,7,1,12 (SF9, BW125, CR4/5, preamble 12). Use hardware UART not SoftwareSerial for reliability.',
+    lib: 'No library — use Serial.print("AT+SEND=2,5,HELLO\\r\\n").',
+  },
+  e32_433: {
+    what: 'The E32-433T is a UART LoRa module at 433MHz from EBYTE, also using the SX1278. Mode is controlled by two pins (M0, M1), making it easy to switch between transmit, sleep, and config modes without code changes. Has an AUX pin that signals when the module is busy.',
+    wiring: 'TX/RX to MCU UART. M0 and M1 to digital outputs (mode select). AUX to digital input (busy indicator). 3.3V VCC. Wait for AUX=HIGH before sending data.',
+    tips: 'Mode 00 (M0=0, M1=0) = normal transparent serial. Mode 11 = config mode (send AT commands). Mode 01/10 = power-saving wake-up modes. Set baud rate, air rate, channel, and power via config commands.',
+    lib: 'EByte LoRa E32 library by Renzo Mischianti.',
+  },
+  heltec_lora32: {
+    what: 'The Heltec WiFi LoRa 32 V2 combines an ESP32, a SX1276/SX1278 LoRa radio, and a 0.96" OLED display on a single development board. It\'s arguably the best all-in-one board for guardian network nodes: WiFi for internet backhaul, LoRa for long-range mesh, OLED for status display. USB-C charging.',
+    wiring: 'Self-contained — LoRa and OLED are wired internally. External connections: I2C on GPIO4/15, UART on GPIO39/37. LoRa antenna: REQUIRED on the IPEX connector (868 or 915MHz). A 8.2cm wire works as a quarter-wave for 868MHz.',
+    tips: 'Use the "Heltec ESP32" board package, not generic ESP32. Built-in battery connector (PH 1.25mm). The LED is on GPIO25. Deep sleep with LoRa: radio.sleep() then ESP.deepSleep(). Wake via timer or external interrupt on GPIO39.',
+    lib: 'Heltec library (includes LoRa + OLED). Also works with arduino-LoRa + Adafruit SSD1306.',
+  },
+  neo6m: {
+    what: 'The NEO-6M from u-blox is the most popular GPS module for maker projects. It outputs NMEA sentences (standard GPS text protocol) over UART at 9600 baud. Provides latitude, longitude, altitude, speed, heading, and UTC time. Uses GPS satellites only (slower fix vs newer multi-constellation chips).',
+    wiring: 'VCC→3.3-5V, GND→GND, TX(GPS)→MCU RX, RX(GPS)→MCU TX. PPS pin outputs 1Hz pulse when satellite lock is acquired — connect to an LED or interrupt pin as a lock indicator.',
+    tips: 'Cold start (no cached almanac) takes ~30 seconds for first fix — needs clear sky view. Once locked, hot start <1s. Keep away from metal enclosures and ground planes. BAUD rate configurable 4800-115200 via UBX protocol commands, but 9600 is fine for 1Hz updates.',
+    lib: 'TinyGPS++ by Mikal Hart (easiest). Or parse NMEA strings manually: $GPRMC, $GPGGA.',
+  },
+  neo8m: {
+    what: 'The NEO-M8N/NEO-8M is u-blox\'s 8th-generation GPS that supports multiple constellations simultaneously: GPS (US), GLONASS (Russia), BeiDou (China), and Galileo (EU). More satellites = faster fix, better accuracy in cities with building obstruction.',
+    wiring: 'Same as NEO-6M: UART TX/RX swap, VCC, GND. I2C also available. Some boards have a backup battery (VBackup pin) for keeping almanac during power-off — dramatically improves fix time.',
+    tips: 'Accuracy: 2.5m CEP (circular error probable) under open sky, vs NEO-6M\'s 2m. For navigation use NEO-8M. For simple location logging, NEO-6M is fine. Configure via u-center software (Windows only).',
+    lib: 'TinyGPS++. For full config: SparkFun u-blox GNSS library.',
+  },
+  l76k: {
+    what: 'The Quectel L76K is a compact, ultra-low-power GPS module (GPS+BeiDou). Its AlwaysLocate™ algorithm adaptively manages power — when the device isn\'t moving, it takes fewer satellite readings to save battery. Ideal for battery-powered guardian field nodes.',
+    wiring: '3.3V VCC (NOT 5V tolerant). UART TX/RX. FORCE_ON pin: pull LOW to disable power-save and force continuous tracking. NRESET active-low reset.',
+    tips: 'Standby current <1mA with AlwaysLocate. Use 1PPS output for precision time sync between nodes. Small form factor (10.1×9.7mm) suits compact enclosures. Backup battery recommended for faster fix after sleep.',
+    lib: 'TinyGPS++ works fine with standard NMEA output.',
+  },
+  gtu7: {
+    what: 'The GT-U7 is a low-cost NEO-6M compatible GPS module — same chip, same pinout, same software. An excellent starting point for first GPS projects. Includes an integrated ceramic patch antenna and SMA connector for external antenna.',
+    wiring: 'Same as NEO-6M: VCC 3.3-5V, GND, TX→MCU RX, RX→MCU TX. LED blinks when acquiring satellites, stays steady when locked.',
+    tips: 'The built-in ceramic patch antenna works outdoors. For indoor testing or partial sky view, connect an external active GPS antenna via the SMA connector (needs 3.3V bias on the antenna pin — check your module variant). Default baud rate: 9600.',
+    lib: 'TinyGPS++.',
+  },
+  atgm336h: {
+    what: 'The ATGM336H is a GPS+BeiDou receiver made by ZHONGKEWEI. Low cost, 3.3V, UART NMEA output. Similar performance to NEO-6M but adds BeiDou constellation for better coverage in Asia. Includes PPS (1 pulse per second) and NRESET pins.',
+    wiring: '3.3V VCC only. UART TX→MCU RX, RX→MCU TX (9600 baud default). PPS and NRESET are optional but useful. Active ceramic patch antenna on the PCB.',
+    tips: 'Good budget option for North American use — BeiDou adds some extra satellites. Not as extensively documented as u-blox. Avoid the counterfeits that re-label older ATGM336H-5N as the H variant — check the module markings.',
+    lib: 'TinyGPS++.',
+  },
+  sim800l: {
+    what: 'The SIM800L is a quad-band GSM/GPRS module — it works like a simple cell phone. Send SMS, make calls, open TCP connections, and do HTTP requests using AT commands over UART. GPRS data (2G only) gives ~85kbps download. Works on any standard SIM card.',
+    wiring: 'VCC: 3.4-4.4V — this is critical. Do NOT use 5V or 3.3V directly. Use a LiPo battery or a dedicated 4V regulator. Needs up to 2A during transmission bursts. TX/RX to MCU UART. Add a 1000µF capacitor at VCC to handle peak current. ANTENNA: required, any GSM antenna.',
+    tips: 'Most common beginner mistake: powering from Arduino\'s 3.3V or 5V pin — the module resets under load. Use a dedicated power supply. AT+CMGF=1 sets SMS text mode. AT+CGATT=1 attaches GPRS. RSSI check: AT+CSQ (above 10 is usable).',
+    lib: 'TinyGSM library by Volodymyr Shymanskyy — excellent AT abstraction.',
+  },
+  sim7600e: {
+    what: 'The SIM7600E is a 4G LTE Cat-4 module supporting real broadband speeds: 150Mbps down, 50Mbps up. Also falls back to 3G/2G. This is for deployments where upload bandwidth matters — streaming video, uploading large files, real-time video feeds from field nodes.',
+    wiring: 'Main UART (AT commands): TX/RX at 115200 baud. USB port for direct data connection. 3.3-4.2V VCC (same power supply cautions as SIM800L — can draw 2A peaks). Needs proper LTE antenna (4G antenna, not old GSM antenna).',
+    tips: 'Use USB for high-speed data and UART for AT command control simultaneously. Network registration: AT+CREG?, AT+CGREG?. For LTE-only: AT+CNMP=38. Check signal: AT+CSQ and AT+CPSI for detailed band info.',
+    lib: 'TinyGSM (for AT control). Direct USB: standard Linux/Windows modem driver (appears as USB network interface).',
+  },
+  a9g: {
+    what: 'The AI-Thinker A9G combines GSM/GPRS cellular and GPS on one module — one chip handles both. Two separate UARTs: one for cellular AT commands, one for GPS NMEA data. Ideal when you want to minimize components: location + internet in a single module for guardian field nodes.',
+    wiring: 'UART1 (GPIO11/10): cellular AT commands. UART2 (GPIO16/17): GPS NMEA sentences. VCC: 3.8V (LiPo direct). BOOT pin must be pulled LOW for 1 second on startup. PWRKEY: toggle to power on/off.',
+    tips: 'GPS fix takes longer than dedicated GPS modules — shared antenna path. The module runs its own RTOS and has 4MB flash for custom firmware if needed. Comes with a small PCB antenna for GSM; GPS needs a clear sky view.',
+    lib: 'Custom A9G library or raw AT commands. Use TinyGPS++ on the GPS UART.',
+  },
+  sim7000g: {
+    what: 'The SIM7000G is designed for IoT: it supports NB-IoT and eMTC (LTE Cat-M1) — low-bandwidth cellular protocols specifically designed for battery-powered sensors. Instead of streaming video, think: send 50 bytes of GPS position every 10 minutes for months on a single battery. Also falls back to GPRS.',
+    wiring: 'UART AT commands at 115200. VCC 3.3-4.2V. NB-IoT requires a nano-SIM and a carrier that supports NB-IoT (Telus, Rogers in Canada; T-Mobile, AT&T in US). Sleep current <1µA.',
+    tips: 'NB-IoT costs much less per MB than LTE. Perfect pairing with solar + LiPo for permanent field nodes. AT+CBANDCFG sets the LTE bands. AT+CMNB=1 forces NB-IoT, =2 forces eMTC. Check carrier support before buying.',
+    lib: 'TinyGSM (full support for SIM7000G).',
+  },
+  ec21: {
+    what: 'The Quectel EC21 is an LTE Cat-1 module — a step below Cat-4 in speed (10Mbps/5Mbps) but cheaper, lower power, and widely compatible. The EC21-G global variant covers all LTE bands worldwide. Has QuecOpen: you can run custom C applications directly on the module without a separate MCU.',
+    wiring: 'Main UART at 115200. USB for debug/firmware. 3.3V I/O. Needs proper LTE antenna (included with most dev boards). Mini-PCIe form factor available for embedded designs.',
+    tips: 'QuecOpen means you can eliminate the Arduino/ESP32 entirely for simple tasks — the EC21 can run your sensor polling and cloud upload code internally. Cat-1 is ideal for guardian nodes that need reliable upload without the cost of Cat-4.',
+    lib: 'TinyGSM works. For QuecOpen: Quectel OpenLinux SDK.',
+  },
 };
 
 function showWiki(type) {
   const wiki = WIKI[type];
   if (!wiki) return;
   const def = getCompDef(type);
+  const w = typeof wiki === 'string' ? { what: wiki } : wiki;
+  const section = (label, color, text) => text
+    ? `<div style="margin-bottom:14px"><div style="color:${color};font-size:11px;letter-spacing:1.5px;margin-bottom:5px">${label}</div><div style="color:var(--text);line-height:1.8;font-size:13px">${text}</div></div>`
+    : '';
+  const pins = (def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('');
+  const dim = def?.dim ? `<div style="margin-bottom:14px"><div style="color:var(--text-dim);font-size:11px;letter-spacing:1.5px;margin-bottom:5px">DIMENSIONS</div><div style="color:var(--amber);font-size:13px">${def.dim}</div></div>` : '';
   document.getElementById('wikiContent').innerHTML = `
-    <div style="color:var(--amber);margin-bottom:8px;font-size:11px">${def?.icon||'⚙'} ${def?.label||type}</div>
-    <div style="color:var(--green);margin-bottom:10px;line-height:2">${wiki}</div>
-    <div style="color:var(--cyan-d);margin-top:6px;font-size:9px">PINS</div>
-    <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${(def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('')}</div>
-    <div style="margin-top:10px;border-top:1px solid var(--edge);padding-top:6px;font-size:9px;color:var(--cyan-d)">
+    <div style="color:var(--amber);margin-bottom:14px;font-size:15px;letter-spacing:1px">${def?.icon||'⚙'} ${def?.label||type}</div>
+    ${section('WHAT IS IT', 'var(--green)', w.what)}
+    ${section('WIRING', 'var(--cyan)', w.wiring)}
+    ${dim}
+    ${section('TIPS', 'var(--amber)', w.tips)}
+    ${section('LIBRARY', 'var(--lora)', w.lib)}
+    ${pins ? `<div style="margin-bottom:14px"><div style="color:var(--text-dim);font-size:11px;letter-spacing:1.5px;margin-bottom:5px">PINS</div><div style="display:flex;flex-wrap:wrap;gap:4px">${pins}</div></div>` : ''}
+    <div style="border-top:1px solid var(--edge);padding-top:10px;font-size:12px;color:var(--text-dim)">
       Share datasheets via IPFS CID in <a href="chat.html" style="color:var(--amber)">#hardware-lab ↗</a>
     </div>
   `;
@@ -800,9 +1106,15 @@ function exportJson() {
 // ── IPFS SHARE ────────────────────────────────────────────────────────────────
 function shareCircuit() {
   updateJson();
-  const json = document.getElementById('jsonEditor').value;
-  const info = `To share this circuit via IPFS:\n\n1. Save the JSON:\n   circuit.json\n\n2. Add to IPFS:\n   ipfs add circuit.json --cid-version=1\n\n3. Share the CID in #hardware-lab\n   It will auto-link as a clickable IPFS badge.\n\n── Current circuit: ${circuit.title}\n   Components: ${circuit.components.length}  Connections: ${circuit.connections.length}`;
+  // Enable LIVE if not already on, to get a session URL
+  if (!liveMode) toggleLive();
+  const sessionUrl = location.href.split('#')[0] + '#' + liveSession;
+  const compList = circuit.components.slice(0,5).map(c=>c.label||c.type).join(', ') + (circuit.components.length>5?`… +${circuit.components.length-5} more`:'');
+  const chatMsg = `🔧 CIRCUIT SHARED — "${circuit.title}" · ${circuit.components.length} components (${compList}) · Join: ${sessionUrl}`;
+  shareToChatGun(chatMsg);
+  const info = `Circuit shared!\n\n🔗 Collab URL (paste in browser or chat):\n${sessionUrl}\n\nAnyone opening this URL joins the same live editing session.\n\n── "${circuit.title}"\n   ${circuit.components.length} components · ${circuit.connections.length} connections\n\n✉ Posted to #hardware-lab chat via GUN.`;
   alert(info);
+  setStatus(`Shared to chat: ${circuit.title}`);
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
@@ -813,7 +1125,15 @@ function clearCanvas() {
 }
 
 function autoLayout() {
-  if (simulation) { simulation.alpha(0.5).restart(); setStatus('Layout running…'); }
+  // Grid-pack components
+  getSvgSize();
+  const cols = Math.max(1, Math.floor((W - 80) / 180));
+  circuit.components.forEach((c, i) => {
+    c.x = 90 + (i % cols) * 180;
+    c.y = 90 + Math.floor(i / cols) * 140;
+  });
+  renderCircuit(circuit);
+  setStatus('Components arranged in grid.');
 }
 
 function setStatus(msg) {
@@ -1110,6 +1430,91 @@ function saveProblemDefinition() {
 }
 
 
+// ── GUN P2P COLLAB ────────────────────────────────────────────────────────────
+let gunDb = null;
+let liveMode = false;
+let liveSession = null;
+let syncTimer = null;
+let peersOnline = 0;
+
+function initGun() {
+  if (gunDb) return;
+  gunDb = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+}
+
+function toggleLive() {
+  if (!liveMode) {
+    initGun();
+    // Session ID from URL hash, or generate one
+    if (!location.hash) location.hash = '#' + Math.random().toString(36).slice(2,8);
+    liveSession = location.hash.replace('#','');
+    liveMode = true;
+    document.getElementById('liveBtn').textContent = 'LIVE: ON';
+    document.getElementById('liveBtn').classList.add('active');
+    subscribeCollab();
+    setStatus(`Collab LIVE — session: ${liveSession} — share URL to collaborate`);
+  } else {
+    liveMode = false;
+    document.getElementById('liveBtn').textContent = 'LIVE: OFF';
+    document.getElementById('liveBtn').classList.remove('active');
+    setStatus('Collab LIVE disabled.');
+  }
+}
+
+function subscribeCollab() {
+  if (!gunDb || !liveSession) return;
+  const node = gunDb.get('guardian-circuit-lab-v1').get(liveSession);
+  // Track peer presence via heartbeat key
+  const myId = Math.random().toString(36).slice(2,6);
+  const heartbeat = setInterval(() => {
+    if (!liveMode) { clearInterval(heartbeat); return; }
+    node.get('peers').get(myId).put({ ts: Date.now() });
+  }, 5000);
+  node.get('peers').map().on((data, key) => {
+    if (!data) return;
+    const alive = Object.keys({}).constructor === Object; // placeholder
+    // Count peers active in last 15s
+    node.get('peers').once(allPeers => {
+      if (!allPeers) return;
+      const now = Date.now();
+      const count = Object.entries(allPeers).filter(([k,v]) => k!=='_' && v && (now-(v.ts||0)) < 15000).length;
+      peersOnline = count;
+      document.getElementById('peerCount').textContent = `· peers: ${count}`;
+      document.getElementById('peerCount').style.color = count > 1 ? 'var(--green)' : 'var(--text-dim)';
+    });
+  });
+  // Subscribe to circuit updates
+  node.get('circuit').on(data => {
+    if (!data || !liveMode) return;
+    try {
+      const remote = JSON.parse(data);
+      // Only apply if different from current (avoid echo)
+      if (JSON.stringify(remote.components) !== JSON.stringify(circuit.components) ||
+          JSON.stringify(remote.connections) !== JSON.stringify(circuit.connections)) {
+        circuit = remote;
+        renderCircuit(circuit);
+        setStatus(`Collab sync received — ${circuit.components.length} components`);
+      }
+    } catch(e) {}
+  });
+}
+
+function pushCollab() {
+  if (!liveMode || !gunDb || !liveSession) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    const snap = JSON.parse(JSON.stringify(circuit));
+    snap.components.forEach(c => { delete c.vx; delete c.vy; delete c.index; });
+    gunDb.get('guardian-circuit-lab-v1').get(liveSession).get('circuit').put(JSON.stringify(snap));
+  }, 600);
+}
+
+function shareToChatGun(message) {
+  initGun();
+  const msg = { text: message, user: 'CIRCUIT-LAB', ts: Date.now(), type: 'circuit' };
+  gunDb.get('guardian-chat-v1').get('messages').set(msg);
+}
+
 // ── STARTUP ───────────────────────────────────────────────────────────────────
 buildCatalog();
 loadExample('guardian-node');
@@ -1118,10 +1523,12 @@ document.getElementById('circuitTitle').addEventListener('input', e => {
   circuit.title = e.target.value;
 });
 
-window.addEventListener('resize', () => {
-  getSvgSize();
-  if (simulation) simulation.force('center', d3.forceCenter(W/2, H/2)).alpha(0.1).restart();
-});
+// Auto-join collab session from URL hash
+if (location.hash && location.hash.length > 1) {
+  setTimeout(() => toggleLive(), 500);
+}
+
+window.addEventListener('resize', () => { getSvgSize(); });
 </script>
 </body>
 </html>
