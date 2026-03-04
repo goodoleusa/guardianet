@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GUARDIAN NETWORK — CyberTemplate</title>
+  <title>GN Globe — [redacted project name]</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <style>
     :root {
       --bg:          #060916;
@@ -27,7 +28,7 @@
       --land-stroke: #1f3f60;
       --graticule:   rgba(0,204,255,0.08);
       --panel-edge:  #152035;
-      --font:        'Share Tech Mono', 'Courier New', monospace;
+      --font:        'Open Sans','Segoe UI',sans-serif;
       --glow-g:      0 0 8px rgba(0,255,65,0.5);
       --glow-c:      0 0 8px rgba(0,204,255,0.5);
       --glow-l:      0 0 8px rgba(255,102,255,0.5);
@@ -432,6 +433,53 @@
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: var(--bg-panel); }
     ::-webkit-scrollbar-thumb { background: var(--cyan-dim); }
+
+    /* status badge */
+    .globe-status-badge{display:inline-block;font-size:0.7rem;padding:2px 10px;letter-spacing:1px;border:1px solid;border-radius:2px;font-family:var(--font);white-space:nowrap;vertical-align:middle}
+    .globe-status-badge.sim{color:var(--red);border-color:#881122;background:rgba(239,68,68,0.08)}
+    .globe-status-badge.live{color:var(--green);border-color:var(--green-dim);background:rgba(0,255,65,0.1);box-shadow:0 0 6px rgba(0,255,65,0.3)}
+
+    /* mobile toggle for panels */
+    .panel-toggle-btn{display:none;background:rgba(0,204,255,0.06);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:var(--font);font-size:14px;padding:10px;cursor:pointer;letter-spacing:1px;width:100%;text-align:center;min-height:44px}
+
+    @media(max-width:600px){
+      html,body{overflow:auto;height:auto;font-size:14px}
+      .layout{height:auto;display:flex;flex-direction:column}
+      .body-row{display:flex;flex-direction:column;min-height:auto}
+      .header{flex-wrap:wrap;padding:10px 14px;gap:8px}
+      .logo-text{font-size:16px}
+      .logo-sub{font-size:10px}
+      .health-wrap{order:3;width:100%}
+      .health-top{font-size:10px}
+      .panel{padding:12px}
+      .panel-left{border-right:none;border-bottom:1px solid var(--panel-edge);order:2}
+      .panel-right{border-left:none;border-top:1px solid var(--panel-edge);order:3}
+      .panel-left.collapsed-mobile .stat-row,
+      .panel-left.collapsed-mobile .stat-divider,
+      .panel-left.collapsed-mobile .chain-alert,
+      .panel-left.collapsed-mobile .lora-info,
+      .panel-left.collapsed-mobile .join-section{display:none}
+      .panel-right.collapsed-mobile .node-item{display:none}
+      .panel-toggle-btn{display:block}
+      .panel-title{font-size:14px}
+      .stat-row{font-size:14px;padding:6px 0}
+      .stat-lbl{font-size:14px}
+      .stat-val{font-size:14px}
+      .globe-wrap{order:1;min-height:50vh;max-height:60vh}
+      .legend{font-size:10px;line-height:1.8}
+      .coords{font-size:10px}
+      .node-item{padding:10px 4px 10px 8px}
+      .ni-id{font-size:14px}
+      .ni-status{font-size:10px}
+      .ni-region{font-size:10px}
+      .ni-meta{font-size:10px}
+      .footer{padding:8px 14px;font-size:10px;flex-wrap:wrap;gap:8px}
+      .footer a{font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+      .btn{font-size:14px;padding:10px;min-height:44px}
+      .badge{font-size:10px}
+      .chain-alert{font-size:14px}
+      .lora-info{font-size:14px}
+    }
   </style>
 </head>
 <body>
@@ -442,8 +490,8 @@
     <div class="logo-block">
       <div class="logo-icon">◈</div>
       <div>
-        <div class="logo-text">GUARDIAN NET <span class="blink">_</span></div>
-        <div class="logo-sub">CYBERTEMPLATE v2.0</div>
+        <div class="logo-text">GN GLOBE <span class="blink">_</span></div>
+        <div class="logo-sub">EYES ON THE NETWORK · NO NODE LEFT BEHIND</div>
       </div>
     </div>
 
@@ -459,7 +507,7 @@
 
     <div class="header-badges">
       <div class="badge online" id="onlineBadge">● ONLINE</div>
-      <div class="badge version">IPFS + LORA MESH</div>
+      <div class="badge version">GN MESH</div>
     </div>
   </header>
 
@@ -467,7 +515,8 @@
   <div class="body-row">
 
     <!-- LEFT PANEL -->
-    <aside class="panel panel-left">
+    <aside class="panel panel-left collapsed-mobile" id="panelLeft">
+      <button class="panel-toggle-btn" onclick="document.getElementById('panelLeft').classList.toggle('collapsed-mobile');this.textContent=this.textContent.includes('SHOW')?'▲ HIDE STATS':'▼ SHOW STATS'">▼ SHOW STATS</button>
       <div class="panel-title">NETWORK STATS</div>
 
       <div class="stat-row"><span class="stat-lbl">ACTIVE</span>   <span class="stat-val g"  id="sActive">--</span></div>
@@ -476,7 +525,7 @@
       <hr class="stat-divider">
       <div class="stat-row"><span class="stat-lbl">SENTINELS</span><span class="stat-val c"  id="sSent">--</span></div>
       <div class="stat-row"><span class="stat-lbl">GUARDIANS</span><span class="stat-val g"  id="sGuard">--</span></div>
-      <div class="stat-row"><span class="stat-lbl">LORA NODES</span><span class="stat-val lo" id="sLora">--</span></div>
+      <div class="stat-row"><span class="stat-lbl">LORA NODES <span class="globe-status-badge sim">SIMULATED</span></span><span class="stat-val lo" id="sLora">--</span></div>
       <hr class="stat-divider">
       <div class="stat-row"><span class="stat-lbl">CHAIN LEN</span><span class="stat-val g"  id="sChain">--</span></div>
       <div class="stat-row"><span class="stat-lbl">BTC BLOCK</span><span class="stat-val c"  id="sBlock">--</span></div>
@@ -490,12 +539,12 @@
       </div>
 
       <div id="loraInfo" class="lora-info" style="display:none">
-        <div class="lora-info-title">◉ LORA MESH NODES</div>
+        <div class="lora-info-title">◉ LORA MESH NODES <span class="globe-status-badge sim">SIMULATED</span></div>
         <div id="loraInfoText"></div>
       </div>
 
       <div class="join-section">
-        <div class="join-title">BECOME A GUARDIAN</div>
+        <div class="join-title">JOIN THE MISSION</div>
         <a class="btn" href="IPFS-PINNING-GUIDE.md">PIN TO IPFS →</a>
         <a class="btn lora-btn" href="#lora-guide">DEPLOY LORA →</a>
         <a class="btn" href="chain.html">JOIN THE CHAIN →</a>
@@ -508,7 +557,7 @@
       <div class="tip" id="tip"></div>
       <div class="coords" id="coords">INITIALIZING...</div>
       <div class="legend">
-        <div><span class="leg-dot active"></span>ACTIVE GUARDIAN</div>
+        <div><span class="leg-dot active"></span>ACTIVE MEMBER</div>
         <div><span class="leg-dot sentinel"></span>SENTINEL (FULL NODE)</div>
         <div><span class="leg-dot away"></span>AWAY</div>
         <div><span class="leg-dot dark"></span>DARK / OFFLINE</div>
@@ -517,7 +566,8 @@
     </div>
 
     <!-- RIGHT PANEL -->
-    <aside class="panel panel-right">
+    <aside class="panel panel-right collapsed-mobile" id="panelRight">
+      <button class="panel-toggle-btn" onclick="document.getElementById('panelRight').classList.toggle('collapsed-mobile');this.textContent=this.textContent.includes('SHOW')?'▲ HIDE NODES':'▼ SHOW NODES'">▼ SHOW NODES</button>
       <div class="panel-title">ACTIVE NODES</div>
       <div id="nodeList"></div>
     </aside>
@@ -533,7 +583,7 @@
     <a href="witness.html">[ VERIFY TIMESTAMP ]</a>
     <a href="chat.html">[ ENTER CHATROOM ]</a>
     <a href="chain.html">[ DEAD MAN'S CHAIN ]</a>
-    <a href="index.html" style="margin-left:auto">← INVESTIGATION</a>
+    <a href="index.html" style="margin-left:auto">← MISSIONS</a>
   </footer>
 
 </div><!-- /layout -->

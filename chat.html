@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guardian Chat</title>
+  <title>GN Chat</title>
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
@@ -163,6 +164,72 @@
     .codepad-area::placeholder { color:#b0b0b0; }
 
     .hidden { display:none!important; }
+
+    .bl-toggle {
+      display:none;
+      position:fixed;
+      top:6px;
+      left:6px;
+      z-index:50;
+      background:var(--bg);
+      border:2px solid;
+      border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white);
+      padding:4px 8px;
+      font:bold 11px 'Tahoma';
+      cursor:pointer;
+      color:#000;
+    }
+
+    .aim-msg { line-height:1.55; }
+    .aim-body { font-size:15px; }
+    .msg-area { font-size:15px; }
+    .chat-input { min-height:44px; font-size:15px; }
+
+    @media (max-width:600px) {
+      .bl-win {
+        display:none;
+        position:fixed;
+        top:0; left:0; bottom:0;
+        width:80vw;
+        max-width:300px;
+        z-index:90;
+        box-shadow:4px 0 16px rgba(0,0,0,0.5);
+      }
+      .bl-win.mobile-open {
+        display:flex!important;
+      }
+      .bl-toggle {
+        display:block;
+      }
+      .bl-overlay {
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.4);
+        z-index:80;
+        display:none;
+      }
+      .bl-overlay.visible {
+        display:block;
+      }
+      .desktop {
+        padding:0;
+        gap:0;
+      }
+      .chat-win {
+        width:100%;
+      }
+      .aim-body { font-size:16px; }
+      .msg-area { font-size:16px; padding:8px 10px; }
+      .chat-input { min-height:48px; font-size:16px; padding:8px 10px; }
+      .input-row { padding:4px 6px; }
+      .aim-who { font-size:13px; }
+      .aim-ts { font-size:10px; }
+      .tab-strip { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .ctab { font-size:12px; padding:4px 8px; }
+      .menubar .mitem { font-size:12px; }
+      .codepad-area { font-size:14px; }
+      .modal-win { width:92vw; max-width:340px; }
+    }
   </style>
 </head>
 <body>
@@ -172,11 +239,11 @@
   <div class="modal-win">
     <div class="titlebar">
       <span class="titlebar-icon">🏃</span>
-      <span class="titlebar-text">Welcome to Guardian Chat</span>
+      <span class="titlebar-text">Welcome to GN Chat</span>
       <div class="wbtn close">✕</div>
     </div>
     <div class="modal-body">
-      <div class="modal-label"><b>Choose your Guardian screen name:</b></div>
+      <div class="modal-label"><b>Choose your screen name:</b></div>
       <div class="name-grid" id="nameGrid"></div>
       <a class="shuffle-lnk" id="shuffleBtn">↻ Generate more names</a>
       <div class="modal-div">— or enter your own below —</div>
@@ -193,11 +260,14 @@
 <!-- ── Desktop ───────────────────────────────────────────────────────────── -->
 <div class="desktop hidden" id="appRoot">
 
+  <button class="bl-toggle" id="blToggle" title="Show Buddy List">☰ Buddies</button>
+  <div class="bl-overlay" id="blOverlay"></div>
+
   <!-- Buddy List window -->
-  <div class="bl-win">
+  <div class="bl-win" id="blWin">
     <div class="titlebar">
       <span class="titlebar-icon" style="color:var(--aim-yellow)">🏃</span>
-      <span class="titlebar-text">Guardian Buddy List</span>
+      <span class="titlebar-text">GN Buddy List</span>
       <div style="display:flex;gap:2px">
         <div class="wbtn">–</div>
         <div class="wbtn">□</div>
@@ -235,7 +305,7 @@
       <div class="bcat" id="catOnline">
         <div class="bcat-hdr" onclick="toggleCat('catOnline')">
           <span class="bcat-arr" id="arr-catOnline">▼</span>
-          Online Guardians
+          Online Members
           <span class="bcat-cnt" id="cnt-catOnline">0</span>
         </div>
         <div class="bcat-body" id="body-catOnline"></div>
@@ -247,7 +317,7 @@
       <button class="w98-btn" title="Send an Instant Message" onclick="focusInput()">IM</button>
       <button class="w98-btn" title="Go to chat room" id="blChatBtn">Chat</button>
       <button class="w98-btn" style="color:#808080" title="Set Away message">Away</button>
-      <button class="w98-btn" style="margin-left:auto" title="Preferences" onclick="window.location='index.html'">Net ↗</button>
+      <button class="w98-btn" style="margin-left:auto" title="Preferences" onclick="window.location='index.html'">Missions ↗</button>
     </div>
   </div>
 
@@ -255,7 +325,7 @@
   <div class="chat-win">
     <div class="titlebar">
       <span class="titlebar-icon">💬</span>
-      <span class="titlebar-text" id="winTitle">Guardian Chat</span>
+      <span class="titlebar-text" id="winTitle">GN Chat</span>
       <div style="display:flex;gap:2px">
         <div class="wbtn">–</div>
         <div class="wbtn">□</div>
@@ -323,18 +393,21 @@
       <span>Msgs: <b id="sbMsgs">0</b></span>
       <div class="sb-sep" style="margin-left:auto"></div>
       <span style="color:#808080">P2P · No server · <a href="guardian-globe.html" style="color:var(--aim-link)">Globe ↗</a></span>
+      <div class="sb-sep"></div>
+      <span style="color:#808080">Rank: <b id="sbRank">RECRUIT</b></span>
     </div>
   </div>
 
 </div>
 
+<script src="js/gameplay.js"></script>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const ROOMS = [
   { id:'general',       label:'#general',         icon:'💬', desc:'Open channel' },
   { id:'investigation', label:'#investigation',    icon:'🔍', desc:'Evidence & analysis' },
   { id:'collab',        label:'#collab-coding',    icon:'💻', desc:'Build together' },
-  { id:'guardian-net',  label:'#guardian-net',     icon:'🌐', desc:'Network ops' },
+  { id:'gn-ops',  label:'#gn-ops',     icon:'🌐', desc:'Network ops' },
   { id:'deadmans',      label:'#dead-mans-chain',  icon:'⛓', desc:'Relay chain' },
 ];
 const IPFS_GW   = 'https://ipfs.io/ipfs/';
@@ -380,7 +453,7 @@ function linkify(raw) {
 function toast(msg, ms=3500) {
   const el = document.createElement('div');
   el.className = 'aol-toast';
-  el.innerHTML = `<b>Guardian Chat:</b><br>${esc(msg)}`;
+  el.innerHTML = `<b>GN Chat:</b><br>${esc(msg)}`;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), ms);
 }
@@ -490,7 +563,7 @@ function switchRoom(roomId) {
   unread[roomId] = 0;
   buildRoomList(); buildTabs();
   const r = ROOMS.find(x=>x.id===roomId);
-  document.getElementById('winTitle').textContent = `Guardian Chat — ${r.label}`;
+  document.getElementById('winTitle').textContent = `GN Chat — ${r.label}`;
   document.getElementById('sbRoom').textContent   = r.label;
   document.getElementById('msgArea').innerHTML    = '';
   sysMsg(`You have entered ${r.label} — ${r.desc}`);
@@ -515,6 +588,20 @@ function subscribeRoom(roomId) {
   });
 }
 
+const BEHIND_THE_SCENES = [
+  'Behind the scenes: Your messages are synced via Gun.js peer-to-peer. No central server stores them \u2014 every connected browser IS the server.',
+  'Behind the scenes: Gun.js uses a concept called CRDTs (Conflict-free Replicated Data Types) so messages merge correctly even when peers reconnect after being offline.',
+  'Behind the scenes: The CIDs you paste here (like bafybei... or Qm...) are content addresses. The hash IS the address \u2014 same content always produces the same hash.',
+  'Behind the scenes: Unlike Discord or Slack, this chat has no single point of failure. If one relay goes down, messages still sync through other peers.',
+  'Behind the scenes: IPFS CIDs starting with "bafybei" use CIDv1 (base32), while those starting with "Qm" use CIDv0 (base58). Both work the same way.',
+  'Behind the scenes: Your screen name is stored only in YOUR browser localStorage. We never see it, collect it, or store it on any server.',
+  'Behind the scenes: The "Warning Level" feature is a nod to classic AOL/AIM. In that era, enough warnings could actually disconnect someone!',
+  'Behind the scenes: When you share a circuit design from Circuit Lab, it creates a JSON file that anyone can import and modify \u2014 open-source hardware.',
+  'Behind the scenes: The Dead Man\u2019s Chain uses Gun.js to maintain a succession relay. If a node goes dark for 48h, its successor auto-promotes.',
+  'Behind the scenes: Bitcoin timestamps via OpenTimestamps don\u2019t store your data ON the blockchain. They store a hash \u2014 a mathematical fingerprint \u2014 proving the data existed at that time.',
+];
+var tipsShown = parseInt(localStorage.getItem('mdd_tips_shown') || '0');
+
 function sendMsg(text) {
   text = text.trim();
   if (!text) return;
@@ -523,6 +610,18 @@ function sendMsg(text) {
   gun.get(NS).get('rooms').get(currentRoom).get('msgs').get(key).put(
     { from:screenName, text, time:ts(), room:currentRoom, t:Date.now() }
   );
+  GN_GAME.trackStat('chatMessages');
+  var chatCount = GN_GAME.getPlayer().stats.chatMessages;
+  if (chatCount === 1) GN_GAME.unlockAchievement('first_chat');
+  if (chatCount >= 10) GN_GAME.unlockAchievement('chat_10');
+  if (chatCount >= 50) GN_GAME.unlockAchievement('chat_50');
+  if (chatCount % 5 === 0) {
+    var tip = BEHIND_THE_SCENES[Math.floor(Math.random() * BEHIND_THE_SCENES.length)];
+    sysMsg(tip);
+    tipsShown++;
+    localStorage.setItem('mdd_tips_shown', String(tipsShown));
+    if (tipsShown >= 5) GN_GAME.unlockAchievement('chat_educator');
+  }
 }
 
 function handleCmd(raw) {
@@ -581,6 +680,12 @@ function initGun() {
     if(d.ts&&Date.now()-d.ts<4000)showTyping(k);
   });
 
+  GN_GAME.init(gun);
+  var p = GN_GAME.getPlayer();
+  document.getElementById('sbRank').textContent = p.rank || 'RECRUIT';
+  GN_GAME.onChange(function(player) {
+    document.getElementById('sbRank').textContent = player.rank || 'RECRUIT';
+  });
   document.getElementById('tbConn').textContent='● Connected (P2P)';
   document.getElementById('tbConn').style.color='green';
   ROOMS.forEach(r => subscribeRoom(r.id));
@@ -591,7 +696,7 @@ function setScreenName(raw) {
   screenName = raw.replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,16) || genName();
   localStorage.setItem('gchat_name', screenName);
   document.getElementById('snDisplay').textContent = screenName;
-  document.title = `${screenName} — Guardian Chat`;
+  document.title = `${screenName} — GN Chat`;
 }
 
 // ── NAME GENERATION ───────────────────────────────────────────────────────────
@@ -630,6 +735,15 @@ function boot(name) {
     sysMsg(`You warned the room. Warning level increased. (Classic AOL feature — cosmetic only.)`);
   });
   document.getElementById('blChatBtn').onclick = () => focusInput();
+
+  const blToggle = document.getElementById('blToggle');
+  const blOverlay = document.getElementById('blOverlay');
+  const blWin = document.getElementById('blWin');
+  function openBuddyPanel() { blWin.classList.add('mobile-open'); blOverlay.classList.add('visible'); }
+  function closeBuddyPanel() { blWin.classList.remove('mobile-open'); blOverlay.classList.remove('visible'); }
+  blToggle.addEventListener('click', openBuddyPanel);
+  blOverlay.addEventListener('click', closeBuddyPanel);
+
   inp.focus();
 }
 

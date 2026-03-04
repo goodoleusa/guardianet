@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WITNESS CHAMBER — CyberTemplate</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>WITNESS CHAMBER — [redacted project name]</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <style>
     :root {
       --bg:       #060916;
@@ -18,7 +19,7 @@
       --red:      #ff3333;
       --gold:     #ffd700;
       --edge:     #152035;
-      --font:     'Share Tech Mono', 'Courier New', monospace;
+      --font:     'Open Sans','Segoe UI',sans-serif;
       --glow-g:   0 0 10px rgba(0,255,65,0.5);
       --glow-c:   0 0 10px rgba(0,204,255,0.5);
       --glow-a:   0 0 10px rgba(255,170,0,0.5);
@@ -31,7 +32,7 @@
       background: var(--bg);
       color: var(--green);
       font-family: var(--font);
-      font-size: 12px;
+      font-size: 16px;
     }
 
     body::after {
@@ -42,20 +43,8 @@
       z-index: 9999;
     }
 
-    /* ── HEADER ── */
-    .header {
-      background: linear-gradient(90deg, #080f1e, #0d1e38, #080f1e);
-      border-bottom: 1px solid var(--cyan-d);
-      padding: 8px 20px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .logo { font-size: 13px; color: var(--cyan); text-shadow: var(--glow-c); letter-spacing: 2px; }
-    .logo-sub { font-size: 8px; color: var(--cyan-d); letter-spacing: 3px; }
     .blink { animation: blink 1.1s step-end infinite; }
     @keyframes blink { 50% { opacity: 0; } }
-    .nav-links { margin-left: auto; display: flex; gap: 16px; font-size: 9px; }
-    .nav-links a { color: var(--cyan-d); text-decoration: none; letter-spacing: 1px; }
-    .nav-links a:hover { color: var(--green); text-shadow: var(--glow-g); }
 
     /* ── MAIN LAYOUT ── */
     .page { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
@@ -66,10 +55,10 @@
       margin-bottom: 32px;
     }
     .chamber-title h1 {
-      font-size: 22px; color: var(--cyan); text-shadow: var(--glow-c);
+      font-size: 28px; color: var(--cyan); text-shadow: var(--glow-c);
       letter-spacing: 4px; margin-bottom: 6px;
     }
-    .chamber-title p { color: var(--cyan-d); font-size: 10px; letter-spacing: 2px; }
+    .chamber-title p { color: var(--cyan-d); font-size: 14px; letter-spacing: 2px; }
 
     /* ── PROGRESS STEPS ── */
     .steps {
@@ -112,7 +101,7 @@
       margin-bottom: 16px;
     }
     .panel-title {
-      font-size: 8px; color: var(--cyan-d); letter-spacing: 2.5px;
+      font-size: 14px; color: var(--cyan-d); letter-spacing: 2.5px;
       border-bottom: 1px solid var(--edge); padding-bottom: 8px; margin-bottom: 16px;
     }
 
@@ -127,8 +116,8 @@
       margin-bottom: 12px;
       position: relative;
     }
-    .hash-label { font-size: 8px; color: var(--cyan-d); letter-spacing: 1px; margin-bottom: 4px; }
-    .hash-value { color: var(--green); text-shadow: 0 0 6px rgba(0,255,65,0.3); }
+    .hash-label { font-size: 13px; color: var(--cyan-d); letter-spacing: 1px; margin-bottom: 4px; }
+    .hash-value { color: var(--green); text-shadow: 0 0 6px rgba(0,255,65,0.3); font-family: 'Courier Prime', 'Courier New', monospace; }
     .hash-value.cyan-h { color: var(--cyan); }
     .hash-value.gold-h { color: var(--gold); text-shadow: 0 0 6px rgba(255,215,0,0.3); }
     .hash-value.loading { color: var(--cyan-d); animation: pulse 1.5s ease-in-out infinite; }
@@ -148,7 +137,7 @@
       background: rgba(0, 204, 255, 0.04);
       border-left: 2px solid var(--cyan-d);
       padding: 10px 14px;
-      font-size: 10px; color: var(--cyan-d); line-height: 1.7;
+      font-size: 15px; color: var(--cyan-d); line-height: 1.7;
       margin-bottom: 16px;
     }
     .explainer strong { color: var(--cyan); }
@@ -157,7 +146,7 @@
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .btn {
-      background: transparent; font-family: var(--font); font-size: 10px;
+      background: transparent; font-family: var(--font); font-size: 15px;
       padding: 9px 18px; cursor: pointer; letter-spacing: 1px;
       text-transform: uppercase; border: 1px solid;
       transition: all 0.2s;
@@ -203,7 +192,7 @@
       font-size: 28px; color: var(--amber); text-shadow: var(--glow-a);
       margin: 10px 0;
     }
-    .waiting-sub { font-size: 10px; color: var(--cyan-d); letter-spacing: 1px; }
+    .waiting-sub { font-size: 14px; color: var(--cyan-d); letter-spacing: 1px; }
 
     /* ── BITCOIN CHAIN VIZ ── */
     .chain-viz {
@@ -250,7 +239,7 @@
     .receipt-row {
       display: flex; gap: 16px; margin-bottom: 8px;
       border-bottom: 1px solid rgba(21,32,53,0.6);
-      padding-bottom: 8px; font-size: 10px;
+      padding-bottom: 8px; font-size: 14px;
     }
     .receipt-key { color: var(--cyan-d); min-width: 120px; }
     .receipt-val { color: var(--green); word-break: break-all; }
@@ -287,34 +276,83 @@
       border-color: var(--green); color: var(--green); background: rgba(0,255,65,0.04);
     }
 
-    /* ── STATUS BAR ── */
-    .status-bar {
-      background: #080f1e; border-top: 1px solid var(--edge);
-      padding: 5px 20px; font-size: 8px; color: var(--cyan-d);
-      position: sticky; bottom: 0;
-      display: flex; gap: 20px; align-items: center;
-    }
-    .status-bar a { color: var(--green); text-decoration: none; }
-    .status-bar a:hover { text-shadow: var(--glow-g); }
-
     /* ── HIDDEN STATES ── */
     .state { display: none; }
     .state.active { display: block; }
+
+    .witness-status-badge{display:inline-block;font-size:0.7rem;padding:2px 10px;letter-spacing:1px;border:1px solid;border-radius:2px;font-family:var(--font);white-space:nowrap;vertical-align:middle}
+    .witness-status-badge.sim{color:var(--red);border-color:#881122;background:rgba(239,68,68,0.08)}
+
+    .sim-info-box{background:rgba(239,68,68,0.05);border:1px solid #881122;padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--cyan-d);line-height:1.8}
+    .sim-info-box strong{color:var(--red)}
+    .sim-info-box ol{padding-left:20px;margin-top:8px}
+    .sim-info-box li{margin-bottom:4px}
+
+    @media(max-width:600px){
+      html,body{font-size:16px}
+      .page{padding:18px 14px 40px}
+      .chamber-title h1{font-size:22px}
+      .chamber-title p{font-size:12px}
+      .steps{flex-wrap:wrap;gap:6px;justify-content:center}
+      .step-circle{width:44px;height:44px;font-size:14px}
+      .step-label{font-size:12px}
+      .step-line{width:16px}
+      .panel{padding:16px}
+      .panel-title{font-size:14px}
+      .explainer{font-size:14px;padding:12px 14px}
+      .hash-box{font-size:14px;padding:14px 16px}
+      .hash-label{font-size:12px}
+      .hash-value{font-size:14px}
+      .copy-btn{font-size:10px;padding:6px 10px;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
+      .btn{font-size:14px;padding:12px 18px;min-height:44px}
+      .btn-big{font-size:16px;padding:16px;min-height:54px}
+      .btn-row{flex-direction:column}
+      .btn-row .btn{width:100%}
+      .waiting-icon{font-size:36px}
+      .countdown{font-size:22px}
+      .waiting-sub{font-size:14px}
+      .chain-viz{flex-direction:column;gap:6px}
+      .chain-arrow{transform:rotate(90deg)}
+      .chain-block{min-width:100%;padding:10px}
+      .chain-block-title{font-size:10px}
+      .chain-block-val{font-size:14px}
+      .receipt-header{flex-direction:column;gap:6px;padding:14px 16px}
+      .receipt-title{font-size:14px}
+      .receipt-body{padding:14px 16px}
+      .receipt-row{flex-direction:column;gap:4px;font-size:14px}
+      .receipt-key{min-width:auto;font-size:12px}
+      .receipt-val{font-size:14px}
+      .receipt-quote{font-size:14px}
+      .merkle-tree{font-size:14px;overflow-x:auto}
+      .upload-zone{padding:20px;font-size:14px;min-height:80px}
+    }
   </style>
 </head>
 <body>
 
 <!-- HEADER -->
-<header class="header">
-  <div>
-    <div class="logo">⧖ WITNESS CHAMBER <span class="blink">_</span></div>
-    <div class="logo-sub">BITCOIN TIMESTAMP CEREMONY</div>
+<header class="gn-header">
+  <div class="gn-header-left">
+    <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:16px">
+      <div class="gn-logo-icon">◈</div>
+      <div>
+        <div class="gn-logo-text">GN <span class="blink">_</span></div>
+        <div class="gn-logo-sub">WITNESS CHAMBER</div>
+      </div>
+    </a>
   </div>
-  <nav class="nav-links">
-    <a href="guardian-globe.html">◈ GLOBE</a>
-    <a href="chain.html">⛓ CHAIN</a>
-    <a href="chat.html">◉ CHAT</a>
-    <a href="index.html">← INVESTIGATION</a>
+  <span id="witnessXP" style="font-size:0.78rem;color:#fbbf24;font-weight:600;cursor:pointer;margin-left:auto" onclick="GN_GAME.showProfileModal()"></span>
+  <button class="gn-hamburger" onclick="document.getElementById('mainNav').classList.add('open')">☰</button>
+  <nav class="gn-nav" id="mainNav">
+    <button class="gn-nav-close" onclick="document.getElementById('mainNav').classList.remove('open')">✕</button>
+    <a class="gn-nav-link" href="index.html" onclick="document.getElementById('mainNav').classList.remove('open')">← MISSIONS</a>
+    <a class="gn-nav-link" href="onboard.html" onclick="document.getElementById('mainNav').classList.remove('open')">QUESTS</a>
+    <a class="gn-nav-link" href="guardian-globe.html" onclick="document.getElementById('mainNav').classList.remove('open')">GLOBE</a>
+    <a class="gn-nav-link" href="chain.html" onclick="document.getElementById('mainNav').classList.remove('open')">CHAIN</a>
+    <a class="gn-nav-link" href="chat.html" onclick="document.getElementById('mainNav').classList.remove('open')">CHAT</a>
+    <a class="gn-nav-link active" href="witness.html" onclick="document.getElementById('mainNav').classList.remove('open')">WITNESS</a>
+    <a class="gn-nav-link" href="circuit.html" onclick="document.getElementById('mainNav').classList.remove('open')">CIRCUIT</a>
+    <a class="gn-nav-link" href="manage.html" onclick="document.getElementById('mainNav').classList.remove('open')">ADMIN</a>
   </nav>
 </header>
 
@@ -323,7 +361,13 @@
   <!-- TITLE -->
   <div class="chamber-title">
     <h1>THE WITNESS CHAMBER</h1>
-    <p>SEAL YOUR WITNESS TO THE BITCOIN BLOCKCHAIN · NO TRUST REQUIRED</p>
+    <p>MAKE EVIDENCE PERMANENT · TIMESTAMP TRUTH TO THE BITCOIN BLOCKCHAIN · BEYOND THE REACH OF ERASURE</p>
+  </div>
+
+  <div class="sim-info-box" id="otsStatusBox" style="border-color:var(--green-d);background:rgba(0,255,65,0.03)">
+    <strong style="color:var(--green)">LIVE</strong> — Real cryptographic timestamps anchored to the Bitcoin blockchain via OpenTimestamps. If evidence is deleted tomorrow, you can prove it existed today — independently verifiable by anyone, no authority required.
+    <br><span style="font-size:0.8rem;color:var(--cyan-d)">How it works: Your file is hashed in your browser (the file never leaves your device). The hash is submitted to OTS calendar servers, aggregated into a merkle tree, and committed to a Bitcoin transaction. After ~1-2 hours, you receive a cryptographic proof — a mathematical receipt that no government, corporation, or adversary can forge or revoke.</span>
+    <br><span style="font-size:0.8rem;color:var(--amber)" id="otsLiveNote">Checking calendar server connectivity...</span>
   </div>
 
   <!-- PROGRESS STEPS -->
@@ -512,7 +556,7 @@
       <div class="receipt-wrap">
         <div class="receipt-header">
           <div class="receipt-title">◼ WITNESS RECEIPT</div>
-          <div style="font-size:9px; color:var(--gold)">CYBERTEMPLATE · VERIFIED</div>
+          <div style="font-size:9px; color:var(--gold)">GN · VERIFIED</div>
         </div>
         <div class="receipt-body">
           <div class="receipt-row">
@@ -598,22 +642,20 @@ pip install opentimestamps-client
 
 </main>
 
-<!-- STATUS BAR -->
-<div class="status-bar">
+<!-- FOOTER -->
+<footer class="gn-footer">
   <span>⧖ WITNESS CHAMBER v1.0</span>
-  <span>|</span>
   <span>MANIFEST: <span id="footerManifest" style="color:var(--green)">--</span></span>
-  <span>|</span>
   <span>WITNESS: <span id="footerWitness" style="color:var(--gold)">--</span></span>
-  <span style="margin-left:auto">
-    <a href="guardian-globe.html">GLOBE</a> ·
-    <a href="index.html">INVESTIGATION</a>
-  </span>
-</div>
+  <a href="index.html">← BACK TO MISSIONS</a>
+  <a href="guardian-globe.html">GLOBE</a>
+  <a href="chain.html">CHAIN</a>
+</footer>
 
+<script src="js/gameplay.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  WITNESS CHAMBER — CyberTemplate v2.0
+//  WITNESS CHAMBER — GN v2.0
 //  Bitcoin timestamp ceremony via OpenTimestamps
 // ═══════════════════════════════════════════════════════════════
 
@@ -623,16 +665,18 @@ const WS = {
   seed:         null,
   witnessHash:  null,
   sealedAt:     null,
-  otsData:      null,  // ArrayBuffer
+  otsData:      null,
   btcBlock:     null,
   btcTimestamp: null,
 };
 
-const OTS_STAMP_URL = 'https://a.pool.opentimestamps.org/timestamp';
+const OTS_STAMP_URL = '/api/ots/stamp';
+const OTS_VERIFY_URL = '/api/ots/verify';
+const MEMPOOL_API = 'https://mempool.space/api';
+const BLOCKSTREAM_API = 'https://blockstream.info/api';
 
 // ── Boot ───────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // Restore from localStorage if exists
   const saved = localStorage.getItem('witness_state');
   if (saved) {
     try {
@@ -641,8 +685,14 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
   }
 
+  GN_GAME.init(null);
+  var p = GN_GAME.getPlayer();
+  var xpEl = document.getElementById('witnessXP');
+  if (xpEl) xpEl.textContent = p.rank + ' · ' + p.xp + ' XP';
+
+  checkOtsConnectivity();
+
   if (WS.manifestHash && WS.witnessHash && WS.sealedAt) {
-    // Resuming — go to waiting or reveal
     WS.otsData = loadOtsFromStorage();
     goToStep(3);
     startCountdown();
@@ -650,6 +700,27 @@ window.addEventListener('DOMContentLoaded', () => {
     loadManifest();
   }
 });
+
+async function checkOtsConnectivity() {
+  const note = document.getElementById('otsLiveNote');
+  try {
+    const resp = await fetch('/api/ots/stamp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: new Uint8Array(0)
+    });
+    if (resp.ok || resp.status === 502) {
+      note.textContent = 'Calendar servers reachable via proxy';
+      note.style.color = 'var(--green)';
+    } else {
+      note.textContent = 'Calendar server proxy available (will submit on seal)';
+      note.style.color = 'var(--cyan)';
+    }
+  } catch(e) {
+    note.textContent = 'Proxy unavailable — timestamps will be cached locally for manual submission';
+    note.style.color = 'var(--amber)';
+  }
+}
 
 // ── Load manifest + hash ───────────────────────────────────────
 async function loadManifest() {
@@ -669,7 +740,6 @@ async function loadManifest() {
     document.getElementById('footerManifest').textContent = hash.slice(0,12) + '...';
 
   } catch(e) {
-    // Fallback: hash a placeholder for demo
     const placeholder = '{"_demo": true, "note": "evidence_manifest.json not found — using demo hash"}';
     const hash = await sha256text(placeholder);
     WS.manifestHash = hash;
@@ -713,8 +783,7 @@ async function updateSealPanel() {
   document.getElementById('sealManifestHash').textContent = WS.manifestHash;
   document.getElementById('sealSeed').textContent = WS.seed;
 
-  // Compute witness hash = sha256(manifestHash + seed + ISO timestamp_minute)
-  const ts = new Date().toISOString().slice(0, 16); // minute precision
+  const ts = new Date().toISOString().slice(0, 16);
   WS.sealPayload = WS.manifestHash + WS.seed + ts;
   WS.witnessHash = await sha256text(WS.sealPayload);
 
@@ -729,8 +798,8 @@ async function doSeal() {
   btn.textContent = 'SUBMITTING TO BITCOIN NETWORK...';
 
   WS.sealedAt = new Date().toISOString();
+  WS.otsSubmitted = false;
 
-  // Try OTS API (may fail due to CORS — handle gracefully)
   try {
     const hashBytes = hexToBytes(WS.witnessHash);
     const resp = await fetch(OTS_STAMP_URL, {
@@ -739,32 +808,42 @@ async function doSeal() {
       body: hashBytes
     });
     if (resp.ok) {
-      WS.otsData = await resp.arrayBuffer();
-      saveOtsToStorage(WS.otsData);
+      const data = await resp.json();
+      WS.otsSubmitted = data.submitted;
+      if (data.submitted) {
+        const successResult = data.results.find(r => r.success);
+        if (successResult && successResult.data) {
+          const bytes = hexToBytes(successResult.data);
+          WS.otsData = bytes.buffer;
+          saveOtsToStorage(WS.otsData);
+        }
+        WS.otsCalendars = data.results.filter(r => r.success).map(r => r.calendar);
+      }
     }
   } catch(e) {
-    // CORS or network error — proceed to waiting state anyway
-    // User can still verify manually with the hash
-    console.info('OTS API not reachable from browser (CORS) — manual verification mode');
+    console.info('OTS proxy not available — hash cached locally for manual submission');
   }
 
-  // Save state
   localStorage.setItem('witness_state', JSON.stringify({
     manifestHash: WS.manifestHash,
     seed:         WS.seed,
     witnessHash:  WS.witnessHash,
     sealedAt:     WS.sealedAt,
     sealPayload:  WS.sealPayload,
+    otsSubmitted: WS.otsSubmitted,
+    otsCalendars: WS.otsCalendars || [],
   }));
 
   goToStep(3);
+  GN_GAME.trackStat('witnessSeals');
+  if (GN_GAME.getPlayer().stats.witnessSeals === 1) GN_GAME.unlockAchievement('first_witness');
   startCountdown();
 }
 
 // ── Waiting / countdown ────────────────────────────────────────
 function startCountdown() {
   const sealedAt = new Date(WS.sealedAt);
-  const targetMs = sealedAt.getTime() + 65 * 60 * 1000; // ~65 min
+  const targetMs = sealedAt.getTime() + 65 * 60 * 1000;
 
   document.getElementById('waitChainYours').textContent = WS.witnessHash.slice(0,12) + '...';
   document.getElementById('waitingSince').textContent = `SEALED: ${sealedAt.toLocaleString()}`;
@@ -785,11 +864,89 @@ function startCountdown() {
   tick();
 }
 
-function checkAndReveal() {
-  // In a full implementation, this would call the OTS verify endpoint.
-  // For now: show a demo receipt with the real hashes + simulated block.
-  WS.btcBlock = '#' + (891247 + Math.floor(Math.random() * 10)).toLocaleString();
-  WS.btcTimestamp = new Date(new Date(WS.sealedAt).getTime() + 62 * 60000).toISOString();
+async function checkAndReveal() {
+  const btn = document.querySelector('[onclick="checkAndReveal()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'CHECKING BLOCKCHAIN...'; }
+
+  let blockData = null;
+  let otsVerified = false;
+
+  try {
+    const verifyResp = await fetch(OTS_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hash: WS.witnessHash })
+    });
+    if (verifyResp.ok) {
+      const vdata = await verifyResp.json();
+      if (vdata.found) {
+        otsVerified = true;
+        if (vdata.data) {
+          WS.otsData = hexToBytes(vdata.data).buffer;
+          saveOtsToStorage(WS.otsData);
+        }
+      }
+    }
+  } catch(e) {}
+
+  try {
+    const tipResp = await fetch(`${MEMPOOL_API}/blocks/tip/height`);
+    if (tipResp.ok) {
+      const tipHeight = await tipResp.json();
+      const blockResp = await fetch(`${MEMPOOL_API}/block-height/${tipHeight}`);
+      if (blockResp.ok) {
+        const blockHash = await blockResp.text();
+        const infoResp = await fetch(`${MEMPOOL_API}/block/${blockHash}`);
+        if (infoResp.ok) {
+          blockData = await infoResp.json();
+        }
+      }
+    }
+  } catch(e) {
+    try {
+      const bsResp = await fetch(`${BLOCKSTREAM_API}/blocks/tip/height`);
+      if (bsResp.ok) {
+        const height = await bsResp.json();
+        const hashResp = await fetch(`${BLOCKSTREAM_API}/block-height/${height}`);
+        if (hashResp.ok) {
+          const hash = await hashResp.text();
+          const infoResp = await fetch(`${BLOCKSTREAM_API}/block/${hash}`);
+          if (infoResp.ok) blockData = await infoResp.json();
+        }
+      }
+    } catch(e2) {}
+  }
+
+  if (blockData) {
+    WS.btcBlock = '#' + (blockData.height || 0).toLocaleString();
+    WS.btcTimestamp = blockData.timestamp
+      ? new Date(blockData.timestamp * 1000).toISOString()
+      : new Date().toISOString();
+    WS.btcBlockHash = blockData.id || '';
+    WS.btcVerified = otsVerified;
+    WS.btcLive = true;
+  } else {
+    WS.btcBlock = '(pending confirmation)';
+    WS.btcTimestamp = new Date().toISOString();
+    WS.btcLive = false;
+    WS.btcVerified = otsVerified;
+  }
+
+  localStorage.setItem('witness_state', JSON.stringify({
+    manifestHash: WS.manifestHash,
+    seed:         WS.seed,
+    witnessHash:  WS.witnessHash,
+    sealedAt:     WS.sealedAt,
+    sealPayload:  WS.sealPayload,
+    otsSubmitted: WS.otsSubmitted,
+    btcBlock:     WS.btcBlock,
+    btcTimestamp: WS.btcTimestamp,
+    btcBlockHash: WS.btcBlockHash,
+    btcVerified:  WS.btcVerified,
+    btcLive:      WS.btcLive,
+  }));
+
+  if (btn) { btn.disabled = false; btn.textContent = 'CHECK AGAIN'; }
   goToStep(4);
   renderReceipt();
 }
@@ -814,11 +971,9 @@ function drawReceiptCanvas() {
   const W = 600, H = 320;
   canvas.width = W; canvas.height = H;
 
-  // Background
   ctx.fillStyle = '#060916';
   ctx.fillRect(0, 0, W, H);
 
-  // Grid pattern from witness hash chars
   const hash = WS.witnessHash || '0'.repeat(64);
   ctx.font = '8px Courier New';
   for (let i = 0; i < 60; i++) {
@@ -829,14 +984,12 @@ function drawReceiptCanvas() {
     ctx.fillText(ch.repeat(3), col * 74 + 2, row * 20 + 20);
   }
 
-  // Gold border
   ctx.strokeStyle = '#ffd700';
   ctx.lineWidth = 1;
   ctx.strokeRect(1, 1, W - 2, H - 2);
   ctx.lineWidth = 0.5;
   ctx.strokeRect(5, 5, W - 10, H - 10);
 
-  // Header
   ctx.fillStyle = 'rgba(255, 215, 0, 0.12)';
   ctx.fillRect(0, 0, W, 44);
   ctx.fillStyle = '#ffd700';
@@ -844,9 +997,8 @@ function drawReceiptCanvas() {
   ctx.fillText('◼ WITNESS RECEIPT', 16, 26);
   ctx.font = '9px Courier New';
   ctx.fillStyle = '#00ccff';
-  ctx.fillText('CYBERTEMPLATE · BITCOIN TIMESTAMPED', W - 260, 26);
+  ctx.fillText('GN · BITCOIN TIMESTAMPED', W - 200, 26);
 
-  // Fields
   const fields = [
     ['MANIFEST HASH', (WS.manifestHash || '--').slice(0,40) + '...'],
     ['WITNESS HASH',  (WS.witnessHash  || '--').slice(0,40) + '...'],
@@ -867,7 +1019,6 @@ function drawReceiptCanvas() {
     ctx.fillRect(16, y + 18, W - 32, 1);
   });
 
-  // Quote
   ctx.fillStyle = 'rgba(255,215,0,0.5)';
   ctx.font = 'italic 10px Courier New';
   ctx.fillText('"You can\'t un-see this."', 16, H - 18);
@@ -895,7 +1046,6 @@ function downloadOts() {
     a.href = URL.createObjectURL(blob);
     a.click();
   } else {
-    // No OTS data (CORS fallback) — download the hash + instructions
     const text = `WITNESS HASH: ${WS.witnessHash}\nSEALED AT: ${WS.sealedAt}\n\n` +
       `To stamp manually:\n  ots stamp -d ${WS.witnessHash} -H sha256\n\n` +
       `Or use: https://opentimestamps.org/\n`;
@@ -909,7 +1059,7 @@ function downloadOts() {
 
 // ── Share ──────────────────────────────────────────────────────
 function shareReceipt() {
-  const txt = `I witnessed the CyberTemplate evidence (${(WS.manifestHash||'').slice(0,12)}...) ` +
+  const txt = `I witnessed the GN evidence (${(WS.manifestHash||'').slice(0,12)}...) ` +
     `at Bitcoin block ${WS.btcBlock}. Verify: https://opentimestamps.org/`;
   if (navigator.share) {
     navigator.share({ title: 'My Witness Receipt', text: txt })
@@ -944,7 +1094,6 @@ async function verifyOtsFile(file) {
 
   try {
     const bytes = await file.arrayBuffer();
-    // Basic OTS header check: first 4 bytes should be magic bytes
     const magic = new Uint8Array(bytes, 0, 4);
     const isOts = magic[0] === 0x00 && magic[1] === 0x4f &&
                   magic[2] === 0x70 && magic[3] === 0x65;

@@ -1,8 +1,8 @@
 {
-  "_comment": "Guardian Net config — point this at any IPFS-pinned site",
-  "site_name": "CyberTemplate Investigation",
-  "site_description": "U.S. Federal Cybersecurity Investigation Portal",
-  "site_url": "https://your-site.com",
+  "_comment": "[redacted project name] config",
+  "site_name": "[redacted project name]",
+  "site_description": "Open-source tools for communities resisting surveillance and censorship. The future is distributed.",
+  "site_url": "https://[redacted-private-deployment-url]",
   "site_cid": "bafybeiabc123xyz456def789ghi012jkl345mno678pqr",
   "registry_url": "data/guardian_registry.json",
   "ipfs_gateways": [
@@ -11,7 +11,7 @@
     "https://dweb.link/ipfs/"
   ],
   "nostr": {
-    "channel_tag": "#cybertemplate-v2",
+    "channel_tag": "#gn-v2",
     "relays": [
       "wss://relay.damus.io",
       "wss://relay.nostr.info",
@@ -35,9 +35,9 @@
     "default_spreading_factor": 10
   },
   "theme": {
-    "accent": "#00ff41",
-    "cyan": "#00ccff",
-    "lora": "#ff66ff",
-    "bg": "#060916"
+    "accent": "#22c55e",
+    "cyan": "#38bdf8",
+    "lora": "#c084fc",
+    "bg": "#060a12"
   }
 }

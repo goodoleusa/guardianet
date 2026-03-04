@@ -3,181 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GUARDIAN NET — Mission Control</title>
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>[redacted project name] — Mission Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <style>
-    :root {
-      --bg:#060a12; --panel:#0c1422; --deep:#040810; --edge:#1a2840;
-      --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
-      --amber:#f59e0b; --lora:#c084fc; --red:#ef4444; --gold:#fbbf24;
-      --text:#cbd5e1; --text-dim:#64748b;
-      --font:'Courier Prime','Courier New',monospace;
-      --glow-g:0 0 12px rgba(34,197,94,0.5);
-      --glow-c:0 0 12px rgba(56,189,248,0.5);
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.6}
-    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
-    a{color:inherit;text-decoration:none}
-    .blink{animation:blink 1.1s step-end infinite}
-    @keyframes blink{50%{opacity:0}}
-    @keyframes iconPulse{0%,100%{box-shadow:0 0 8px rgba(56,189,248,0.4)}50%{box-shadow:0 0 20px rgba(56,189,248,0.8)}}
-
-    /* ─── HEADER ─── */
-    .header{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-    .header-left{display:flex;align-items:center;gap:12px}
-    .logo-icon{width:36px;height:36px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--cyan);box-shadow:0 0 8px rgba(56,189,248,0.4);animation:iconPulse 3s ease-in-out infinite}
-    .logo-text{font-size:18px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
-    .logo-sub{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
-    .header-nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .nav-link{font-size:12px;color:var(--text-dim);letter-spacing:2px;padding:4px 10px;border:1px solid transparent;transition:all 0.15s}
-    .nav-link:hover{color:var(--cyan);border-color:var(--edge)}
-
-    /* ─── MISSION BANNER ─── */
-    .mission-banner{background:linear-gradient(90deg,#0a0d20,#0d1428,#0a0d20);border-bottom:1px solid var(--edge);padding:20px 24px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
-    .mission-title{font-size:13px;color:var(--gold);letter-spacing:3px;margin-bottom:8px;text-shadow:0 0 8px rgba(251,191,36,0.3)}
-    .mission-brief{font-size:15px;color:var(--text);line-height:1.8;max-width:640px}
+    .mission-banner{background:linear-gradient(90deg,#0a0d20,#0d1428,#0a0d20);border-bottom:1px solid var(--edge);padding:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+    .mission-title{font-size:0.82rem;color:var(--gold);letter-spacing:3px;margin-bottom:10px;text-shadow:0 0 8px rgba(251,191,36,0.3)}
+    .mission-brief{font-size:1rem;color:var(--text);line-height:1.8;max-width:700px}
     .mission-brief em{color:var(--green)}
     .threat-panel{text-align:right}
-    .threat-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px}
-    .threat-level{font-size:28px;color:var(--amber);text-shadow:0 0 12px rgba(245,158,11,0.5)}
-    .threat-link{font-size:11px;color:var(--amber);letter-spacing:1px;display:block;margin-top:4px}
+    .threat-label{font-size:0.82rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px}
+    .threat-level{font-size:1.8rem;color:var(--amber);text-shadow:0 0 12px rgba(245,158,11,0.5)}
+    .threat-link{font-size:0.82rem;color:var(--amber);letter-spacing:1px;display:block;margin-top:6px}
     .threat-link:hover{text-shadow:0 0 8px rgba(245,158,11,0.6)}
 
-    /* ─── LIVE STATUS BAR ─── */
-    .status-bar{background:var(--panel);border-bottom:1px solid var(--edge);padding:10px 24px;display:flex;gap:24px;flex-wrap:wrap;align-items:center}
-    .stat-item{display:flex;flex-direction:column;align-items:flex-start}
-    .stat-label{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:3px}
-    .stat-value{font-size:20px;color:var(--green);text-shadow:var(--glow-g);line-height:1}
-    .stat-value.amber{color:var(--amber)}
-    .stat-value.cyan{color:var(--cyan);text-shadow:var(--glow-c)}
-    .status-bar-fill{height:6px;background:#0a1628;border:1px solid var(--edge);margin-left:auto;width:200px;flex-shrink:0}
-    .status-bar-fill-inner{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:var(--glow-g);transition:width 1.2s ease}
+    .event-feed{padding:10px 24px;background:var(--deep);border-bottom:1px solid var(--edge);font-size:0.82rem;color:var(--text-dim);min-height:36px;overflow:hidden}
+    .event-feed span{margin-right:40px}
+    .event-feed .ev-green{color:var(--green)}
+    .event-feed .ev-amber{color:var(--amber)}
 
-    /* ─── ACTIVE OPERATIONS ─── */
-    .ops-section{padding:20px 24px;border-bottom:1px solid var(--edge)}
-    .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-    .section-title{font-size:11px;color:var(--text-dim);letter-spacing:3px}
-    .section-link{font-size:13px;color:var(--green-d);letter-spacing:1px}
+    .my-missions-section{padding:24px;border-bottom:1px solid var(--edge);background:rgba(34,197,94,0.02)}
+    .my-missions-list{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+    .my-mission-card{background:var(--deep);border:1px solid var(--green-d);padding:16px 20px;border-left:4px solid var(--green);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .my-mission-info{flex:1;min-width:200px}
+    .my-mission-title{font-size:1rem;color:var(--green);margin-bottom:4px}
+    .my-mission-status{font-size:0.82rem;color:var(--text-dim);letter-spacing:1px}
+    .my-mission-progress{width:200px}
+    .my-mission-remove{font-size:0.82rem;color:var(--red);border:1px solid rgba(239,68,68,0.3);background:none;font-family:var(--font);padding:6px 12px;cursor:pointer;letter-spacing:1px;border-radius:var(--radius)}
+    .my-mission-remove:hover{background:rgba(239,68,68,0.1)}
+
+    .ops-section{padding:24px;border-bottom:1px solid var(--edge)}
+    .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+    .section-title{font-size:0.82rem;color:var(--text-dim);letter-spacing:3px}
+    .section-link{font-size:0.88rem;color:var(--green-d);letter-spacing:1px}
     .section-link:hover{color:var(--green)}
 
-    .ops-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-    .op-card{background:var(--deep);border:1px solid var(--edge);padding:14px 16px;border-left:3px solid var(--amber)}
+    .ops-list{display:flex;flex-direction:column;gap:12px;max-height:70vh;overflow-y:auto;scrollbar-width:thin}
+    .op-card{background:var(--deep);border:1px solid var(--edge);padding:20px 24px;border-left:4px solid var(--amber);border-radius:var(--radius)}
     .op-card.critical{border-left-color:var(--red)}
     .op-card.complete{border-left-color:var(--green)}
-    .op-priority{font-size:11px;letter-spacing:2px;margin-bottom:6px}
+    .op-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+    .op-priority{font-size:0.82rem;letter-spacing:2px}
     .op-priority.critical{color:var(--red)}
     .op-priority.high{color:var(--amber)}
     .op-priority.medium{color:var(--text-dim)}
-    .op-title{font-size:15px;color:var(--green);margin-bottom:6px;line-height:1.4}
-    .op-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:10px}
-    .op-progress{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:5px}
-    .op-bar{height:4px;background:#0a1628;border:1px solid var(--edge)}
-    .op-bar-fill{height:100%;background:var(--green);box-shadow:0 0 4px rgba(34,197,94,0.4);transition:width 0.8s ease}
-    .op-action{font-size:13px;color:var(--green-d);letter-spacing:1px;margin-top:8px}
-    .op-action:hover{color:var(--green)}
+    .op-title{font-size:1.1rem;color:var(--green);line-height:1.4}
+    .op-desc{font-size:0.88rem;color:var(--text);line-height:1.7;margin-bottom:12px}
+    .op-progress{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--text-dim);margin-bottom:6px}
+    .op-bar{height:6px;background:#0a1628;border:1px solid var(--edge);border-radius:3px;overflow:hidden}
+    .op-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:0 0 4px rgba(34,197,94,0.4);transition:width 0.8s ease;border-radius:3px}
+    .op-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+    .op-source{font-size:0.76rem;color:var(--text-dim);letter-spacing:1px;padding:4px 10px;border:1px solid var(--edge);border-radius:var(--radius)}
+    .op-source:hover{border-color:var(--text-dim)}
+    .op-accepted-badge{font-size:0.76rem;color:var(--green);letter-spacing:1px;display:flex;align-items:center;gap:4px}
 
-    /* ─── START HERE CTA ─── */
-    .cta-section{padding:20px 24px;border-bottom:1px solid var(--edge);background:#080f1e}
-    .cta-title{font-size:11px;letter-spacing:3px;color:var(--text-dim);margin-bottom:14px}
-    .cta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-    .cta-card{background:var(--panel);border:1px solid var(--edge);padding:16px;cursor:pointer;transition:all 0.15s;display:block}
+    .cta-section{padding:24px;border-bottom:1px solid var(--edge);background:#080f1e}
+    .cta-title{font-size:0.82rem;letter-spacing:3px;color:var(--text-dim);margin-bottom:16px}
+    .cta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .cta-card{background:var(--panel);border:1px solid var(--edge);padding:22px;cursor:pointer;transition:all 0.15s;display:block;border-radius:var(--radius)}
     .cta-card:hover{background:#0d1e38;border-color:currentColor}
     .cta-card.primary{border-color:var(--green);background:rgba(34,197,94,0.05)}
     .cta-card.primary:hover{background:rgba(34,197,94,0.1)}
-    .cta-icon{font-size:22px;margin-bottom:10px}
-    .cta-name{font-size:15px;letter-spacing:2px;margin-bottom:6px}
+    .cta-icon{font-size:28px;margin-bottom:12px}
+    .cta-name{font-size:1.05rem;letter-spacing:2px;margin-bottom:8px}
     .cta-name.green{color:var(--green)}
     .cta-name.cyan{color:var(--cyan)}
     .cta-name.amber{color:var(--amber)}
     .cta-name.lora{color:var(--lora)}
-    .cta-desc{font-size:13px;color:var(--text);line-height:1.6}
-    .cta-tag{margin-top:10px;font-size:12px;letter-spacing:1px;color:var(--green-d)}
+    .cta-desc{font-size:0.88rem;color:var(--text);line-height:1.7}
+    .cta-tag{margin-top:12px;font-size:0.82rem;letter-spacing:1px;color:var(--green-d)}
     .cta-tag.new{color:var(--gold)}
 
-    /* ─── FEATURE GRID ─── */
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--edge);border-top:1px solid var(--edge)}
-    .card{background:var(--panel);padding:22px;cursor:pointer;transition:background 0.15s;display:block;color:inherit}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--edge);border-top:1px solid var(--edge)}
+    .card{background:var(--panel);padding:26px;cursor:pointer;transition:background 0.15s;display:block;color:inherit}
     .card:hover{background:#0d1830}
-    .card-icon{font-size:26px;margin-bottom:12px}
-    .card-title{font-size:16px;letter-spacing:2px;margin-bottom:8px}
+    .card-icon{font-size:30px;margin-bottom:14px}
+    .card-title{font-size:1.05rem;letter-spacing:2px;margin-bottom:10px}
     .card-title.green{color:var(--green);text-shadow:var(--glow-g)}
     .card-title.cyan{color:var(--cyan);text-shadow:var(--glow-c)}
     .card-title.amber{color:var(--amber)}
     .card-title.lora{color:var(--lora)}
-    .card-desc{font-size:13px;color:var(--text);line-height:1.7}
-    .card-status{margin-top:12px;font-size:12px;letter-spacing:1px;color:var(--green)}
+    .card-desc{font-size:0.88rem;color:var(--text);line-height:1.7}
+    .card-status{margin-top:14px;font-size:0.82rem;letter-spacing:1px;color:var(--green)}
 
-    /* ─── TOOLS OF RESISTANCE ─── */
-    .tools-section{padding:20px 24px;border-bottom:1px solid var(--edge)}
-    .tools-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .tool-pill{background:var(--panel);border:1px solid var(--edge);padding:6px 12px;font-size:13px;letter-spacing:1px;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+    .tools-section{padding:24px;border-bottom:1px solid var(--edge)}
+    .tools-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .tool-pill{background:var(--panel);border:1px solid var(--edge);padding:8px 14px;font-size:0.82rem;letter-spacing:1px;transition:all 0.15s;display:flex;align-items:center;gap:6px;border-radius:var(--radius)}
     .tool-pill:hover{border-color:currentColor}
     .tool-pill.green{color:var(--green)}
     .tool-pill.cyan{color:var(--cyan)}
     .tool-pill.amber{color:var(--amber)}
     .tool-pill.lora{color:var(--lora)}
-    .tool-pill .warn{color:var(--amber);font-size:12px}
+    .tool-pill .warn{color:var(--amber);font-size:0.76rem}
 
-    /* ─── TIER / RANKS ─── */
     .how-section{padding:28px 24px;border-bottom:1px solid var(--edge);max-width:960px}
     .tier-list{display:flex;flex-direction:column;gap:3px}
-    .tier{display:grid;grid-template-columns:32px 1fr 1fr auto;gap:14px;padding:10px 14px;border-left:2px solid var(--edge);transition:border-color 0.2s;cursor:pointer}
+    .tier{display:grid;grid-template-columns:32px 1fr 1fr auto;gap:14px;padding:12px 14px;border-left:2px solid var(--edge);transition:border-color 0.2s;cursor:pointer}
     .tier:hover{border-color:var(--green);background:rgba(34,197,94,0.03)}
-    .tier-num{color:var(--text-dim);font-size:14px}
-    .tier-action{font-size:15px;color:var(--green)}
-    .tier-concept{font-size:13px;color:var(--text)}
-    .tier-link{font-size:13px;color:var(--green-d);white-space:nowrap;align-self:center}
+    .tier-num{color:var(--text-dim);font-size:0.88rem}
+    .tier-action{font-size:0.95rem;color:var(--green)}
+    .tier-concept{font-size:0.82rem;color:var(--text)}
+    .tier-link{font-size:0.82rem;color:var(--green-d);white-space:nowrap;align-self:center}
     .tier:hover .tier-link{color:var(--green)}
 
-    /* ─── FOOTER ─── */
-    .footer{background:#080f1e;border-top:1px solid var(--edge);padding:10px 24px;display:flex;gap:24px;font-size:13px;color:var(--text-dim);flex-wrap:wrap;align-items:center}
-    .footer a{color:var(--green)}
-    .footer a:hover{text-shadow:var(--glow-g)}
+    .status-bar-fill{height:6px;background:#0a1628;border:1px solid var(--edge);margin-left:auto;width:200px;flex-shrink:0;border-radius:3px;overflow:hidden}
+    .status-bar-fill-inner{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:var(--glow-g);transition:width 1.2s ease;border-radius:3px}
 
-    /* ─── LIVE EVENTS TICKER ─── */
-    .event-feed{padding:8px 24px;background:var(--deep);border-bottom:1px solid var(--edge);font-size:13px;color:var(--text-dim);min-height:32px;overflow:hidden}
-    .event-feed span{margin-right:40px}
-    .event-feed .ev-green{color:var(--green)}
-    .event-feed .ev-amber{color:var(--amber)}
+    .tools-disclaimer{margin-top:12px;font-size:0.76rem;color:var(--cyan-d)}
+    .tools-disclaimer a{color:var(--amber)}
 
-    ::-webkit-scrollbar{width:4px}
-    ::-webkit-scrollbar-track{background:var(--panel)}
-    ::-webkit-scrollbar-thumb{background:var(--edge)}
+    @media(max-width:600px){
+      .mission-banner{grid-template-columns:1fr;text-align:left}
+      .threat-panel{text-align:left;padding-top:10px;border-top:1px solid var(--edge)}
+      .tier{grid-template-columns:28px 1fr;gap:6px}
+      .tier-concept,.tier-link{grid-column:2}
+      .my-mission-card{flex-direction:column;align-items:stretch}
+      .my-mission-progress{width:100%}
+      .op-header{flex-direction:column;align-items:flex-start}
+      .status-bar-fill{width:100%;margin-left:0}
+    }
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header-left">
-    <div class="logo-icon">◈</div>
+<header class="gn-header">
+  <div class="gn-header-left">
+    <div class="gn-logo-icon">◈</div>
     <div>
-      <div class="logo-text">GUARDIAN NET <span class="blink">_</span></div>
-      <div class="logo-sub">MISSION CONTROL // DEFEND DEMOCRACY</div>
+      <div class="gn-logo-text" style="font-family:'Special Elite',monospace">[REDACTED PROJECT NAME] <span class="blink">_</span></div>
+      <div class="gn-logo-sub">THE FUTURE IS DISTRIBUTED</div>
     </div>
   </div>
-  <nav class="header-nav">
-    <a class="nav-link" href="onboard.html">QUESTS</a>
-    <a class="nav-link" href="pin.html">📌 PIN</a>
-    <a class="nav-link" href="guardian-globe.html">GLOBE</a>
-    <a class="nav-link" href="chain.html">CHAIN</a>
-    <a class="nav-link" href="chat.html">CHAT</a>
-    <a class="nav-link" href="witness.html">WITNESS</a>
-    <a class="nav-link" href="circuit.html">CIRCUIT</a>
-    <a class="nav-link" href="manage.html">ADMIN</a>
-    <a class="nav-link" href="roadmap.html" style="color:var(--gold)">ROADMAP</a>
+  <button class="gn-hamburger" onclick="document.getElementById('mainNav').classList.add('open')">☰</button>
+  <nav class="gn-nav" id="mainNav">
+    <button class="gn-nav-close" onclick="document.getElementById('mainNav').classList.remove('open')">✕</button>
+    <a class="gn-nav-link active" href="index.html" onclick="document.getElementById('mainNav').classList.remove('open')">MISSION CTRL</a>
+    <a class="gn-nav-link" href="onboard.html" onclick="document.getElementById('mainNav').classList.remove('open')">QUESTS</a>
+    <a class="gn-nav-link" href="guardian-globe.html" onclick="document.getElementById('mainNav').classList.remove('open')">GLOBE</a>
+    <a class="gn-nav-link" href="chain.html" onclick="document.getElementById('mainNav').classList.remove('open')">CHAIN</a>
+    <a class="gn-nav-link" href="chat.html" onclick="document.getElementById('mainNav').classList.remove('open')">CHAT</a>
+    <a class="gn-nav-link" href="witness.html" onclick="document.getElementById('mainNav').classList.remove('open')">WITNESS</a>
+    <a class="gn-nav-link" href="circuit.html" onclick="document.getElementById('mainNav').classList.remove('open')">CIRCUIT</a>
+    <a class="gn-nav-link" href="manage.html" onclick="document.getElementById('mainNav').classList.remove('open')">ADMIN</a>
+    <a class="gn-nav-link" href="https://[redacted-private-deployment-url]/mission-control" target="_blank" onclick="document.getElementById('mainNav').classList.remove('open')">GN HOME ↗</a>
   </nav>
 </header>
 
-<!-- MISSION BANNER -->
+<div id="playerBar" style="background:var(--deep);border-bottom:1px solid var(--edge);padding:10px 28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+  <div id="playerBarContent" style="flex:1"></div>
+  <button onclick="GN_GAME.showProfileModal()" style="background:rgba(56,189,248,0.08);border:1px solid #0ea5e9;color:#38bdf8;font-family:var(--font);font-size:0.82rem;font-weight:700;padding:8px 16px;cursor:pointer;border-radius:6px;letter-spacing:1px">MY PROFILE</button>
+</div>
+
 <div class="mission-banner">
   <div>
     <div class="mission-title">◼ MISSION: DEFEND DEMOCRACY</div>
     <div class="mission-brief">
-      Political records are being erased. Documents go offline. Data gets purged. History gets rewritten.<br>
-      GuardianNet distributes the record across <em>people</em>: IPFS pins, Bitcoin timestamps, LoRa mesh —
-      so that no single server, government, or takedown notice can make truth disappear.
+      Records are being erased. Archives taken offline. History rewritten in real time.<br>
+      We build the countermeasure: <em>open-source tools that put power back in the hands of communities</em>. IPFS pins that can't be deleted. Bitcoin timestamps that can't be forged. LoRa mesh networks that work without internet, cell towers, or permission. Every tool here is designed for people facing real threats — journalists, activists, archivists, and communities resisting surveillance and censorship.
     </div>
   </div>
   <div class="threat-panel">
@@ -187,138 +169,214 @@
   </div>
 </div>
 
-<!-- LIVE STATUS BAR -->
-<div class="status-bar">
-  <div class="stat-item">
-    <div class="stat-label">ACTIVE NODES</div>
-    <div class="stat-value" id="statActive">--</div>
+<div class="gn-protocol-bar" id="protocolBar">
+  <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="gun">
+    <span class="gn-badge live">LIVE</span>
+    <span class="gn-protocol-name">Gun.js</span>
+    <span class="gn-protocol-status">P2P relay connected</span>
+    <div class="gn-protocol-detail">
+      <div><span class="text-green">What's real:</span> P2P data sync via Gun relay servers. Real-time presence and chat.</div>
+      <div><span class="text-dim">What's simulated:</span> Nothing — Gun.js is fully operational.</div>
+    </div>
   </div>
-  <div class="stat-item">
-    <div class="stat-label">ONLINE NOW</div>
-    <div class="stat-value cyan" id="statOnline">--</div>
+  <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="ipfs">
+    <span class="gn-badge hybrid">HYBRID</span>
+    <span class="gn-protocol-name">IPFS</span>
+    <span class="gn-protocol-status">Real CIDs, gateway verification via /api/ipfs/check</span>
+    <div class="gn-protocol-detail">
+      <div><span class="text-green">What's real:</span> CIDs are real content addresses. Gateway fetching works. Documents are retrievable. Gateway verification available via /api/ipfs/check endpoint.</div>
+      <div><span class="text-amber">What's simulated:</span> Pin counts are static (from missions.json). No live pinning API connected.</div>
+      <h4>STEPS TO MAKE FULLY LIVE</h4>
+      <ol>
+        <li>Connect to Pinata or web3.storage API for real pin tracking</li>
+        <li>Add IPFS node status checks via HTTP gateway</li>
+        <li>Implement pin verification and count updates</li>
+      </ol>
+    </div>
   </div>
-  <div class="stat-item">
-    <div class="stat-label">DARK NODES</div>
-    <div class="stat-value amber" id="statDark">--</div>
+  <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="ots">
+    <span class="gn-badge live">LIVE</span>
+    <span class="gn-protocol-name">OpenTimestamps</span>
+    <span class="gn-protocol-status">LIVE — Real OTS calendar submission via proxy</span>
+    <div class="gn-protocol-detail">
+      <div><span class="text-green">What's real:</span> SHA-256 hashing in your browser. Server-side proxy submits hashes to real OTS calendar servers. Verification against real Bitcoin blockchain data via mempool.space API.</div>
+      <div><span class="text-green">What's simulated:</span> Nothing — OpenTimestamps is fully operational via server-side proxy.</div>
+      <h4>HOW IT WORKS</h4>
+      <ol>
+        <li>Browser computes SHA-256 hash of your document</li>
+        <li>Hash is sent to server-side proxy which submits to OTS calendar servers</li>
+        <li>Calendar servers aggregate hashes into a merkle tree anchored to Bitcoin</li>
+        <li>Verification checks against real Bitcoin blockchain data via mempool.space API</li>
+      </ol>
+    </div>
   </div>
-  <div class="stat-item">
-    <div class="stat-label">IN CHAIN</div>
-    <div class="stat-value" id="statChain">--</div>
+  <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="nostr">
+    <span class="gn-badge inactive">INACTIVE</span>
+    <span class="gn-protocol-name">Nostr</span>
+    <span class="gn-protocol-status">Config only</span>
+    <div class="gn-protocol-detail">
+      <div><span class="text-dim">What's real:</span> Configuration and key format definitions exist.</div>
+      <div><span class="text-dim">What's simulated:</span> No relay connections. No event publishing or subscribing.</div>
+      <h4>STEPS TO MAKE REAL</h4>
+      <ol>
+        <li>Import nostr-tools library</li>
+        <li>Generate keypair (or import existing nsec)</li>
+        <li>Connect to public relays (e.g., relay.damus.io)</li>
+        <li>Publish and subscribe to Guardian events (kind:1 notes, kind:30023 articles)</li>
+      </ol>
+    </div>
   </div>
-  <div class="stat-item">
-    <div class="stat-label">RESILIENCE</div>
-    <div class="stat-value" id="statPct">--%</div>
-  </div>
-  <div style="flex:1"></div>
-  <div style="text-align:right">
-    <div class="stat-label">NETWORK RESILIENCE</div>
-    <div class="status-bar-fill"><div class="status-bar-fill-inner" id="resilFill" style="width:0%"></div></div>
+  <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="lora">
+    <span class="gn-badge educational">EDUCATIONAL</span>
+    <span class="gn-protocol-name">LoRa</span>
+    <span class="gn-protocol-status">Design tool only</span>
+    <div class="gn-protocol-detail">
+      <div><span class="text-lora">What's real:</span> Circuit Lab for designing LoRa node schematics. Component catalog is accurate.</div>
+      <div><span class="text-dim">What's simulated:</span> No actual LoRa hardware communication. Globe nodes are from registry data.</div>
+      <h4>STEPS TO MAKE REAL</h4>
+      <ol>
+        <li>Flash Meshtastic firmware to ESP32 + SX1276/SX1262 hardware</li>
+        <li>Connect via Web Serial API in browser</li>
+        <li>Bridge mesh messages to Gun.js for web relay</li>
+        <li>Deploy solar-powered nodes for persistent coverage</li>
+      </ol>
+    </div>
   </div>
 </div>
 
-<!-- LIVE EVENT TICKER -->
+<div class="gn-section" style="padding-top:14px;padding-bottom:14px">
+  <div class="gn-stat-grid">
+    <div class="gn-stat-item">
+      <div class="gn-stat-label">ACTIVE NODES</div>
+      <div class="gn-stat-value" id="statActive">--</div>
+    </div>
+    <div class="gn-stat-item">
+      <div class="gn-stat-label">ONLINE NOW</div>
+      <div class="gn-stat-value cyan" id="statOnline">--</div>
+    </div>
+    <div class="gn-stat-item">
+      <div class="gn-stat-label">DARK NODES</div>
+      <div class="gn-stat-value amber" id="statDark">--</div>
+    </div>
+    <div class="gn-stat-item">
+      <div class="gn-stat-label">IN CHAIN</div>
+      <div class="gn-stat-value" id="statChain">--</div>
+    </div>
+    <div class="gn-stat-item">
+      <div class="gn-stat-label">RESILIENCE</div>
+      <div class="gn-stat-value" id="statPct">--%</div>
+    </div>
+    <div style="flex:1"></div>
+    <div style="text-align:right">
+      <div class="gn-stat-label">NETWORK RESILIENCE</div>
+      <div class="status-bar-fill"><div class="status-bar-fill-inner" id="resilFill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
 <div class="event-feed" id="eventFeed">
   <span class="ev-green">● SYSTEM ONLINE</span>
   <span>Fetching live network data…</span>
 </div>
 
-<!-- ACTIVE OPERATIONS -->
+<div class="my-missions-section" id="myMissionsSection" style="display:none">
+  <div class="section-hdr">
+    <div class="section-title">MY ACTIVE MISSIONS</div>
+    <span class="section-link" style="cursor:default">Accepted missions tracked locally</span>
+  </div>
+  <div class="my-missions-list" id="myMissionsList"></div>
+</div>
+
 <div class="ops-section" id="missions">
   <div class="section-hdr">
     <div class="section-title">ACTIVE ARCHIVE MISSIONS</div>
     <a class="section-link" href="witness.html">timestamp evidence →</a>
   </div>
-  <div class="ops-grid" id="opsGrid">
+  <div class="ops-list gn-scroll-container" id="opsGrid">
     <div class="op-card" style="color:var(--cyan-d);border-left-color:var(--edge)">Loading missions…</div>
   </div>
 </div>
 
-<!-- START HERE CTA -->
 <div class="cta-section">
   <div class="cta-title">WHERE DO YOU FIT IN?</div>
   <div class="cta-grid">
     <a class="cta-card primary" href="onboard.html?path=archivist">
       <div class="cta-icon">📦</div>
       <div class="cta-name green">I WANT TO ARCHIVE</div>
-      <div class="cta-desc">Learn IPFS, pin documents, timestamp evidence to Bitcoin. Make truth permanent.</div>
+      <div class="cta-desc">Make truth undeletable. Learn to pin documents across a distributed network and timestamp evidence to the Bitcoin blockchain. When records disappear, yours won't.</div>
       <div class="cta-tag new">★ START HERE — QUESTS</div>
     </a>
     <a class="cta-card" href="onboard.html?path=communicator">
       <div class="cta-icon">📡</div>
       <div class="cta-name cyan">I WANT CENSOR-PROOF COMMS</div>
-      <div class="cta-desc">P2P chat, LoRa mesh, dead man's chain. With honest threat model for each tool.</div>
+      <div class="cta-desc">Build communication channels that survive shutdowns. Peer-to-peer chat with no central server to seize, mesh radio networks that work off-grid, and a dead man's chain that keeps the network alive even when individuals can't.</div>
       <div class="cta-tag">QUEST PATH →</div>
     </a>
     <a class="cta-card" href="onboard.html?path=hardware">
       <div class="cta-icon">⚡</div>
       <div class="cta-name lora">I WANT TO BUILD HARDWARE</div>
-      <div class="cta-desc">Design LoRa nodes, flash Meshtastic, build solar sentinels. Circuit Lab.</div>
+      <div class="cta-desc">Open-source hardware for communities facing surveillance. Design LoRa mesh radios, solar-powered relay nodes, and off-grid sensors. Real schematics, real parts lists, shareable via IPFS.</div>
       <div class="cta-tag">QUEST PATH →</div>
     </a>
     <a class="cta-card" href="onboard.html?path=explorer">
       <div class="cta-icon">🔭</div>
       <div class="cta-name amber">JUST EXPLORING</div>
-      <div class="cta-desc">Learn the concepts. No technical background needed. 5-minute contributions welcome.</div>
+      <div class="cta-desc">No technical background needed. Learn how these tools work, why they matter, and what they can't do. Contribute in 5 minutes. Every person who understands this tech makes the network stronger.</div>
       <div class="cta-tag">QUEST PATH →</div>
     </a>
   </div>
 </div>
 
-<!-- FEATURE GRID -->
 <div class="grid">
   <a class="card" href="guardian-globe.html">
     <div class="card-icon">🌐</div>
-    <div class="card-title green">GUARDIAN GLOBE</div>
-    <div class="card-desc">Live rotating D3 globe — all IPFS and LoRa mesh nodes. Click any node to inspect tier, location, last seen, and chain successor.</div>
+    <div class="card-title green">GN GLOBE</div>
+    <div class="card-desc">Real-time map of the resistance network. Every IPFS archive node. Every LoRa mesh relay. See who's online, where coverage gaps exist, and how the network heals when nodes go dark.</div>
     <div class="card-status">● LIVE</div>
   </a>
   <a class="card" href="witness.html">
     <div class="card-icon">⧖</div>
     <div class="card-title cyan">WITNESS CHAMBER</div>
-    <div class="card-desc">Seal documents to the Bitcoin blockchain via OpenTimestamps. Generate a cryptographic receipt. No trust required — math is the notary.</div>
+    <div class="card-desc">Timestamp evidence to the Bitcoin blockchain. If a regime deletes records tomorrow, you can prove they existed today. Cryptographic proof, no intermediary — math is the only authority.</div>
     <div class="card-status">● LIVE</div>
   </a>
   <a class="card" href="chat.html">
     <div class="card-icon">💬</div>
     <div class="card-title amber">P2P CHATROOM</div>
-    <div class="card-desc">GUN.js mesh — no server. AOL retro skin. Drop IPFS CIDs and they auto-link. CodePad for shared collaboration. Screen name generation.</div>
+    <div class="card-desc">Serverless peer-to-peer chat that no one can shut down. Built on Gun.js mesh — every browser IS the server. Share IPFS evidence links, coordinate actions, stay connected when centralized platforms go dark. Not end-to-end encrypted by default.</div>
     <div class="card-status">● LIVE</div>
   </a>
   <a class="card" href="chain.html">
     <div class="card-icon">⛓</div>
     <div class="card-title lora">DEAD MAN'S CHAIN</div>
-    <div class="card-desc">48h succession relay. If a guardian goes dark, their successor auto-promotes. The chain heals itself. Join and set your successor.</div>
+    <div class="card-desc">Automated succession protocol for activists at risk. If someone goes dark for 48 hours, their designated successor inherits their role and data. The network never breaks — even when individuals are silenced.</div>
     <div class="card-status">● LIVE</div>
   </a>
   <a class="card" href="circuit.html">
     <div class="card-icon">⚡</div>
     <div class="card-title amber">CIRCUIT LAB</div>
-    <div class="card-desc">D3 force-graph hardware schematic editor. LoRa, GPS, cellular catalog. Design → export JSON → share via IPFS. Collaborative.</div>
+    <div class="card-desc">Open-source hardware design for communities under surveillance. Build LoRa mesh radios, off-grid sensor networks, and communication relays that work without cell towers or internet. Design it, share it, build it.</div>
     <div class="card-status">● LIVE</div>
   </a>
   <a class="card" href="onboard.html">
     <div class="card-icon">◈</div>
-    <div class="card-title cyan">GUARDIAN QUESTS</div>
-    <div class="card-desc">Gamified onboarding with real actions. Earn XP, learn web3 concepts, build skills. Honest threat model included for every tool.</div>
+    <div class="card-title cyan">GN QUESTS</div>
+    <div class="card-desc">Learn to defend democracy with real tools — not theory. Each quest teaches a skill: pin a document, timestamp evidence, build a mesh node. Honest threat models so you know exactly what each tool can and can't protect you from.</div>
     <div class="card-status" style="color:var(--gold)">★ NEW</div>
   </a>
 </div>
 
-<!-- TOOLS OF RESISTANCE -->
 <div class="tools-section" id="tools">
   <div class="section-hdr">
     <div class="section-title">TOOLS OF RESISTANCE</div>
     <a class="section-link" href="onboard.html">full guide with threat models →</a>
   </div>
-  <div class="tools-grid" id="toolsGrid">
-    <!-- Loaded from tools.json -->
-  </div>
-  <div style="margin-top:10px;font-size:8px;color:var(--cyan-d)">
-    ⚠ Every tool has trade-offs. Decentralization ≠ always safer. See <a href="onboard.html" style="color:var(--amber)">Guardian Quests</a> for honest threat models.
+  <div class="tools-grid" id="toolsGrid"></div>
+  <div class="tools-disclaimer">
+    ⚠ Every tool has trade-offs. Decentralization ≠ always safer. See <a href="onboard.html">GN Quests</a> for honest threat models.
   </div>
 </div>
 
-<!-- GUARDIAN RANKS -->
 <div class="how-section">
   <div class="section-hdr">
     <div class="section-title">GUARDIAN RANKS — HOW FAR WILL YOU GO?</div>
@@ -364,7 +422,7 @@
   </div>
 </div>
 
-<footer class="footer">
+<footer class="gn-footer">
   <span>CID: <span id="footerCid" style="color:var(--green)">loading…</span></span>
   <span>|</span>
   <span>NODES: <span id="footerNodes" style="color:var(--green)">--</span> active</span>
@@ -372,174 +430,226 @@
     <a href="https://github.com/goodoleusa/guardianet" target="_blank">SOURCE</a> ·
     <a href="guardian-globe.html">GLOBE</a> ·
     <a href="manage.html">ADMIN</a> ·
-    <a href="onboard.html">QUESTS</a>
+    <a href="onboard.html">QUESTS</a> ·
+    <a href="https://[redacted-private-deployment-url]/mission-control" target="_blank">GN HOME ↗</a>
   </span>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 <script>
-/* ════════════════════════════════════════════════════
-   REGISTRY STATS
-════════════════════════════════════════════════════ */
+function toggleProtocol(el) {
+  var detail = el.querySelector('.gn-protocol-detail');
+  if (!detail) return;
+  var isOpen = detail.classList.contains('open');
+  document.querySelectorAll('.gn-protocol-detail.open').forEach(function(d) { d.classList.remove('open'); });
+  document.querySelectorAll('.gn-protocol-item.expanded').forEach(function(p) { p.classList.remove('expanded'); });
+  if (!isOpen) {
+    detail.classList.add('open');
+    el.classList.add('expanded');
+  }
+}
+
+function getAcceptedMissions() {
+  try { return JSON.parse(localStorage.getItem('guardian_accepted_missions') || '[]'); } catch(e) { return []; }
+}
+
+function saveAcceptedMissions(list) {
+  localStorage.setItem('guardian_accepted_missions', JSON.stringify(list));
+}
+
+function acceptMission(id) {
+  var accepted = getAcceptedMissions();
+  if (accepted.indexOf(id) === -1) {
+    accepted.push(id);
+    saveAcceptedMissions(accepted);
+    GN_GAME.acceptMission(id);
+    GN_GAME.renderPlayerBar('playerBarContent');
+    loadMissions();
+    renderMyMissions();
+  }
+}
+
+function removeMission(id) {
+  var accepted = getAcceptedMissions().filter(function(m) { return m !== id; });
+  saveAcceptedMissions(accepted);
+  loadMissions();
+  renderMyMissions();
+}
+
+var allMissionsData = [];
+
+function renderMyMissions() {
+  var accepted = getAcceptedMissions();
+  var section = document.getElementById('myMissionsSection');
+  var list = document.getElementById('myMissionsList');
+  if (accepted.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = '';
+  accepted.forEach(function(id) {
+    var m = allMissionsData.find(function(x) { return x.id === id; });
+    if (!m) return;
+    var pct = m.copies_pinned && m.target_copies ? Math.round(m.copies_pinned / m.target_copies * 100) : 0;
+    var card = document.createElement('div');
+    card.className = 'my-mission-card';
+    card.innerHTML =
+      '<div class="my-mission-info">' +
+        '<div class="my-mission-title">' + m.title + '</div>' +
+        '<div class="my-mission-status">' + m.status + ' · ' + (m.copies_pinned || 0) + '/' + (m.target_copies || '?') + ' copies</div>' +
+      '</div>' +
+      '<div class="my-mission-progress">' +
+        '<div class="gn-progress-bar"><div class="gn-progress-fill" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
+      '</div>' +
+      '<a class="gn-btn cyan" href="pin.html" style="font-size:0.76rem;padding:6px 14px">▸ PIN NOW</a>' +
+      '<button class="my-mission-remove" onclick="removeMission(\'' + id + '\')">✕ DROP</button>';
+    list.appendChild(card);
+  });
+}
+
 async function loadRegistry() {
   try {
-    const r = await fetch('data/guardian_registry.json');
-    const reg = await r.json();
-    const m = reg.metadata || {};
-    const nodes = reg.nodes || [];
-    const active = nodes.filter(n => n.status === 'active').length;
-    const dark   = nodes.filter(n => n.status === 'dark').length;
-    const pct    = nodes.length ? Math.round(active / nodes.length * 100) : 0;
+    var r = await fetch('data/guardian_registry.json');
+    var reg = await r.json();
+    var m = reg.metadata || {};
+    var nodes = reg.nodes || [];
+    var active = nodes.filter(function(n) { return n.status === 'active'; }).length;
+    var dark = nodes.filter(function(n) { return n.status === 'dark'; }).length;
+    var pct = nodes.length ? Math.round(active / nodes.length * 100) : 0;
 
     document.getElementById('statActive').textContent = active;
-    document.getElementById('statDark').textContent   = dark;
-    document.getElementById('statChain').textContent  = nodes.length;
-    document.getElementById('statPct').textContent    = pct + '%';
-    document.getElementById('resilFill').style.width  = pct + '%';
+    document.getElementById('statDark').textContent = dark;
+    document.getElementById('statChain').textContent = nodes.length;
+    document.getElementById('statPct').textContent = pct + '%';
+    document.getElementById('resilFill').style.width = pct + '%';
     document.getElementById('footerNodes').textContent = active;
-    document.getElementById('footerCid').textContent  = (m.pinned_cid || '—').slice(0,22) + '…';
+    document.getElementById('footerCid').textContent = (m.pinned_cid || '—').slice(0, 22) + '…';
 
-    // Threat level heuristic
-    const threatEl = document.getElementById('threatLevel');
-    if (dark >= 3)      { threatEl.textContent='🔴 ELEVATED'; threatEl.style.color='var(--red)'; }
-    else if (dark >= 1) { threatEl.textContent='🟡 MODERATE'; threatEl.style.color='var(--amber)'; }
-    else                { threatEl.textContent='🟢 STABLE';   threatEl.style.color='var(--green)'; }
-
+    var threatEl = document.getElementById('threatLevel');
+    if (dark >= 3)      { threatEl.textContent = '🔴 ELEVATED'; threatEl.style.color = 'var(--red)'; }
+    else if (dark >= 1) { threatEl.textContent = '🟡 MODERATE'; threatEl.style.color = 'var(--amber)'; }
+    else                { threatEl.textContent = '🟢 STABLE';   threatEl.style.color = 'var(--green)'; }
   } catch(e) {
     document.getElementById('statActive').textContent = '?';
     document.getElementById('threatLevel').textContent = '⚪ UNKNOWN';
   }
 }
 
-/* ════════════════════════════════════════════════════
-   ACTIVE MISSIONS
-════════════════════════════════════════════════════ */
 async function loadMissions() {
   try {
-    const r = await fetch('data/missions.json');
-    const data = await r.json();
-    const grid = document.getElementById('opsGrid');
+    var r = await fetch('data/missions.json');
+    var data = await r.json();
+    allMissionsData = data.missions || [];
+    var grid = document.getElementById('opsGrid');
+    var accepted = getAcceptedMissions();
     grid.innerHTML = '';
-    (data.missions || []).forEach(m => {
-      const pct = m.copies_pinned && m.target_copies
-        ? Math.round(m.copies_pinned / m.target_copies * 100) : 0;
-      const card = document.createElement('div');
-      card.className = `op-card${m.priority==='critical'?' critical':''}`;
-      card.innerHTML = `
-        <div class="op-priority ${m.priority}">${m.status}</div>
-        <div class="op-title">${m.title}</div>
-        <div class="op-desc">${m.desc}</div>
-        ${m.copies_pinned != null ? `
-          <div class="op-progress"><span>${m.copies_pinned} copies pinned</span><span>target: ${m.target_copies}</span></div>
-          <div class="op-bar"><div class="op-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
-        ` : ''}
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-          <a class="op-action" href="pin.html">▸ START PINNING ↗</a>
-          ${m.archive_url ? `<a class="op-action" href="${m.archive_url}" target="_blank" style="opacity:.7;font-size:10px;padding:3px 8px">source ↗</a>` : ''}
-        </div>
-      `;
+    allMissionsData.forEach(function(m) {
+      var pct = m.copies_pinned && m.target_copies ? Math.round(m.copies_pinned / m.target_copies * 100) : 0;
+      var isAccepted = accepted.indexOf(m.id) !== -1;
+      var card = document.createElement('div');
+      card.className = 'op-card' + (m.priority === 'critical' ? ' critical' : '');
+      card.innerHTML =
+        '<div class="op-header">' +
+          '<span class="gn-badge ' + (m.priority === 'critical' ? 'simulated' : m.priority === 'high' ? 'hybrid' : 'inactive') + '">' + m.priority.toUpperCase() + '</span>' +
+          '<span class="op-priority ' + m.priority + '">' + m.status + '</span>' +
+        '</div>' +
+        '<div class="op-title">' + m.title + '</div>' +
+        '<div class="op-desc">' + m.desc + '</div>' +
+        (m.copies_pinned != null ?
+          '<div class="op-progress"><span>' + m.copies_pinned + ' copies pinned</span><span>target: ' + m.target_copies + '</span></div>' +
+          '<div class="op-bar"><div class="op-bar-fill" style="width:' + Math.min(pct, 100) + '%"></div></div>'
+        : '') +
+        '<div class="op-actions">' +
+          (isAccepted
+            ? '<span class="op-accepted-badge">✓ ACCEPTED</span><a class="gn-btn cyan" href="pin.html" style="font-size:0.76rem;padding:8px 16px">▸ START PINNING</a>'
+            : '<button class="gn-btn" onclick="acceptMission(\'' + m.id + '\')">ACCEPT MISSION</button>') +
+          (m.archive_url ? '<a class="op-source" href="' + m.archive_url + '" target="_blank">source ↗</a>' : '') +
+        '</div>';
       grid.appendChild(card);
     });
+    renderMyMissions();
   } catch(e) {
     document.getElementById('opsGrid').innerHTML = '<div class="op-card" style="color:var(--cyan-d)">Could not load missions. <a href="chat.html" style="color:var(--green)">Ask in chat →</a></div>';
   }
 }
 
-/* ════════════════════════════════════════════════════
-   TOOLS GRID
-════════════════════════════════════════════════════ */
-const TOOLS_HIGHLIGHT = [
-  // P2P comms
+var TOOLS_HIGHLIGHT = [
   { name:'Signal',          url:'https://signal.org/', cat:'cyan',   warn:false },
   { name:'Briar',           url:'https://briarproject.org/', cat:'cyan', warn:false },
   { name:'Matrix',          url:'https://matrix.org/', cat:'cyan',   warn:true, warnTip:'metadata risks' },
   { name:'Scuttlebutt',     url:'https://www.scuttlebutt.nz/', cat:'cyan', warn:false },
-  // Archive
   { name:'IPFS',            url:'https://ipfs.tech/', cat:'green',   warn:false },
   { name:'Proofmode',       url:'https://proofmode.org/', cat:'green', warn:false },
   { name:'OpenTimestamps',  url:'https://opentimestamps.org/', cat:'green', warn:false },
-  // Anonymity
   { name:'Tor Browser',     url:'https://www.torproject.org/', cat:'amber', warn:true, warnTip:'exit node attacks' },
   { name:'OONI Explorer',   url:'https://explorer.ooni.org/', cat:'amber', warn:false },
-  // Mesh
   { name:'Meshtastic',      url:'https://meshtastic.org', cat:'lora', warn:true, warnTip:'RF detectable' },
   { name:'disaster.radio',  url:'https://disaster.radio', cat:'lora', warn:false },
   { name:'tinySSB',         url:'https://github.com/ssbc/tinySSB', cat:'lora', warn:false },
-  // Self-host
   { name:'YunoHost',        url:'https://yunohost.org/', cat:'green', warn:false },
   { name:'Mapeo',           url:'https://www.digital-democracy.org/mapeo', cat:'green', warn:false },
-  // Democracy
   { name:'Protect Democracy', url:'https://protectdemocracy.org/threat-index/', cat:'amber', warn:false },
-  { name:'Hamilton Dashboard', url:'https://securingdemocracy.gmfus.org/hamilton-dashboard/', cat:'amber', warn:false },
+  { name:'Hamilton Dashboard', url:'https://securingdemocracy.gmfus.org/hamilton-dashboard/', cat:'amber', warn:false }
 ];
 
 function renderTools() {
-  const grid = document.getElementById('toolsGrid');
-  TOOLS_HIGHLIGHT.forEach(t => {
-    const pill = document.createElement('a');
-    pill.className = `tool-pill ${t.cat}`;
+  var grid = document.getElementById('toolsGrid');
+  TOOLS_HIGHLIGHT.forEach(function(t) {
+    var pill = document.createElement('a');
+    pill.className = 'tool-pill ' + t.cat;
     pill.href = t.url;
     pill.target = '_blank';
     pill.rel = 'noopener';
-    pill.innerHTML = t.name + (t.warn ? ` <span class="warn" title="${t.warnTip||'see threat model'}">⚠</span>` : '');
+    pill.innerHTML = t.name + (t.warn ? ' <span class="warn" title="' + (t.warnTip || 'see threat model') + '">⚠</span>' : '');
     grid.appendChild(pill);
   });
 }
 
-/* ════════════════════════════════════════════════════
-   GUN.JS LIVE STATS
-════════════════════════════════════════════════════ */
+var gun = null;
 function initGun() {
   try {
-    const gun = Gun(['https://gun-manhattan.herokuapp.com/gun','wss://relay.peer.ooo/gun']);
-
-    // Count online presences (from chat)
-    let onlineSet = new Set();
-    gun.get('guardian-chat-v1').get('presence').map().on((val, key) => {
+    gun = Gun(['https://gun-manhattan.herokuapp.com/gun','wss://relay.peer.ooo/gun']);
+    var onlineSet = new Set();
+    gun.get('guardian-chat-v1').get('presence').map().on(function(val, key) {
       if (!val || !val.t) return;
-      const age = Date.now() - val.t;
+      var age = Date.now() - val.t;
       if (age < 90000) onlineSet.add(key); else onlineSet.delete(key);
       document.getElementById('statOnline').textContent = onlineSet.size;
     });
 
-    // Live event feed from chain activity
-    const feed = document.getElementById('eventFeed');
-    let feedItems = ['<span class="ev-green">● SYSTEM ONLINE</span>'];
-
-    gun.get('guardian-chain-v1').get('nodes').map().on((val, key) => {
+    var feed = document.getElementById('eventFeed');
+    var feedItems = ['<span class="ev-green">● SYSTEM ONLINE</span>'];
+    gun.get('guardian-chain-v1').get('nodes').map().on(function(val, key) {
       if (!val || !val.name) return;
-      const age = Date.now() - (val.last_beat || 0);
-      const status = age < 1800000 ? 'ACTIVE' : age < 172800000 ? 'AWAY' : 'DARK';
-      const cls = status === 'ACTIVE' ? 'ev-green' : status === 'AWAY' ? '' : 'ev-amber';
-      const item = `<span class="${cls}">CHAIN NODE ${val.name||key}: ${status}</span>`;
-      if (!feedItems.includes(item)) {
+      var age = Date.now() - (val.last_beat || 0);
+      var status = age < 1800000 ? 'ACTIVE' : age < 172800000 ? 'AWAY' : 'DARK';
+      var cls = status === 'ACTIVE' ? 'ev-green' : status === 'AWAY' ? '' : 'ev-amber';
+      var item = '<span class="' + cls + '">CHAIN NODE ' + (val.name || key) + ': ' + status + '</span>';
+      if (feedItems.indexOf(item) === -1) {
         feedItems.unshift(item);
         if (feedItems.length > 8) feedItems.pop();
         feed.innerHTML = feedItems.join('');
       }
     });
-
-  } catch(e) { /* GUN unavailable */ }
+  } catch(e) {}
 }
 
-/* ════════════════════════════════════════════════════
-   INIT
-════════════════════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', function() {
   loadRegistry();
   loadMissions();
   renderTools();
   initGun();
+  GN_GAME.init(gun);
+  GN_GAME.renderPlayerBar('playerBarContent');
 
-  // Handle ?path= query param → redirect to onboard with path
-  const params = new URLSearchParams(location.search);
+  var params = new URLSearchParams(location.search);
   if (params.get('path')) {
     location.href = 'onboard.html?path=' + params.get('path');
   }
 });
-
-// Handle path param in onboard.html too
-// (passed via CTA links as ?path=archivist etc — onboard.html reads this)
+</script>
+<script src="js/gameplay.js"></script>
+<script>
+  GN_GAME.init(gun);
+  GN_GAME.renderPlayerBar('playerBarContent');
 </script>
 </body>
 </html>
