@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUARDIAN QUESTS — Become a Guardian</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060916; --panel:#0b1120; --deep:#030810; --edge:#152035;
+      --green:#00ff41; --green-d:#00992a; --cyan:#00ccff; --cyan-d:#0077aa;
+      --amber:#ffaa00; --lora:#ff66ff; --red:#ff3355; --gold:#ffd700;
+      --font:'Share Tech Mono','Courier New',monospace;
+      --glow-g:0 0 10px rgba(0,255,65,0.5);
+      --glow-c:0 0 10px rgba(0,204,255,0.5);
+      --glow-a:0 0 10px rgba(255,170,0,0.5);
+      --glow-l:0 0 10px rgba(255,102,255,0.4);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100vh;background:var(--bg);color:var(--green);font-family:var(--font);font-size:12px}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+
+    /* ─── HEADER ─── */
+    .hdr{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--cyan-d);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .hdr-left{display:flex;align-items:center;gap:12px}
+    .logo-icon{width:30px;height:30px;border:1px solid var(--cyan-d);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cyan);animation:pulse 3s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(0,204,255,0.4)}50%{box-shadow:0 0 20px rgba(0,204,255,0.8)}}
+    .logo-text{font-size:13px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px}
+    .logo-sub{font-size:8px;color:var(--cyan-d);letter-spacing:3px}
+    .blink{animation:blink 1.1s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+    .hdr-back{font-size:9px;color:var(--cyan-d);text-decoration:none;border:1px solid var(--edge);padding:4px 8px;letter-spacing:1px}
+    .hdr-back:hover{color:var(--cyan);border-color:var(--cyan-d)}
+
+    /* ─── XP BAR ─── */
+    .xp-strip{background:var(--panel);border-bottom:1px solid var(--edge);padding:8px 20px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+    .xp-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .xp-name{font-size:10px;color:var(--green)}
+    .rank-badge{font-size:9px;letter-spacing:2px;padding:2px 8px;border:1px solid currentColor;display:inline-block}
+    .xp-bar-wrap{flex:1;min-width:120px}
+    .xp-bar-meta{display:flex;justify-content:space-between;font-size:8px;color:var(--cyan-d);margin-bottom:3px}
+    .xp-bar-track{height:5px;background:#0a1628;border:1px solid var(--edge)}
+    .xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));box-shadow:var(--glow-g);transition:width 0.8s ease}
+    .xp-total{font-size:11px;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,0.4)}
+
+    /* ─── PATH SELECTOR ─── */
+    .path-wrap{padding:20px 20px 0;display:flex;gap:8px;flex-wrap:wrap}
+    .path-btn{background:var(--panel);border:1px solid var(--edge);padding:8px 16px;cursor:pointer;font-family:var(--font);font-size:10px;letter-spacing:2px;color:var(--cyan-d);transition:all 0.15s;display:flex;align-items:center;gap:6px}
+    .path-btn:hover,.path-btn.active{border-color:currentColor}
+    .path-btn.active{background:#0d1e38}
+    .path-btn[data-path="archivist"].active{color:var(--green);border-color:var(--green);text-shadow:var(--glow-g)}
+    .path-btn[data-path="communicator"].active{color:var(--cyan);border-color:var(--cyan);text-shadow:var(--glow-c)}
+    .path-btn[data-path="hardware"].active{color:var(--lora);border-color:var(--lora);text-shadow:var(--glow-l)}
+    .path-btn[data-path="explorer"].active{color:var(--amber);border-color:var(--amber);text-shadow:var(--glow-a)}
+    .path-desc{padding:8px 20px;font-size:9px;color:var(--cyan-d);border-bottom:1px solid var(--edge);line-height:1.7}
+
+    /* ─── QUEST LIST ─── */
+    .quests{padding:16px 20px;display:flex;flex-direction:column;gap:12px;max-width:860px}
+
+    .quest-card{background:var(--panel);border:1px solid var(--edge);transition:border-color 0.2s}
+    .quest-card.available{border-left:3px solid var(--green)}
+    .quest-card.complete{border-left:3px solid var(--green-d);opacity:0.7}
+    .quest-card.locked{border-left:3px solid var(--edge);opacity:0.5}
+    .quest-card.threat{border-left:3px solid var(--amber)}
+
+    .quest-header{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .quest-status-icon{width:20px;height:20px;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .quest-title{flex:1;font-size:11px;letter-spacing:2px}
+    .quest-title.green{color:var(--green)}
+    .quest-title.cyan{color:var(--cyan)}
+    .quest-title.amber{color:var(--amber)}
+    .quest-title.lora{color:var(--lora)}
+    .quest-title.locked-color{color:var(--edge)}
+    .quest-xp{font-size:9px;color:var(--gold);white-space:nowrap}
+    .quest-toggle{font-size:10px;color:var(--cyan-d);margin-left:8px;transition:transform 0.2s}
+    .quest-toggle.open{transform:rotate(180deg)}
+
+    .quest-body{padding:0 16px 16px;display:none}
+    .quest-body.visible{display:block}
+
+    .quest-section{margin-top:12px}
+    .quest-section-label{font-size:8px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--edge)}
+    .quest-text{font-size:10px;color:var(--green);line-height:1.8}
+    .quest-text em{color:var(--cyan);font-style:normal}
+    .quest-text strong{color:var(--gold)}
+
+    .irl-box{background:#0a1628;border:1px solid var(--cyan-d);border-left:3px solid var(--cyan);padding:8px 12px;margin-top:8px}
+    .irl-label{font-size:7px;letter-spacing:3px;color:var(--cyan-d);margin-bottom:4px}
+    .irl-text{font-size:10px;color:var(--cyan);line-height:1.7}
+
+    .threat-box{background:#100808;border:1px solid #442200;border-left:3px solid var(--amber);padding:8px 12px;margin-top:8px}
+    .threat-label{font-size:7px;letter-spacing:3px;color:var(--amber);margin-bottom:4px}
+    .threat-text{font-size:10px;color:#cc8800;line-height:1.7}
+
+    .mission-box{background:#060e16;border:1px solid var(--green-d);border-left:3px solid var(--green);padding:10px 12px;margin-top:10px}
+    .mission-label{font-size:7px;letter-spacing:3px;color:var(--green-d);margin-bottom:6px}
+    .mission-links{display:flex;flex-direction:column;gap:5px}
+    .mission-link{color:var(--green);text-decoration:none;font-size:10px;display:flex;align-items:center;gap:6px}
+    .mission-link::before{content:'▸';color:var(--green-d)}
+    .mission-link:hover{text-shadow:var(--glow-g)}
+
+    .complete-btn{margin-top:12px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:10px;letter-spacing:2px;padding:8px 16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:8px}
+    .complete-btn:hover{background:rgba(0,255,65,0.1);box-shadow:var(--glow-g)}
+    .complete-btn:disabled{border-color:var(--green-d);color:var(--green-d);cursor:default;background:rgba(0,150,40,0.1)}
+
+    /* ─── CONGRATS / UNLOCK FLASH ─── */
+    .xp-flash{position:fixed;top:60px;right:20px;background:#0d1e38;border:1px solid var(--gold);color:var(--gold);padding:10px 16px;font-size:11px;letter-spacing:2px;z-index:1000;animation:fadeOut 3s ease forwards;pointer-events:none}
+    @keyframes fadeOut{0%,60%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-20px)}}
+
+    /* ─── INTRO MODAL ─── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(6,9,22,0.95);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.hidden{display:none}
+    .modal{background:var(--panel);border:1px solid var(--cyan-d);max-width:520px;width:100%;padding:28px}
+    .modal-title{font-size:14px;color:var(--cyan);text-shadow:var(--glow-c);letter-spacing:3px;margin-bottom:16px}
+    .modal-text{font-size:10px;color:var(--green);line-height:1.9;margin-bottom:20px}
+    .modal-text a{color:var(--cyan);text-decoration:none}
+    .modal-paths{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+    .modal-path{background:var(--deep);border:1px solid var(--edge);padding:12px;cursor:pointer;transition:all 0.15s;text-align:left;font-family:var(--font)}
+    .modal-path:hover{border-color:currentColor}
+    .modal-path-icon{font-size:18px;margin-bottom:6px}
+    .modal-path-name{font-size:11px;letter-spacing:2px;margin-bottom:4px}
+    .modal-path-sub{font-size:8px;color:var(--cyan-d);line-height:1.6}
+    .modal-path[data-path="archivist"]{color:var(--green)}
+    .modal-path[data-path="communicator"]{color:var(--cyan)}
+    .modal-path[data-path="hardware"]{color:var(--lora)}
+    .modal-path[data-path="explorer"]{color:var(--amber)}
+    .modal-skip{font-size:8px;color:var(--cyan-d);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .modal-skip:hover{color:var(--cyan)}
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--cyan-d)}
+  </style>
+</head>
+<body>
+
+<!-- INTRO MODAL -->
+<div class="modal-overlay" id="introModal">
+  <div class="modal">
+    <div class="modal-title">◈ GUARDIAN QUESTS <span class="blink">_</span></div>
+    <div class="modal-text">
+      Political reality is being erased in real time. Documents disappear. Data gets purged.
+      History gets rewritten.<br><br>
+      GuardianNet fights back with <em>math</em>: content-addressed files on IPFS,
+      off-grid LoRa mesh networks, and Bitcoin-anchored timestamps.<br><br>
+      Each quest teaches one real concept — and ends with a <strong>real action</strong>.
+      No account needed. You earn XP stored in your browser.
+    </div>
+    <div class="modal-paths">
+      <button class="modal-path" data-path="archivist" onclick="pickPath('archivist')">
+        <div class="modal-path-icon">📦</div>
+        <div class="modal-path-name">ARCHIVIST</div>
+        <div class="modal-path-sub">Pin files, timestamp evidence,<br>make truth permanent</div>
+      </button>
+      <button class="modal-path" data-path="communicator" onclick="pickPath('communicator')">
+        <div class="modal-path-icon">📡</div>
+        <div class="modal-path-name">COMMUNICATOR</div>
+        <div class="modal-path-sub">P2P chat, LoRa mesh,<br>censorship-proof channels</div>
+      </button>
+      <button class="modal-path" data-path="hardware" onclick="pickPath('hardware')">
+        <div class="modal-path-icon">⚡</div>
+        <div class="modal-path-name">HARDWARE OPS</div>
+        <div class="modal-path-sub">Build LoRa nodes, design<br>off-grid mesh circuits</div>
+      </button>
+      <button class="modal-path" data-path="explorer" onclick="pickPath('explorer')">
+        <div class="modal-path-icon">🔭</div>
+        <div class="modal-path-name">JUST EXPLORING</div>
+        <div class="modal-path-sub">Learn the concepts,<br>no commitment required</div>
+      </button>
+    </div>
+    <div class="modal-skip" onclick="pickPath('explorer')">skip intro → default to exploring</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="logo-icon">◈</div>
+    <div>
+      <div class="logo-text">GUARDIAN QUESTS <span class="blink">_</span></div>
+      <div class="logo-sub">MISSION: DEFEND DEMOCRACY</div>
+    </div>
+  </div>
+  <a href="index.html" class="hdr-back">← MISSION CONTROL</a>
+</header>
+
+<!-- XP BAR -->
+<div class="xp-strip">
+  <div class="xp-left">
+    <span class="xp-name">OPERATIVE: <span id="displayName" style="color:var(--green)">—</span></span>
+    <span class="rank-badge" id="rankBadge" style="color:var(--cyan-d)">OBSERVER</span>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-meta">
+        <span id="xpBarLabel">XP PROGRESS</span>
+        <span id="xpNextLabel">100 XP → ARCHIVIST</span>
+      </div>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="xp-total"><span id="xpDisplay">0</span> XP</div>
+</div>
+
+<!-- PATH SELECTOR -->
+<div class="path-wrap">
+  <button class="path-btn" data-path="archivist" onclick="switchPath('archivist')">📦 ARCHIVIST</button>
+  <button class="path-btn" data-path="communicator" onclick="switchPath('communicator')">📡 COMMUNICATOR</button>
+  <button class="path-btn" data-path="hardware" onclick="switchPath('hardware')">⚡ HARDWARE OPS</button>
+  <button class="path-btn" data-path="explorer" onclick="switchPath('explorer')">🔭 EXPLORING</button>
+</div>
+<div class="path-desc" id="pathDesc"></div>
+
+<!-- QUEST LIST -->
+<div class="quests" id="questList"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+<script>
+/* ════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════ */
+function uid() { return 'gn_' + Math.random().toString(36).slice(2,10); }
+const STATE = {
+  userId: localStorage.getItem('gn_uid') || uid(),
+  xp: parseInt(localStorage.getItem('gn_xp') || '0'),
+  completed: new Set(JSON.parse(localStorage.getItem('gn_completed') || '[]')),
+  path: localStorage.getItem('gn_path') || null,
+  codename: localStorage.getItem('gn_codename') || generateCodename()
+};
+localStorage.setItem('gn_uid', STATE.userId);
+
+function generateCodename() {
+  const adj = ['CIPHER','VECTOR','GHOST','ECHO','PROXY','RAZOR','NEON','HELIX','APEX','SIGMA'];
+  const noun = ['HAWK','FOX','WOLF','RAVEN','LYNX','OWL','BEAR','CRANE','VIPER','MOTH'];
+  const name = adj[Math.floor(Math.random()*adj.length)] + noun[Math.floor(Math.random()*noun.length)];
+  localStorage.setItem('gn_codename', name);
+  return name;
+}
+
+function saveState() {
+  localStorage.setItem('gn_xp', STATE.xp);
+  localStorage.setItem('gn_completed', JSON.stringify([...STATE.completed]));
+  localStorage.setItem('gn_path', STATE.path);
+}
+
+/* ════════════════════════════════════════════════════
+   RANKS
+════════════════════════════════════════════════════ */
+const RANKS = [
+  { name:'OBSERVER',     min:0,    color:'var(--cyan-d)' },
+  { name:'ARCHIVIST',    min:100,  color:'var(--green-d)' },
+  { name:'GUARDIAN',     min:250,  color:'var(--green)' },
+  { name:'SENTINEL',     min:500,  color:'var(--cyan)' },
+  { name:'NODE OPERATOR',min:800,  color:'var(--amber)' },
+  { name:'MESH PIONEER', min:1200, color:'var(--lora)' }
+];
+function getRank(xp) { return [...RANKS].reverse().find(r => xp >= r.min) || RANKS[0]; }
+function getNextRank(xp) { return RANKS.find(r => r.min > xp); }
+
+/* ════════════════════════════════════════════════════
+   QUEST DATA
+════════════════════════════════════════════════════ */
+const PATH_DESCS = {
+  archivist:    'Make truth permanent. Learn IPFS content addressing, pinning, and Bitcoin timestamping. Each quest ends with a real archiving action.',
+  communicator: 'Build censorship-proof channels. Understand P2P messaging, LoRa mesh, and the dead man\'s chain. Includes honest threat model for each tool.',
+  hardware:     'Build the physical network. Design LoRa hardware, flash Meshtastic, understand solar-powered resilient nodes. Circuit Lab integration.',
+  explorer:     'No commitment. Learn the core concepts behind decentralized resistance — why it matters, how it works, and what you can do today in under 5 minutes.'
+};
+
+const QUESTS = {
+  archivist: [
+    {
+      id:'A1', title:'THE INDESTRUCTIBLE FILE', xp:50, requires:[], color:'green',
+      concept:`Files on IPFS are addressed by <em>what they are</em> — a cryptographic fingerprint of their content — not <em>where they live</em>. This is called content addressing.
+
+The same file has the same address everywhere on Earth. Forever. You cannot make the address point to something different. You cannot delete it by taking down a server.
+
+This is why IPFS files survive government takedowns, server shutdowns, and domain seizures.`,
+      irl:`In July 2025, <strong>constitution.congress.gov returned 403 errors</strong>. The constitutional text had already been archived by 40+ IPFS nodes. Same content. Same address. The government URL became irrelevant.`,
+      threat:`IPFS is not anonymous. Your IPFS node reveals which CIDs you request. If you're fetching sensitive content from a restricted environment, use a <strong>public IPFS gateway</strong> (like ipfs.io) through Tor — your node doesn't have to participate in the swarm.`,
+      mission:`Open this IPFS gateway URL in your browser and confirm the file loads. This is IPFS working — no central server.`,
+      links:[
+        {label:'Open IPFS file via public gateway', url:'https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/'},
+        {label:'What is IPFS? (official docs)', url:'https://docs.ipfs.tech/concepts/what-is-ipfs/'}
+      ]
+    },
+    {
+      id:'A2', title:'PIN YOUR FIRST FILE', xp:100, requires:['A1'], color:'green',
+      concept:`Pinning means your device <em>commits to hosting</em> a specific file. Every person who pins is a mirror. You can't take down a mirror you don't know exists.
+
+When you pin a CID on IPFS, you become part of the network serving that content. If 200 people pin the same document, a censorship attempt must identify and take down 200 independent hosts — often in different countries.
+
+Free pinning services: Pinata (1GB free), Filebase, web3.storage. Or run your own IPFS node.`,
+      irl:`During the 2019–2020 Hong Kong protests, activists pinned documentation of police actions to IPFS before accounts were suspended. When Twitter/Instagram content was removed, the IPFS versions remained.`,
+      threat:`Pinning services (Pinata, web3.storage) are US companies subject to DMCA and law enforcement requests. For the highest-risk content, run your own IPFS node or use distributed pinning clusters. Your node's IP is publicly visible in the IPFS DHT.`,
+      mission:`Create a free Pinata account and pin the GuardianNet archive CID. Then verify your pin is live.`,
+      links:[
+        {label:'Create free Pinata account', url:'https://app.pinata.cloud/register'},
+        {label:'IPFS Cluster — self-host pinning', url:'https://ipfscluster.io/'},
+        {label:'Guardian archive missions →', url:'index.html#missions'}
+      ]
+    },
+    {
+      id:'A3', title:'THE BITCOIN WITNESS', xp:150, requires:['A1'], color:'green',
+      concept:`Bitcoin's blockchain is a clock that has never been wrong. Every 10 minutes, a new block is added. The sequence cannot be reordered or backdated — it's proven by cumulative computational work.
+
+<em>OpenTimestamps</em> takes a document's fingerprint (SHA-256 hash), bundles it with thousands of others into a Merkle tree, and anchors the root hash in a single Bitcoin transaction. This proves the document existed before that Bitcoin block — verifiably, forever, without trusting anyone.
+
+The cost: near-zero (shared across all documents in the batch).`,
+      irl:`Journalists use Bitcoin timestamps to prove documents existed before stories were published — protection against "that document is fabricated" claims. Whistleblowers timestamp evidence before submitting to lawyers. You can't un-witness something.`,
+      threat:`The Bitcoin transaction that anchors your timestamp is public. Anyone can see <em>that</em> a timestamp occurred (though not the document content). For sensitive materials, consider this exposure.`,
+      mission:`Open the Witness Chamber and complete a full timestamping ceremony. Download your receipt.`,
+      links:[
+        {label:'Open Witness Chamber →', url:'witness.html'},
+        {label:'OpenTimestamps explained', url:'https://opentimestamps.org/'}
+      ]
+    },
+    {
+      id:'A4', title:'ARCHIVE A MISSION FILE', xp:125, requires:['A2'], color:'green',
+      concept:`Active archive missions are documents that need <em>more mirrors right now</em>. Some because official sources are unreliable. Some because they're under active attack. Some because they're foundational texts that must survive indefinitely.
+
+Every pin is a vote for historical record. When 500 people mirror a document, it's as permanent as anything can be.`,
+      irl:`Gene Sharp's <em>From Dictatorship to Democracy</em> has helped topple authoritarian governments in Serbia, Egypt, Tunisia, and elsewhere. It must never be unavailable. <strong>Every copy is infrastructure for future resistance movements you'll never meet.</strong>`,
+      threat:`Be mindful of what you host. In some jurisdictions, hosting specific political documents carries legal risk. Use a VPN or Tor when pinning if this applies to you.`,
+      mission:`Choose a mission from the Active Operations panel. Download the file, add it to IPFS, and verify the CID. Post your CID in #investigation on Guardian Chat.`,
+      links:[
+        {label:'View Active Archive Missions →', url:'index.html#missions'},
+        {label:'Open Guardian Chat →', url:'chat.html'},
+        {label:'IPFS Desktop (run a full node)', url:'https://github.com/ipfs/ipfs-desktop/releases'}
+      ]
+    }
+  ],
+
+  communicator: [
+    {
+      id:'C1', title:'THE MESH THAT CAN\'T BE KILLED', xp:50, requires:[], color:'cyan',
+      concept:`Centralized servers are <em>single points of failure</em>. A government can order Twitter to block an account. A company can shut down a server. A court can seize a domain.
+
+P2P networks have no center. Data lives on every node. Shutting down one node makes the others more important, not less. The network routes around damage — like the internet was originally designed to do.
+
+GUN.js (what this chat uses) stores every message on every connected peer. There's no server to subpoena.`,
+      irl:`When Iran blocked Signal in 2021, P2P apps like Briar kept working over Bluetooth and WiFi without internet. When Myanmar's military cut internet access for 7 days in 2021, Meshtastic mesh networks kept activist communication alive.`,
+      threat:`P2P ≠ anonymous. In GUN.js, your IP address is visible to relay peers. In Scuttlebutt, your social graph is public. Know your threat model: P2P is about <em>resilience</em>, not necessarily privacy. For anonymity, add Tor.`,
+      mission:`Join Guardian Chat — no account, no server. Pick a codename and say hello in #general.`,
+      links:[
+        {label:'Open Guardian Chat →', url:'chat.html'},
+        {label:'GUN.js — the database for freedom fighters', url:'https://gun.eco/'}
+      ]
+    },
+    {
+      id:'C2', title:'THE DEAD MAN\'S SWITCH', xp:100, requires:['C1'], color:'cyan',
+      concept:`A dead man's switch is a failsafe: it activates if you <em>stop</em> doing something. In the Dead Man's Chain, each guardian must send a heartbeat every 48 hours. If they go silent, their <em>successor</em> automatically inherits their position.
+
+This means: you cannot kill the chain by silencing one node. Succession is automatic. The chain heals itself.
+
+This is also a political organizing model: build succession into your structure before you need it.`,
+      irl:`Journalists use dead man's switches to ensure unpublished evidence releases automatically if they're detained or killed. Dissidents in authoritarian countries use them so that silencing them <em>proves</em> something happened. <strong>The threat of automatic release is itself protection.</strong>`,
+      threat:`The chain is public — positions and timing are visible. Do not use real names or identifying information in your node entry if you have operational security concerns.`,
+      mission:`Join the Dead Man's Chain. Add yourself with a codename. Set your successor. Send your first heartbeat.`,
+      links:[
+        {label:'Open Dead Man\'s Chain →', url:'chain.html'}
+      ]
+    },
+    {
+      id:'C3', title:'WHEN THE INTERNET DISAPPEARS', xp:100, requires:[], color:'cyan',
+      concept:`LoRa (Long Range) radio can send small messages <em>10–40km</em> using a $20–30 chip with no internet, no cell service, no infrastructure whatsoever. Meshtastic builds an encrypted mesh from these radios: every node relays messages from every other node.
+
+The network scales with participants. 5 nodes in a city = limited range. 50 nodes = city-wide coverage. 500 nodes = regional network that survives a full internet shutdown.`,
+      irl:`During the 2021 Myanmar coup, activists used LoRa mesh to coordinate when military cut internet. Ukrainian civilian defense networks used Meshtastic for communication during infrastructure attacks. GoTenna mesh was used by activists in areas of police signal jamming.`,
+      threat:`<strong>LoRa signals are detectable and triangulatable.</strong> Direction-finding equipment can locate active transmitters. In a high-repression environment: transmit briefly, move location, use directional antennas. LoRa ≠ invisible — it's resilient, not covert. Meshtastic adds encryption but the radio signal itself is detectable.`,
+      mission:`Explore the LoRa hardware catalog in Circuit Lab. Load the "Guardian Node" example and review the components.`,
+      links:[
+        {label:'Open Circuit Lab (load Guardian Node example) →', url:'circuit.html'},
+        {label:'Meshtastic — official documentation', url:'https://meshtastic.org'},
+        {label:'disaster.radio — solar-powered mesh', url:'https://disaster.radio'}
+      ]
+    },
+    {
+      id:'C4', title:'CENSORSHIP-PROOF COMMS: THE HONEST GUIDE', xp:100, requires:['C1'], color:'amber',
+      concept:`No single tool is right for all situations. Threat model first, tool second.
+
+<strong>For 1:1 sensitive comms:</strong> Signal (phone number required; best audit record). Briar (no phone number; works over BT/WiFi; Android only).
+
+<strong>For community organizing:</strong> Matrix/Element (federated; metadata exposed to homeserver; great for non-sensitive coordination). Session (no phone number; newer, less audited).
+
+<strong>Critical: Tor exit node attacks.</strong> Russia's intelligence services have been documented operating <em>significant percentages</em> of Tor exit nodes. A Tor user sending unencrypted traffic through a Russian-controlled exit node is visible to Russian intelligence. <strong>Tor is for censorship circumvention, not secure communication</strong> — always use end-to-end encryption on top of Tor.
+
+<strong>Matrix criticism:</strong> Federation means your homeserver operator can see who you message and when. Room key distribution has had past vulnerabilities. For high-risk activist 1:1 comms, Signal or Briar is safer.`,
+      irl:`Activists in Belarus used Matrix community rooms for general organizing — and were exposed when the homeserver was seized. Those using Signal for 1:1 sensitive communications were not compromised. <strong>Match the tool to the sensitivity of the communication.</strong>`,
+      threat:`The safest tool is the one your contacts will actually use. A perfect security tool used by 2 people protects 2 people. Signal used by 200 people in your network protects 200 people.`,
+      mission:`Review the Tools of Resistance library and identify your personal backup communication stack. What would you use if Signal was blocked tomorrow?`,
+      links:[
+        {label:'Browse Tools of Resistance →', url:'index.html#tools'},
+        {label:'Security in a Box — EFF guide', url:'https://securityinabox.org/'},
+        {label:'EFF Surveillance Self-Defense', url:'https://ssd.eff.org/'}
+      ]
+    }
+  ],
+
+  hardware: [
+    {
+      id:'H1', title:'THE $30 BROADCAST TOWER', xp:100, requires:[], color:'lora',
+      concept:`An ESP32 microcontroller ($5) + SX1278 LoRa module ($8–15) = a community-owned communication node. No license required at low power. No infrastructure required. No monthly fee.
+
+These mesh automatically. Each node relays messages from every other — so the range is the <em>sum of all nodes in range of each other</em>, not just one device. A city with 50 nodes has city-wide coverage with hardware you can build for under $50 total.
+
+The circuit also supports GPS, cellular backup (SIM800L), and solar charging.`,
+      irl:`Disaster.radio built this concept into solar-powered community infrastructure. When the Cumbre Vieja volcano erupted in La Palma (2021) and cut communications, ham radio + LoRa networks kept coordination alive for weeks.`,
+      threat:`Building and operating radio equipment has legal frameworks in most countries. At low power, LoRa modules are license-exempt in most jurisdictions (check local regs). Operating at higher power or on restricted frequencies may require licensing. Understand your local regulations.`,
+      mission:`Open Circuit Lab, load the "Guardian Node" example schematic, and explore the component catalog. Note what each component does.`,
+      links:[
+        {label:'Open Circuit Lab (Guardian Node example) →', url:'circuit.html'},
+        {label:'ESP32 dev boards on Tindie', url:'https://www.tindie.com/'},
+        {label:'RadioLib — LoRa library for Arduino/ESP32', url:'https://github.com/jgromes/RadioLib'}
+      ]
+    },
+    {
+      id:'H2', title:'FLASH A MESHTASTIC NODE', xp:175, requires:['H1'], color:'lora',
+      concept:`Meshtastic is open-source firmware that turns $30 hardware into an encrypted, GPS-enabled mesh node. It pairs with a mobile app and stores contacts, messages, and routing state on the device.
+
+You flash it once, configure channel encryption keys, and it works indefinitely without internet. A network key shared among your group creates a private encrypted mesh on top of the public LoRa frequency.
+
+Hardware options: LILYGO T-Deck, Heltec V3, T3S3, RAK WisBlock. All under $50.`,
+      irl:`Ukrainian territorial defense units used Meshtastic for squad-level communication when military radio was unavailable. Puerto Rico communities used mesh networks post-Hurricane Maria when cell infrastructure was down for months.`,
+      threat:`Meshtastic encrypts <em>message content</em>. It does not hide the fact that your device is transmitting, or your GPS location (which is broadcast by default). Disable GPS broadcasting if location privacy is needed. Use a group channel key shared out-of-band.`,
+      mission:`Use ESP Terminator (web flasher) to flash Meshtastic firmware onto a compatible board — or review the flashing guide and identify the hardware you'd acquire.`,
+      links:[
+        {label:'ESP Terminator — web-based flasher', url:'https://espterminator.com'},
+        {label:'Meshtastic getting started', url:'https://meshtastic.org/docs/getting-started/'},
+        {label:'T-Deck Plus Meshtastic hardware', url:'https://lilygo.cc/products/t-deck-plus-meshtastic'}
+      ]
+    },
+    {
+      id:'H3', title:'DESIGN A CIRCUIT — SHARE VIA IPFS', xp:150, requires:['H1'], color:'lora',
+      concept:`Open-source hardware means anyone can build your design. Circuit Lab lets you design schematics visually, export as JSON, and share the design via IPFS — where it has a permanent content-addressed URL.
+
+This creates a decentralized library of censorship-resistant hardware designs. Anyone who pins your schematic can build from it. A government can't take down a CID any more than they can change the laws of mathematics.`,
+      irl:`The entire open-source hardware ecosystem (Arduino, ESP32, Raspberry Pi) exists because hardware designs were shared freely. GuardianNet extends this to resistance hardware: off-grid comms, sensor networks, SDR (software defined radio) for signals intelligence.`,
+      threat:`Be thoughtful about what hardware designs you publish. In some jurisdictions, publishing certain radio designs or frequency configurations has legal implications.`,
+      mission:`Modify the Guardian Node schematic in Circuit Lab — add a solar charging circuit or GPS module. Export the JSON and share via IPFS. Post the CID in #hardware-lab.`,
+      links:[
+        {label:'Open Circuit Lab →', url:'circuit.html'},
+        {label:'Open Guardian Chat (#hardware-lab) →', url:'chat.html'}
+      ]
+    },
+    {
+      id:'H4', title:'THE SOLAR SENTINEL', xp:200, requires:['H2','H3'], color:'amber',
+      concept:`A solar-powered node with a LiPo battery can run <em>indefinitely</em> without grid power. In a crisis, power infrastructure fails first. Cell towers have ~4 hours of battery backup. Solar mesh nodes keep running for weeks.
+
+Design: ESP32 + LoRa + TP4056 solar charge controller + 18650 LiPo + small solar panel. Total BOM: ~$40–60. Weatherproof enclosure adds $10–20.
+
+These can be mounted on rooftops, trees, lamp posts — anywhere with line-of-sight to sky. They increase the mesh's range and survivability.`,
+      irl:`During the 2017 Puerto Rico hurricane response, community mesh networks kept functioning for weeks after the grid failed. First responders who had pre-deployed solar mesh nodes had operational communication when no one else did.`,
+      threat:`Persistent outdoor transmitters are more detectable because they're always on. In high-repression environments, transmit-on-demand rather than always-on may be safer. Know your threat model.`,
+      mission:`Design a solar-powered Guardian Node variant in Circuit Lab (add TP4056 + LiPo + solar panel to the base design). Export, pin to IPFS, and share the schematic.`,
+      links:[
+        {label:'Open Circuit Lab →', url:'circuit.html'},
+        {label:'TP4056 solar charge module (Tindie)', url:'https://www.tindie.com/'},
+        {label:'disaster.radio open-source solar design', url:'https://disaster.radio'}
+      ]
+    }
+  ],
+
+  explorer: [
+    {
+      id:'E1', title:'WHY THIS EXISTS', xp:25, requires:[], color:'amber',
+      concept:`Since January 2025:
+— Federal spending transparency data was removed and courts had to order partial restoration
+— 130+ CISA cybersecurity employees were laid off, removing institutional threat knowledge
+— constitution.congress.gov returned 403 errors during a period of constitutional scrutiny
+— Federal web properties are being redesigned, with historical pages going offline
+
+None of these events are individually catastrophic. Collectively, they represent a pattern: <em>information infrastructure is being selectively degraded</em>. The historical record is becoming dependent on who controls the servers.
+
+GuardianNet's answer: distribute the record. Make it math.`,
+      irl:`Authoritarian governments don't usually destroy records dramatically — they let them decay. Links die. Pages redirect. Archives get "reorganized." By the time anyone notices, the record is gone. <strong>The time to archive is before the deletion, not after.</strong>`,
+      threat:`Decentralization is not a magic solution. It is a risk distribution strategy. The question is always: what is your adversary capable of? For a nation-state adversary, distributed storage raises costs but does not make content invulnerable.`,
+      mission:`Read the Protect Democracy threat index. Note the current level.`,
+      links:[
+        {label:'Protect Democracy Threat Index', url:'https://protectdemocracy.org/threat-index/'},
+        {label:'OONI Censorship Explorer (US)', url:'https://explorer.ooni.org/country/US'}
+      ]
+    },
+    {
+      id:'E2', title:'THE THREE THREATS', xp:25, requires:['E1'], color:'amber',
+      concept:`Three attack vectors on democratic information infrastructure:
+
+<strong>1. CENSORSHIP:</strong> Block access to information. DNS seizures, ISP-level filtering, URL blacklists. Defense: content addressing (IPFS), circumvention (Tor/VPN), mesh fallback.
+
+<strong>2. SURVEILLANCE:</strong> Monitor who accesses what. Chill effect — people self-censor when watched. Defense: E2E encryption, Tor for browsing, minimal metadata generation.
+
+<strong>3. INFORMATION WARFARE:</strong> Flood with disinformation, discredit legitimate sources, exploit algorithmic amplification. Defense: cryptographic provenance (ProofMode, timestamps), source verification, media literacy.
+
+These three often operate together — surveillance enables targeting, censorship removes counter-narratives, info warfare fills the vacuum.`,
+      irl:`The OONI Explorer shows real-time censorship measurements from 200+ countries. The Hamilton Dashboard tracks Russian state-sponsored disinformation. Information Laundromat detects coordinated inauthentic behavior. <strong>These are not hypothetical threats — they're being measured right now.</strong>`,
+      threat:`Understanding threats doesn't mean paranoia. Most people in most contexts don't need military-grade OPSEC. The goal is proportionate response: match your tools to your actual threat model.`,
+      mission:`Check the OONI Explorer for any censorship incidents in your country in the last 90 days.`,
+      links:[
+        {label:'OONI Explorer', url:'https://explorer.ooni.org/'},
+        {label:'Hamilton Dashboard (disinformation)', url:'https://securingdemocracy.gmfus.org/hamilton-dashboard/'},
+        {label:'Information Laundromat', url:'https://informationlaundromat.com/'}
+      ]
+    },
+    {
+      id:'E3', title:'YOUR 5-MINUTE CONTRIBUTION', xp:50, requires:['E1'], color:'green',
+      concept:`You don't need to be technical. Right now, in 5 minutes, you can do one of these:
+
+<strong>Easiest:</strong> Pin a document via Pinata (free account, drag-and-drop). You just became part of the distributed archive.
+
+<strong>Easy:</strong> Install IPFS Companion browser extension. You now serve content to visitors of IPFS-linked pages.
+
+<strong>Medium:</strong> Share an IPFS gateway link to a document you think should survive. Every share increases the chance another person will pin it.
+
+<strong>Medium:</strong> Contact your representative about digital transparency using Democracy.io.
+
+<strong>If technical:</strong> Set up a free Pinata account, get an API key, and run the automated pinning script from the guardianet README.`,
+      irl:`The Internet Archive has been running on donations and volunteer effort since 1996. Its Wayback Machine has archived <strong>866 billion web pages</strong> — because people decided that history mattered. Every pin is a small vote for the same principle.`,
+      threat:`None. This is the low-risk, high-impact action. Pin a document. Tell someone about IPFS. Vote with your storage.`,
+      mission:`Do one action from the list above. Then join Guardian Chat and tell us what you did.`,
+      links:[
+        {label:'Pinata — free IPFS pinning', url:'https://app.pinata.cloud/register'},
+        {label:'IPFS Companion browser extension', url:'https://github.com/ipfs/ipfs-companion#readme'},
+        {label:'Democracy.io — contact Congress', url:'https://democracy.io/#!/'},
+        {label:'Join Guardian Chat →', url:'chat.html'}
+      ]
+    }
+  ]
+};
+
+/* ════════════════════════════════════════════════════
+   GUN SYNC (optional — quest XP is local-first)
+════════════════════════════════════════════════════ */
+let gun;
+try {
+  gun = Gun(['https://gun-manhattan.herokuapp.com/gun','wss://relay.peer.ooo/gun']);
+  // Sync XP to GUN for community leaderboard (pseudonymous)
+  function syncToGun() {
+    const rank = getRank(STATE.xp);
+    gun.get('guardian-quests-v1').get('leaderboard').get(STATE.userId).put({
+      codename: STATE.codename, xp: STATE.xp, rank: rank.name,
+      t: Date.now()
+    });
+  }
+} catch(e) { /* GUN unavailable — localStorage fallback is fine */ }
+
+/* ════════════════════════════════════════════════════
+   UI
+════════════════════════════════════════════════════ */
+function updateXPBar() {
+  const rank = getRank(STATE.xp);
+  const next = getNextRank(STATE.xp);
+  const prevMin = rank.min;
+  const nextMin = next ? next.min : rank.min + 1;
+  const pct = next ? Math.round((STATE.xp - prevMin) / (nextMin - prevMin) * 100) : 100;
+
+  document.getElementById('xpDisplay').textContent = STATE.xp;
+  document.getElementById('rankBadge').textContent = rank.name;
+  document.getElementById('rankBadge').style.color = rank.color;
+  document.getElementById('rankBadge').style.borderColor = rank.color;
+  document.getElementById('xpBarFill').style.width = pct + '%';
+  document.getElementById('xpBarFill').style.background = `linear-gradient(90deg, ${rank.color}88, ${rank.color})`;
+  document.getElementById('xpBarLabel').textContent = 'RANK PROGRESS';
+  document.getElementById('xpNextLabel').textContent = next
+    ? `${STATE.xp}/${next.min} XP → ${next.name}`
+    : `MAX RANK: ${rank.name}`;
+  document.getElementById('displayName').textContent = STATE.codename;
+}
+
+function flashXP(amount, questTitle) {
+  const el = document.createElement('div');
+  el.className = 'xp-flash';
+  el.textContent = `+${amount} XP — ${questTitle}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function completeQuest(questId, xp, title) {
+  if (STATE.completed.has(questId)) return;
+  STATE.completed.add(questId);
+  STATE.xp += xp;
+  saveState();
+  updateXPBar();
+  renderQuests();
+  flashXP(xp, title);
+  if (gun) try { syncToGun(); } catch(e) {}
+}
+
+function toggleQuest(id) {
+  const body = document.getElementById('qbody_' + id);
+  const toggle = document.getElementById('qtoggle_' + id);
+  if (!body) return;
+  body.classList.toggle('visible');
+  toggle.classList.toggle('open');
+}
+
+function renderQuests() {
+  const path = STATE.path || 'explorer';
+  const quests = QUESTS[path] || [];
+  const container = document.getElementById('questList');
+  container.innerHTML = '';
+
+  quests.forEach(q => {
+    const done = STATE.completed.has(q.id);
+    const locked = q.requires.length > 0 && !q.requires.every(r => STATE.completed.has(r));
+    let status = locked ? 'locked' : (done ? 'complete' : 'available');
+    if (q.id.startsWith('C4') || q.id === 'E2') status = (status === 'locked' ? 'locked' : 'threat');
+
+    const card = document.createElement('div');
+    card.className = `quest-card ${status}`;
+
+    const icon = done ? '✓' : (locked ? '🔒' : '▸');
+    const colorCls = locked ? 'locked-color' : (done ? 'green' : q.color);
+
+    card.innerHTML = `
+      <div class="quest-header" onclick="toggleQuest('${q.id}')">
+        <div class="quest-status-icon" style="${done?'color:var(--green-d)':locked?'color:var(--edge)':'color:var(--green)'}">${icon}</div>
+        <div class="quest-title ${colorCls}">${q.title}</div>
+        <div class="quest-xp">+${q.xp} XP</div>
+        <div class="quest-toggle" id="qtoggle_${q.id}">▾</div>
+      </div>
+      <div class="quest-body" id="qbody_${q.id}">
+        <div class="quest-section">
+          <div class="quest-section-label">THE CONCEPT</div>
+          <div class="quest-text">${q.concept.replace(/\n/g,'<br>')}</div>
+        </div>
+        <div class="irl-box">
+          <div class="irl-label">IRL APPLICATION</div>
+          <div class="irl-text">${q.irl}</div>
+        </div>
+        ${q.threat ? `<div class="threat-box">
+          <div class="threat-label">⚠ THREAT MODEL</div>
+          <div class="threat-text">${q.threat}</div>
+        </div>` : ''}
+        <div class="mission-box">
+          <div class="mission-label">YOUR MISSION</div>
+          <div class="quest-text" style="margin-bottom:10px">${q.mission}</div>
+          <div class="mission-links">
+            ${q.links.map(l=>`<a class="mission-link" href="${l.url}" target="${l.url.startsWith('http')?'_blank':'_self'}">${l.label}</a>`).join('')}
+          </div>
+        </div>
+        ${locked
+          ? `<div class="complete-btn" style="border-color:var(--edge);color:var(--edge);cursor:default">🔒 COMPLETE PREREQUISITES FIRST</div>`
+          : done
+          ? `<button class="complete-btn" disabled>✓ QUEST COMPLETE — +${q.xp} XP EARNED</button>`
+          : `<button class="complete-btn" onclick="completeQuest('${q.id}',${q.xp},'${q.title.replace(/'/g,"\\'")}')">▸ MARK COMPLETE — +${q.xp} XP</button>`
+        }
+      </div>
+    `;
+    container.appendChild(card);
+
+    // Auto-open first available quest
+    if (!locked && !done && container.querySelectorAll('.quest-body.visible').length === 0) {
+      card.querySelector('.quest-body').classList.add('visible');
+      card.querySelector('.quest-toggle').classList.add('open');
+    }
+  });
+}
+
+function switchPath(path) {
+  STATE.path = path;
+  saveState();
+  document.querySelectorAll('.path-btn').forEach(b => b.classList.toggle('active', b.dataset.path === path));
+  document.getElementById('pathDesc').textContent = PATH_DESCS[path];
+  renderQuests();
+}
+
+function pickPath(path) {
+  document.getElementById('introModal').classList.add('hidden');
+  switchPath(path);
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  updateXPBar();
+
+  // Handle ?path= query param from index.html CTAs
+  const urlPath = new URLSearchParams(location.search).get('path');
+  if (urlPath && QUESTS[urlPath]) {
+    document.getElementById('introModal').classList.add('hidden');
+    switchPath(urlPath);
+  } else if (STATE.path) {
+    // Returning user — skip intro
+    document.getElementById('introModal').classList.add('hidden');
+    switchPath(STATE.path);
+  }
+  // else: show intro modal (default state)
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+{
+  "_note": "Curated from Raindrop collection. Each tool includes honest threat model notes.",
+  "_updated": "2026-03-03",
+  "categories": [
+    {
+      "id": "p2p_comms",
+      "label": "P2P COMMUNICATIONS",
+      "icon": "📡",
+      "color": "cyan",
+      "tools": [
+        {
+          "name": "Signal",
+          "url": "https://signal.org/",
+          "desc": "Gold standard for encrypted 1:1 and group messaging. E2E by default.",
+          "threat_note": "Requires a phone number (linkable to identity). Server run by Signal Foundation (US). For high-risk: use disappearing messages.",
+          "difficulty": 1,
+          "tags": ["mobile", "encrypted", "recommended"]
+        },
+        {
+          "name": "Briar",
+          "url": "https://briarproject.org/",
+          "desc": "P2P messaging over Tor, WiFi, or Bluetooth. Works with no internet.",
+          "threat_note": "No phone number required. Works over Bluetooth/WiFi mesh when internet is down. Slower sync. Android only.",
+          "difficulty": 2,
+          "tags": ["mobile", "offline-capable", "tor", "mesh"]
+        },
+        {
+          "name": "Matrix Protocol",
+          "url": "https://matrix.org/",
+          "desc": "Open federated chat protocol. Element is the main client.",
+          "threat_note": "CRITICAL: Federation means your homeserver operator sees your contact graph and message metadata. Room key distribution has had past vulnerabilities. Great for community organizing — NOT equivalent to Signal for sensitive 1:1 comms. Choose a homeserver you trust, or self-host.",
+          "difficulty": 2,
+          "tags": ["federated", "community", "self-hostable", "use-with-caution"]
+        },
+        {
+          "name": "Scuttlebutt",
+          "url": "https://www.scuttlebutt.nz/",
+          "desc": "Offline-first decentralized social network. Sync via LAN, USB, or internet.",
+          "threat_note": "Your social graph is public within the network. Great for resilient community feeds. No central server to subpoena.",
+          "difficulty": 3,
+          "tags": ["offline-capable", "decentralized", "community"]
+        },
+        {
+          "name": "Manyverse",
+          "url": "https://www.manyver.se/download",
+          "desc": "Scuttlebutt on mobile. Works offline, syncs when peers are nearby.",
+          "threat_note": "Same caveats as Scuttlebutt. Content-addressed: once you post, others may hold copies.",
+          "difficulty": 2,
+          "tags": ["mobile", "offline-capable", "scuttlebutt"]
+        },
+        {
+          "name": "Session",
+          "url": "https://getsession.org/",
+          "desc": "Signal-like messaging with no phone number. Routes through onion network.",
+          "threat_note": "Newer protocol, less audited than Signal. Decentralized routing adds anonymity but reduces reliability.",
+          "difficulty": 2,
+          "tags": ["anonymous", "no-phone-number", "encrypted"]
+        },
+        {
+          "name": "Calyx Meet",
+          "url": "https://calyxinstitute.org/projects/digital-services/calyx-meet",
+          "desc": "Encrypted Jitsi video call instance by Calyx Institute. No time limit.",
+          "threat_note": "Hosted by Calyx Institute (US nonprofit). Better than Zoom for sensitive meetings. Server-side infrastructure still exists.",
+          "difficulty": 1,
+          "tags": ["video", "encrypted", "free"]
+        },
+        {
+          "name": "tinySSB",
+          "url": "https://github.com/ssbc/tinySSB",
+          "desc": "Secure Scuttlebutt over LoRa and Bluetooth. Off-grid P2P messaging.",
+          "threat_note": "Experimental. LoRa signals are detectable and can be triangulated. Add encryption layer for sensitive use.",
+          "difficulty": 4,
+          "tags": ["lora", "bluetooth", "offline-capable", "experimental"]
+        }
+      ]
+    },
+    {
+      "id": "anonymity",
+      "label": "ANONYMITY & CIRCUMVENTION",
+      "icon": "🧅",
+      "color": "amber",
+      "tools": [
+        {
+          "name": "Tor Browser",
+          "url": "https://www.torproject.org/",
+          "desc": "Route traffic through encrypted relays. Standard for censorship circumvention.",
+          "threat_note": "IMPORTANT: Nation-state adversaries (Russia, others) operate malicious Tor exit nodes. Correlation attacks can de-anonymize users when both entry and exit are observed. Tor is excellent for browsing — do NOT use Tor Browser for communications (use Signal instead). Best used with a VPN for entry node protection.",
+          "difficulty": 1,
+          "tags": ["browser", "circumvention", "anonymity"]
+        },
+        {
+          "name": "zkMe Identity",
+          "url": "https://app.zk.me/",
+          "desc": "Zero-knowledge proof identity verification. Prove membership without revealing identity.",
+          "threat_note": "ZK proofs are mathematically sound, but implementation bugs exist. Newer tech — use for low-stakes pseudonymous membership.",
+          "difficulty": 3,
+          "tags": ["zero-knowledge", "privacy", "identity", "web3"]
+        },
+        {
+          "name": "OONI Explorer",
+          "url": "https://explorer.ooni.org/",
+          "desc": "Real-time global map of internet censorship. Measure what's being blocked where.",
+          "threat_note": "Running OONI Probe in some countries may attract attention. Check local risks before running probes.",
+          "difficulty": 1,
+          "tags": ["monitoring", "censorship", "research"]
+        }
+      ]
+    },
+    {
+      "id": "ipfs_archive",
+      "label": "IPFS & ARCHIVING",
+      "icon": "📦",
+      "color": "green",
+      "tools": [
+        {
+          "name": "IPFS",
+          "url": "https://ipfs.tech/",
+          "desc": "Content-addressed P2P file system. Pin files, make them uncensorable.",
+          "threat_note": "Content addressing ≠ anonymity. Your IPFS node reveals which CIDs you're fetching. Use a public gateway if you don't want to reveal interest in specific content.",
+          "difficulty": 2,
+          "tags": ["hosting", "archive", "censorship-resistant"]
+        },
+        {
+          "name": "Proofmode",
+          "url": "https://proofmode.org/",
+          "desc": "Cryptographically signed photo/video with chain-of-custody. Verifiable evidence.",
+          "threat_note": "Metadata (GPS, device ID) is captured as part of proof. Strip or be aware of what you're attesting to.",
+          "difficulty": 2,
+          "tags": ["evidence", "archive", "mobile", "recommended"]
+        },
+        {
+          "name": "IPFS Cluster",
+          "url": "https://ipfscluster.io/",
+          "desc": "Coordinate multiple IPFS nodes to collaboratively pin content.",
+          "threat_note": "Cluster nodes see each other's addresses. Run on trusted infrastructure.",
+          "difficulty": 4,
+          "tags": ["hosting", "infrastructure", "advanced"]
+        },
+        {
+          "name": "OpenTimestamps",
+          "url": "https://opentimestamps.org/",
+          "desc": "Anchor document hashes to the Bitcoin blockchain. Proof of existence at a time.",
+          "threat_note": "Bitcoin transaction metadata is public. The fact that you anchored something is visible (but not the content).",
+          "difficulty": 2,
+          "tags": ["bitcoin", "timestamp", "evidence"]
+        },
+        {
+          "name": "Helia Verified Fetch",
+          "url": "https://github.com/ipfs/helia-verified-fetch",
+          "desc": "Trustless IPFS content retrieval in the browser. No gateway needed.",
+          "threat_note": "Experimental. Verifies content matches CID without trusting a gateway.",
+          "difficulty": 4,
+          "tags": ["developer", "ipfs", "trustless", "experimental"]
+        },
+        {
+          "name": "git-remote-ipfs",
+          "url": "https://github.com/dhappy/git-remote-ipfs",
+          "desc": "Push and pull Git repositories directly from IPFS.",
+          "threat_note": "Git history can contain sensitive data. Review before publishing repos to IPFS.",
+          "difficulty": 4,
+          "tags": ["developer", "ipfs", "git"]
+        }
+      ]
+    },
+    {
+      "id": "lora_mesh",
+      "label": "LORA & MESH NETWORKS",
+      "icon": "📻",
+      "color": "lora",
+      "tools": [
+        {
+          "name": "Meshtastic",
+          "url": "https://meshtastic.org",
+          "desc": "Open-source off-grid LoRa mesh. $30 hardware, 10-40km range, encrypted.",
+          "threat_note": "LoRa signals are detectable and triangulatable. Meshtastic adds encryption, but your transmitter location can be found with direction-finding equipment. For high-risk: use directional antenna, minimize transmit time.",
+          "difficulty": 3,
+          "tags": ["lora", "hardware", "mesh", "offline-capable", "recommended"]
+        },
+        {
+          "name": "disaster.radio",
+          "url": "https://disaster.radio",
+          "desc": "Solar-powered, disaster-resilient LoRa mesh communication network.",
+          "threat_note": "Same RF detection risks as Meshtastic. Solar operation means persistent presence — consider RF signature.",
+          "difficulty": 4,
+          "tags": ["lora", "solar", "hardware", "infrastructure"]
+        },
+        {
+          "name": "LibreMesh",
+          "url": "https://libremesh.org",
+          "desc": "Community WiFi mesh network firmware for routers.",
+          "threat_note": "WiFi range is limited (100-300m). Good for neighborhood mesh, not long-range. WiFi can be jammed.",
+          "difficulty": 4,
+          "tags": ["wifi", "mesh", "community-network", "hardware"]
+        },
+        {
+          "name": "Butter App",
+          "url": "https://likebutter.app/",
+          "desc": "Offline-first toolkit: access tools without internet. Community mesh.",
+          "threat_note": "Relatively new project. Review for your specific threat model before deploying.",
+          "difficulty": 2,
+          "tags": ["offline-capable", "mesh", "mobile"]
+        },
+        {
+          "name": "Rhizomatica",
+          "url": "https://www.rhizomatica.org/resources/",
+          "desc": "Community-owned cellular networks for rural/indigenous communities.",
+          "threat_note": "Requires coordination with local authorities in most jurisdictions. Legal landscape varies.",
+          "difficulty": 5,
+          "tags": ["cellular", "community-network", "infrastructure"]
+        }
+      ]
+    },
+    {
+      "id": "self_hosting",
+      "label": "SELF-HOST & INFRASTRUCTURE",
+      "icon": "🏠",
+      "color": "green",
+      "tools": [
+        {
+          "name": "YunoHost",
+          "url": "https://yunohost.org/",
+          "desc": "Self-host 100+ apps (Nextcloud, Matrix, Gitea, etc.) on a cheap server.",
+          "threat_note": "A self-hosted server is a known IP address. Ensure physical and network security. Hosting politically sensitive content increases your threat surface.",
+          "difficulty": 3,
+          "tags": ["self-hosting", "infrastructure", "recommended"]
+        },
+        {
+          "name": "Gitea",
+          "url": "https://about.gitea.com/",
+          "desc": "Self-hosted Git. Own your code. No Microsoft/GitHub dependency.",
+          "threat_note": "Public repos on your server reveal your IP. Use with Tor hidden service for anonymity.",
+          "difficulty": 3,
+          "tags": ["git", "self-hosting", "code"]
+        },
+        {
+          "name": "Anytype",
+          "url": "https://download.anytype.io/",
+          "desc": "Offline-first notes/knowledge base with private IPFS sync. Local-first.",
+          "threat_note": "Data sync uses private IPFS. Local-first means data stays on your device by default. Backup node is operated by Anytype.",
+          "difficulty": 2,
+          "tags": ["notes", "offline-capable", "ipfs", "private"]
+        },
+        {
+          "name": "Mapeo",
+          "url": "https://www.digital-democracy.org/mapeo",
+          "desc": "Offline-first collaborative mapping for communities. No internet required.",
+          "threat_note": "Geolocation data is sensitive. Secure your device and limit who has access to maps.",
+          "difficulty": 2,
+          "tags": ["mapping", "offline-capable", "community", "mobile"]
+        }
+      ]
+    },
+    {
+      "id": "democracy_monitoring",
+      "label": "DEMOCRACY MONITORING",
+      "icon": "🛡",
+      "color": "amber",
+      "tools": [
+        {
+          "name": "Protect Democracy",
+          "url": "https://protectdemocracy.org/threat-index/",
+          "desc": "Independent authoritarian threat index for the United States.",
+          "threat_note": null,
+          "difficulty": 1,
+          "tags": ["monitoring", "democracy", "us-politics"]
+        },
+        {
+          "name": "OONI Explorer",
+          "url": "https://explorer.ooni.org/",
+          "desc": "Billion+ measurements of internet censorship globally. Real-time data.",
+          "threat_note": null,
+          "difficulty": 1,
+          "tags": ["censorship", "monitoring", "research"]
+        },
+        {
+          "name": "Hamilton Dashboard",
+          "url": "https://securingdemocracy.gmfus.org/hamilton-dashboard/",
+          "desc": "GMF tracker of Russian state-sponsored disinformation campaigns.",
+          "threat_note": null,
+          "difficulty": 1,
+          "tags": ["disinformation", "russia", "monitoring"]
+        },
+        {
+          "name": "Information Laundromat",
+          "url": "https://informationlaundromat.com/",
+          "desc": "Detect coordinated disinformation networks. ISD Research tool.",
+          "threat_note": null,
+          "difficulty": 1,
+          "tags": ["disinformation", "research", "osint"]
+        },
+        {
+          "name": "Democracy.io",
+          "url": "https://democracy.io/#!/",
+          "desc": "Contact your US Congressional representatives. Simple, fast.",
+          "threat_note": null,
+          "difficulty": 1,
+          "tags": ["advocacy", "us-politics", "irl-action"]
+        }
+      ]
+    }
+  ]
+}
