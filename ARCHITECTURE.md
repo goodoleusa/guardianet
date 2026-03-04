@@ -20,16 +20,18 @@ through real actions, make it easy to join IPFS hosting, bridge digital tools to
 
 ## Files Map
 - `index.html` — Mission Control (entry point, live stats, active ops, tools grid)
-- `onboard.html` — NEW: Guardian Quest/XP system (gamified onboarding, real actions)
-- `chain.html` — Dead Man's Chain (48h succession relay)
+- `onboard.html` — Guardian Quest/XP system (gamified onboarding, real actions)
+- `pin.html` — NEW: Operation First Pin — guided IPFS wizard (method selector, pinset menu, GUN XP registry)
+- `chain.html` — Dead Man's Chain (48h succession relay, demo mode, P2P DB educational guide)
 - `chat.html` — P2P chatroom (GUN.js, AOL skin)
 - `guardian-globe.html` — D3 orthographic globe, node positions
-- `circuit.html` — Hardware schematic editor (D3 force-graph, LoRa catalog)
+- `circuit.html` — Hardware schematic editor (static layout, BOM+fit estimator, GUN collab, wiki)
 - `witness.html` — Bitcoin timestamping ceremony (OpenTimestamps)
 - `manage.html` — Admin registry, CID vault, broadcast console
 - `data/guardian_registry.json` — 13 live nodes (sentinel/guardian/lora tiers)
-- `data/tools.json` — NEW: Curated censorship-resistant tools (from Raindrop collection)
-- `data/missions.json` — NEW: Active archive missions (files that need pinning NOW)
+- `data/tools.json` — Curated censorship-resistant tools (from Raindrop collection)
+- `data/missions.json` — Active archive missions (files that need pinning NOW)
+- `data/guardian-pinset.json` — NEW: ipfs-cluster compatible pinset config (bulk-pin all missions)
 
 ## GUN.js Namespaces
 - `guardian-chain-v1/nodes/{nodeId}` — chain heartbeats + succession
@@ -38,6 +40,10 @@ through real actions, make it easy to join IPFS hosting, bridge digital tools to
 - `guardian-quests-v1/{userId}/completed` — quest completion state
 - `guardian-quests-v1/{userId}/xp` — XP total
 - `guardian-quests-v1/leaderboard/{userId}` — public rank display
+- `guardian-pins-v1/pins/{autoId}` — NEW: pin claims {name, cid, method, pinsetId, xp, ts}
+- `guardian-pins-v1/recent/{autoId}` — NEW: recent pins feed for pin.html live ticker
+- `guardian-circuit-lab-v1/{sessionId}/circuit` — circuit JSON for collab sync (circuit.html)
+- `guardian-circuit-lab-v1/{sessionId}/peers/{peerId}` — peer heartbeats for presence count
 
 ## GUN.js Peers
 - `https://gun-manhattan.herokuapp.com/gun`
@@ -57,7 +63,15 @@ through real actions, make it easy to join IPFS hosting, bridge digital tools to
 - GUN.js: public by default; data on relay servers is not private
 - LoRa: signal is detectable/triangulatable; mesh ≠ encrypted by default (Meshtastic adds crypto)
 
+## IPFS Hosting Scaffold (3 tiers)
+1. **Browser** — IPFS Companion extension (mentioned in onboard.html)
+2. **Desktop** — IPFS Desktop or Kubo CLI (linked in pin.html + onboard.html)
+3. **Cluster** — ipfs-cluster with guardian-pinset.json (pin.html cluster tab + guardian-pinset.json)
+Workflow gap closed: pin.html connects "learn about IPFS" → "pick a free service" → "pin a CID" → "claim XP" in one flow.
+
 ## Open Questions
 - Active missions: static missions.json or GUN-dynamic (admin pushes via manage.html)?
 - onboard.html XP: anonymous (localStorage only) vs. pseudonymous (GUN public)?
+- pin.html copy counts: currently static from PINSETS array — should pull live from guardian-pins-v1 per CID
 - Mobile optimization priority?
+- node-setup.html: step-by-step IPFS node wizard (Kubo install → verify → pin guardian CID → live)
