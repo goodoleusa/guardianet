@@ -332,7 +332,11 @@
       <div class="form-title">REGISTER NEW MEMBER</div>
       <div class="form-row">
         <div><div class="form-label">SCREEN NAME</div><input class="form-input" id="fName" placeholder="CipherHawk23" maxlength="16"></div>
-        <div><div class="form-label">TIER (1-6)</div><input class="form-input" id="fTier" placeholder="3" type="number" min="1" max="6" value="3"></div>
+        <div><div class="form-label">TIER</div>
+          <select class="form-input" id="fTier">
+            <option value="member">Member</option><option value="sentinel">Sentinel</option>
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div><div class="form-label">NODE TYPE</div>
@@ -641,7 +645,7 @@ function renderRegistry() {
       <td style="color:var(--cyan-d)">${i+1}</td>
       <td style="color:var(--green)">${esc(n.name||n.id||'—')}</td>
       <td><span class="status-pill ${status}">${status.toUpperCase()}</span></td>
-      <td><span class="tier-badge">T${n.tier||'?'}</span></td>
+      <td><span class="tier-badge">${String(n.tier||'?').toUpperCase()}</span></td>
       <td style="color:var(--cyan)">${esc(n.node_type||n.type||'—')}</td>
       <td>${esc(n.location||'—')}</td>
       <td>${ago(lastBeat)}</td>
@@ -664,7 +668,7 @@ function addGuardian() {
   const entry = {
     id:        rndHex(4),
     name,
-    tier:      parseInt(document.getElementById('fTier').value)||3,
+    tier:      document.getElementById('fTier').value || 'member',
     node_type: document.getElementById('fNodeType').value,
     location:  document.getElementById('fLoc').value.trim(),
     notes:     document.getElementById('fNotes').value.trim(),

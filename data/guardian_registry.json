@@ -5,10 +5,10 @@
     "pinned_cid": "bafybeiabc123xyz456def789ghi012jkl345mno678pqr901stu234vwx",
     "bitcoin_block": 891247,
     "bitcoin_timestamp": "2026-03-01T22:15:00Z",
-    "total_guardians": 13,
-    "active_guardians": 9,
-    "away_guardians": 2,
-    "dark_guardians": 1,
+    "total_members": 13,
+    "active_members": 9,
+    "away_members": 2,
+    "dark_members": 1,
     "lora_nodes": 1,
     "takedown_attempts": 3,
     "last_attempt": "2026-02-12T00:00:00Z",
@@ -46,7 +46,7 @@
     {
       "id": "f1a8e3c9",
       "position": 3,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "London, UK",
       "lat": 51.5074,
@@ -60,7 +60,7 @@
     {
       "id": "9d4b7f2e",
       "position": 4,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Seattle, US",
       "lat": 47.6062,
@@ -74,7 +74,7 @@
     {
       "id": "e2d8b4f6",
       "position": 5,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Tokyo, JP",
       "lat": 35.6762,
@@ -88,7 +88,7 @@
     {
       "id": "3c9f1a7b",
       "position": 6,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "São Paulo, BR",
       "lat": -23.5505,
@@ -102,7 +102,7 @@
     {
       "id": "a8c5f2e1",
       "position": 7,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Sydney, AU",
       "lat": -33.8688,
@@ -116,7 +116,7 @@
     {
       "id": "b3e7d9c4",
       "position": 8,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Toronto, CA",
       "lat": 43.6532,
@@ -144,7 +144,7 @@
     {
       "id": "d5e9b3c6",
       "position": 10,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Seoul, KR",
       "lat": 37.5665,
@@ -158,7 +158,7 @@
     {
       "id": "e6f0c4d7",
       "position": 11,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Cape Town, ZA",
       "lat": -33.9249,
@@ -172,7 +172,7 @@
     {
       "id": "f7a1d5e8",
       "position": 12,
-      "tier": "guardian",
+      "tier": "member",
       "type": "ipfs",
       "region": "Chicago, US",
       "lat": 41.8781,
@@ -186,7 +186,7 @@
     {
       "id": "a0b1c2d3",
       "position": 13,
-      "tier": "guardian",
+      "tier": "member",
       "type": "lora",
       "region": "Appalachian Ridge, US",
       "lat": 36.5,

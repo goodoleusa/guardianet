@@ -5,6 +5,7 @@ import urllib.request
 import urllib.error
 
 PORT = 5000
+PINATA_API_KEY = os.environ.get('PINATA_API_KEY', '')
 
 OTS_CALENDARS = [
     'https://a.pool.opentimestamps.org',
@@ -19,6 +20,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._proxy_ots_stamp()
         elif self.path == '/api/ots/verify':
             self._proxy_ots_verify()
+        elif self.path == '/api/ipfs/pin':
+            self._proxy_pinata_pin()
         else:
             self.send_error(404)
 
@@ -27,8 +30,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._proxy_ots_get_stamp()
         elif self.path == '/api/ipfs/check' or self.path.startswith('/api/ipfs/check?'):
             self._proxy_ipfs_check()
+        elif self.path == '/api/ipfs/pin-status' or self.path.startswith('/api/ipfs/pin-status?'):
+            self._proxy_pinata_status()
         else:
             super().do_GET()
+
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
 
     def _proxy_ots_stamp(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -172,17 +183,132 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             'gateways': results
         }).encode())
 
+    def _proxy_pinata_pin(self):
+        if not PINATA_API_KEY:
+            self.send_response(503)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Pinata API key not configured'}).encode())
+            return
+
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length)
+        try:
+            data = json.loads(body)
+            cid = data.get('cid', '').strip()
+            name = data.get('name', 'GN-pin')
+        except Exception:
+            self.send_error(400, 'Invalid JSON')
+            return
+
+        if not cid:
+            self.send_error(400, 'Missing cid')
+            return
+
+        pin_body = json.dumps({
+            'hashToPin': cid,
+            'pinataMetadata': {'name': name}
+        }).encode()
+
+        try:
+            req = urllib.request.Request(
+                'https://api.pinata.cloud/pinning/pinByHash',
+                data=pin_body,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {PINATA_API_KEY}'
+                },
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = json.loads(resp.read())
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'pinned': True,
+                    'cid': cid,
+                    'status': result.get('status', 'queued'),
+                    'id': result.get('id', ''),
+                }).encode())
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='replace')
+            self.send_response(e.code)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'pinned': False,
+                'error': err_body,
+                'status_code': e.code
+            }).encode())
+        except Exception as e:
+            self.send_response(502)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'pinned': False,
+                'error': str(e)
+            }).encode())
+
+    def _proxy_pinata_status(self):
+        if not PINATA_API_KEY:
+            self.send_response(503)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Pinata API key not configured'}).encode())
+            return
+
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        cid = params.get('cid', [''])[0]
+
+        if not cid:
+            self.send_error(400, 'Missing cid')
+            return
+
+        try:
+            url = f'https://api.pinata.cloud/pinning/pinJobs?ipfs_pin_hash={cid}&status=prechecking,searching,retrieving,pinned'
+            req = urllib.request.Request(
+                url,
+                headers={'Authorization': f'Bearer {PINATA_API_KEY}'},
+                method='GET'
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+                rows = result.get('rows', [])
+                status = rows[0].get('status', 'unknown') if rows else 'not_found'
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'cid': cid,
+                    'status': status,
+                    'jobs': len(rows)
+                }).encode())
+        except Exception as e:
+            self.send_response(502)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
     def log_message(self, fmt, *args):
-        if '/api/' in (args[0] if args else ''):
-            super().log_message(fmt, *args)
-        else:
+        try:
+            msg = str(args[0]) if args else ''
+            if '/api/' in msg:
+                super().log_message(fmt, *args)
+            else:
+                super().log_message(fmt, *args)
+        except Exception:
             super().log_message(fmt, *args)
 
 
 if __name__ == '__main__':
     with http.server.HTTPServer(('0.0.0.0', PORT), Handler) as httpd:
-        print(f'Guardian Net server on port {PORT}')
+        print(f'GN server on port {PORT}')
         print(f'  Static files: .')
         print(f'  OTS proxy:    /api/ots/stamp, /api/ots/verify')
         print(f'  IPFS check:   /api/ipfs/check?cid=...')
+        print(f'  Pinata pin:   /api/ipfs/pin (POST)')
+        print(f'  Pinata key:   {"configured" if PINATA_API_KEY else "NOT SET"}')
         httpd.serve_forever()

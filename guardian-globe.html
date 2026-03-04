@@ -6,6 +6,7 @@
   <title>GN Globe — [redacted project name]</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -599,8 +600,9 @@ let world    = null;
 let proj, path, svg, gRoot;
 let rotating = true;
 let selectedId = null;
+let gun = null;
+let liveNodeCount = 0;
 
-// ── Init ──────────────────────────────────────────────────────
 async function init() {
   try {
     const [regRes, worldRes] = await Promise.all([
@@ -618,6 +620,74 @@ async function init() {
   updateStats();
   buildNodeList();
   updateFooter();
+  initLiveData();
+}
+
+function initLiveData() {
+  try {
+    gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://gun-us.herokuapp.com/gun']);
+  } catch (e) { return; }
+
+  var liveNodes = {};
+
+  gun.get('guardian-chain-v1').get('nodes').map().on(function(val, key) {
+    if (!val || !val.name || key === '_') return;
+    liveNodes[key] = val;
+    mergeLiveNodes(liveNodes);
+  });
+
+  gun.get('guardian-pins-v1').get('pins').map().on(function(val, key) {
+    if (!val || !val.name || key === '_') return;
+    updateLiveCounter();
+  });
+}
+
+function mergeLiveNodes(liveNodes) {
+  if (!registry) return;
+  var existingIds = new Set(registry.nodes.map(function(n) { return n.id; }));
+  var added = 0;
+
+  Object.keys(liveNodes).forEach(function(key) {
+    var n = liveNodes[key];
+    if (n.nodeId && !existingIds.has(n.nodeId) && !n.nodeId.startsWith('demo-')) {
+      var lat = 20 + Math.sin(hashCode(n.nodeId)) * 40;
+      var lng = -40 + Math.cos(hashCode(n.nodeId) * 7) * 120;
+      registry.nodes.push({
+        id: n.nodeId,
+        name: n.name,
+        type: 'ipfs',
+        tier: 'member',
+        status: isActive(n.last_beat) ? 'active' : isDark(n.last_beat) ? 'dark' : 'away',
+        lat: lat,
+        lng: lng,
+        last_seen: n.last_beat ? new Date(n.last_beat).toISOString() : new Date().toISOString(),
+        live: true
+      });
+      existingIds.add(n.nodeId);
+      added++;
+    }
+  });
+
+  if (added > 0) {
+    drawNodes();
+    drawArcs();
+    updateStats();
+    buildNodeList();
+  }
+}
+
+function isActive(ts) { return ts && (Date.now() - ts) < 30 * 60000; }
+function isDark(ts) { return ts && (Date.now() - ts) > 48 * 3600000; }
+function hashCode(s) {
+  var h = 0;
+  for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+
+function updateLiveCounter() {
+  liveNodeCount++;
+  var el = document.getElementById('sGuard');
+  if (el && liveNodeCount > 0) el.textContent = liveNodeCount;
 }
 
 // ── Build globe ───────────────────────────────────────────────
@@ -886,7 +956,7 @@ function updateStats() {
   const away     = nodes.filter(x => x.status === 'away').length;
   const dark     = nodes.filter(x => x.status === 'dark').length;
   const sents    = nodes.filter(x => x.tier   === 'sentinel').length;
-  const guards   = nodes.filter(x => x.tier   === 'guardian' && x.type !== 'lora').length;
+  const guards   = nodes.filter(x => x.tier   === 'member' && x.type !== 'lora').length;
   const loras    = nodes.filter(x => x.type   === 'lora').length;
 
   document.getElementById('sActive').textContent   = active;
@@ -1000,17 +1070,17 @@ const FALLBACK = {
   nodes: [
     { id:'2af3e9b1', position:1,  tier:'sentinel', type:'ipfs', region:'New York, US',       lat:40.71,  lng:-74.01,  last_seen:new Date(Date.now()-600000).toISOString(),   successor:'7bc4d2a0', joined:'2026-01-15', status:'active', pinned_cid:'bafybei...' },
     { id:'7bc4d2a0', position:2,  tier:'sentinel', type:'ipfs', region:'Frankfurt, DE',      lat:50.11,  lng:8.68,    last_seen:new Date(Date.now()-300000).toISOString(),   successor:'f1a8e3c9', joined:'2026-01-20', status:'active', pinned_cid:'bafybei...' },
-    { id:'f1a8e3c9', position:3,  tier:'guardian', type:'ipfs', region:'London, UK',         lat:51.51,  lng:-0.13,   last_seen:new Date(Date.now()-1200000).toISOString(),  successor:'9d4b7f2e', joined:'2026-01-28', status:'active', pinned_cid:'bafybei...' },
-    { id:'9d4b7f2e', position:4,  tier:'guardian', type:'ipfs', region:'Seattle, US',        lat:47.61,  lng:-122.33, last_seen:new Date(Date.now()-7200000).toISOString(),  successor:'e2d8b4f6', joined:'2026-02-01', status:'away',   pinned_cid:'bafybei...' },
-    { id:'e2d8b4f6', position:5,  tier:'guardian', type:'ipfs', region:'Tokyo, JP',          lat:35.68,  lng:139.65,  last_seen:new Date(Date.now()-900000).toISOString(),   successor:'3c9f1a7b', joined:'2026-02-03', status:'active', pinned_cid:'bafybei...' },
-    { id:'3c9f1a7b', position:6,  tier:'guardian', type:'ipfs', region:'São Paulo, BR',      lat:-23.55, lng:-46.63,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'a8c5f2e1', joined:'2026-02-05', status:'active', pinned_cid:'bafybei...' },
-    { id:'a8c5f2e1', position:7,  tier:'guardian', type:'ipfs', region:'Sydney, AU',         lat:-33.87, lng:151.21,  last_seen:new Date(Date.now()-2400000).toISOString(),  successor:'b3e7d9c4', joined:'2026-02-08', status:'active', pinned_cid:'bafybei...' },
-    { id:'b3e7d9c4', position:8,  tier:'guardian', type:'ipfs', region:'Toronto, CA',        lat:43.65,  lng:-79.38,  last_seen:new Date(Date.now()-5400000).toISOString(),  successor:'c4f8a2b5', joined:'2026-02-10', status:'away',   pinned_cid:'bafybei...' },
+    { id:'f1a8e3c9', position:3,  tier:'member', type:'ipfs', region:'London, UK',         lat:51.51,  lng:-0.13,   last_seen:new Date(Date.now()-1200000).toISOString(),  successor:'9d4b7f2e', joined:'2026-01-28', status:'active', pinned_cid:'bafybei...' },
+    { id:'9d4b7f2e', position:4,  tier:'member', type:'ipfs', region:'Seattle, US',        lat:47.61,  lng:-122.33, last_seen:new Date(Date.now()-7200000).toISOString(),  successor:'e2d8b4f6', joined:'2026-02-01', status:'away',   pinned_cid:'bafybei...' },
+    { id:'e2d8b4f6', position:5,  tier:'member', type:'ipfs', region:'Tokyo, JP',          lat:35.68,  lng:139.65,  last_seen:new Date(Date.now()-900000).toISOString(),   successor:'3c9f1a7b', joined:'2026-02-03', status:'active', pinned_cid:'bafybei...' },
+    { id:'3c9f1a7b', position:6,  tier:'member', type:'ipfs', region:'São Paulo, BR',      lat:-23.55, lng:-46.63,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'a8c5f2e1', joined:'2026-02-05', status:'active', pinned_cid:'bafybei...' },
+    { id:'a8c5f2e1', position:7,  tier:'member', type:'ipfs', region:'Sydney, AU',         lat:-33.87, lng:151.21,  last_seen:new Date(Date.now()-2400000).toISOString(),  successor:'b3e7d9c4', joined:'2026-02-08', status:'active', pinned_cid:'bafybei...' },
+    { id:'b3e7d9c4', position:8,  tier:'member', type:'ipfs', region:'Toronto, CA',        lat:43.65,  lng:-79.38,  last_seen:new Date(Date.now()-5400000).toISOString(),  successor:'c4f8a2b5', joined:'2026-02-10', status:'away',   pinned_cid:'bafybei...' },
     { id:'c4f8a2b5', position:9,  tier:'sentinel', type:'ipfs', region:'Amsterdam, NL',      lat:52.37,  lng:4.90,    last_seen:new Date(Date.now()-480000).toISOString(),   successor:'d5e9b3c6', joined:'2026-02-12', status:'active', pinned_cid:'bafybei...' },
-    { id:'d5e9b3c6', position:10, tier:'guardian', type:'ipfs', region:'Seoul, KR',          lat:37.57,  lng:126.98,  last_seen:new Date(Date.now()-720000).toISOString(),   successor:'e6f0c4d7', joined:'2026-02-15', status:'active', pinned_cid:'bafybei...' },
-    { id:'e6f0c4d7', position:11, tier:'guardian', type:'ipfs', region:'Cape Town, ZA',      lat:-33.92, lng:18.42,   last_seen:new Date(Date.now()-3600000).toISOString(),  successor:'f7a1d5e8', joined:'2026-02-18', status:'active', pinned_cid:'bafybei...' },
-    { id:'f7a1d5e8', position:12, tier:'guardian', type:'ipfs', region:'Chicago, US',        lat:41.88,  lng:-87.63,  last_seen:new Date(Date.now()-172800000).toISOString(),successor:'a0b1c2d3', joined:'2026-02-20', status:'dark',   pinned_cid:null },
-    { id:'a0b1c2d3', position:13, tier:'guardian', type:'lora', region:'Appalachian Ridge, US', lat:36.5, lng:-81.5,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'2af3e9b1', joined:'2026-03-01', status:'active', pinned_cid:'bafybei...', lora:{ freq_mhz:915, spreading_factor:10, range_km:40, mesh_peers:3 } }
+    { id:'d5e9b3c6', position:10, tier:'member', type:'ipfs', region:'Seoul, KR',          lat:37.57,  lng:126.98,  last_seen:new Date(Date.now()-720000).toISOString(),   successor:'e6f0c4d7', joined:'2026-02-15', status:'active', pinned_cid:'bafybei...' },
+    { id:'e6f0c4d7', position:11, tier:'member', type:'ipfs', region:'Cape Town, ZA',      lat:-33.92, lng:18.42,   last_seen:new Date(Date.now()-3600000).toISOString(),  successor:'f7a1d5e8', joined:'2026-02-18', status:'active', pinned_cid:'bafybei...' },
+    { id:'f7a1d5e8', position:12, tier:'member', type:'ipfs', region:'Chicago, US',        lat:41.88,  lng:-87.63,  last_seen:new Date(Date.now()-172800000).toISOString(),successor:'a0b1c2d3', joined:'2026-02-20', status:'dark',   pinned_cid:null },
+    { id:'a0b1c2d3', position:13, tier:'member', type:'lora', region:'Appalachian Ridge, US', lat:36.5, lng:-81.5,  last_seen:new Date(Date.now()-1800000).toISOString(),  successor:'2af3e9b1', joined:'2026-03-01', status:'active', pinned_cid:'bafybei...', lora:{ freq_mhz:915, spreading_factor:10, range_km:40, mesh_peers:3 } }
   ]
 };
 

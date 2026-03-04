@@ -282,6 +282,21 @@ let sessionXp = 0;
 // ── METHODS ─────────────────────────────────────────────────────────────────
 const METHODS = [
   {
+    id: 'gn-auto',
+    name: 'GN Auto-Pin',
+    difficulty: 'easy',
+    desc: 'One click. We pin the CID directly via our Pinata infrastructure. No account needed. Instant.',
+    free: '✓ Free · Instant · No account required',
+    steps: [
+      `Select a mission archive in Step 02 below.`,
+      `Click the <strong style="color:var(--green)">⚡ PIN NOW VIA GN</strong> button that appears in Step 03.`,
+      `The server pins the CID to Pinata infrastructure immediately. No sign-up required.`,
+      `After pinning, verify the document loads on the IPFS gateway in Step 04.`,
+    ],
+    note: 'This uses the GN project\'s Pinata API key. The CID is pinned to professional IPFS infrastructure. For maximum resilience, also pin via your own node (see other methods).',
+    autoPin: true,
+  },
+  {
     id: 'free-cloud',
     name: 'Free Cloud Pinning',
     difficulty: 'easy',
@@ -525,11 +540,19 @@ function updateExecutePanel() {
     let storachaUrl = `https://storacha.network`;
     let pinataUrl = `https://app.pinata.cloud/pinmanager?cid=${cid}`;
     let gatewayUrl = `https://ipfs.io/ipfs/${cid}`;
+
+    let autoPinBtn = '';
+    if (selectedMethod && selectedMethod.autoPin) {
+      autoPinBtn = `<button class="pin-btn primary" id="autoPinBtn" onclick="autoPinViaMDD()" style="background:rgba(0,255,65,0.1);border-color:var(--green);font-size:15px;padding:14px 20px">⚡ PIN NOW VIA GN</button>
+        <div id="autoPinResult" style="margin-top:10px;font-size:13px;display:none"></div>`;
+    }
+
     actionHtml = `
       <div class="cid-display" id="cidDisplay" onclick="copyCid()" title="Click to copy CID">
         ${cid}
         <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-dim)" id="cidCopyLabel">click to copy</span>
       </div>
+      ${autoPinBtn}
       <div class="pin-actions">
         <a class="pin-btn primary" href="${storachaUrl}" target="_blank">📌 Pin on Storacha (free) →</a>
         <a class="pin-btn" href="${pinataUrl}" target="_blank">📌 Pin on Pinata →</a>
@@ -562,6 +585,7 @@ function buildQuickRef() {
   if (!selectedMethod) return '';
   const cid = selectedPinset?.cid || 'bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq';
   const refs = {
+    'gn-auto':   `Click <b style="color:var(--green)">⚡ PIN NOW VIA GN</b> above. One click — we handle the rest via Pinata API.`,
     'free-cloud': `<b style="color:var(--cyan)">Storacha:</b> storacha.network → Files → Upload by CID<br><b style="color:var(--cyan)">nft.storage:</b> nft.storage → Upload → CID<br><b style="color:var(--cyan)">4EVERLAND:</b> 4everland.org → IPFS → Pin → CID<br><b style="color:var(--cyan)">Filebase:</b> filebase.com → IPFS bucket → Pin by CID`,
     desktop:      `1. Download IPFS Desktop → Import → From IPFS → paste CID`,
     cli:          `<span class="cmd" onclick="copyCmd(this)">ipfs pin add ${cid}</span>`,
@@ -585,6 +609,43 @@ function copyCid() {
   navigator.clipboard.writeText(selectedPinset.cid).catch(() => {});
   const lbl = document.getElementById('cidCopyLabel');
   if (lbl) { lbl.textContent = '✓ copied!'; lbl.style.color = 'var(--green)'; setTimeout(() => { lbl.textContent = 'click to copy'; lbl.style.color = ''; }, 2000); }
+}
+
+async function autoPinViaMDD() {
+  if (!selectedPinset?.cid) { alert('Select a mission archive first.'); return; }
+  const btn = document.getElementById('autoPinBtn');
+  const result = document.getElementById('autoPinResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ PINNING…';
+  result.style.display = '';
+  result.style.color = 'var(--amber)';
+  result.textContent = 'Submitting CID to Pinata infrastructure…';
+
+  try {
+    const resp = await fetch('/api/ipfs/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cid: selectedPinset.cid, name: 'GN-' + selectedPinset.id })
+    });
+    const data = await resp.json();
+
+    if (data.pinned) {
+      result.style.color = 'var(--green)';
+      result.innerHTML = `✓ <strong>PINNED!</strong> CID submitted to Pinata. Status: ${data.status || 'queued'}. The document is now being replicated across IPFS infrastructure.`;
+      btn.textContent = '✓ PINNED';
+      btn.style.borderColor = 'var(--green)';
+    } else {
+      result.style.color = 'var(--red)';
+      result.innerHTML = `✗ Pin failed: ${data.error || 'Unknown error'}. Try one of the manual methods below.`;
+      btn.textContent = '⚡ RETRY PIN';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    result.style.color = 'var(--red)';
+    result.innerHTML = `✗ Network error: ${e.message}. The server may be restarting — try again in a moment.`;
+    btn.textContent = '⚡ RETRY PIN';
+    btn.disabled = false;
+  }
 }
 
 function copyCmd(el) {

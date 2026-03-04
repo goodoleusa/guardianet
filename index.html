@@ -180,18 +180,12 @@
     </div>
   </div>
   <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="ipfs">
-    <span class="gn-badge hybrid">HYBRID</span>
+    <span class="gn-badge live">LIVE</span>
     <span class="gn-protocol-name">IPFS</span>
-    <span class="gn-protocol-status">Real CIDs, gateway verification via /api/ipfs/check</span>
+    <span class="gn-protocol-status">Real CIDs + Pinata pinning via /api/ipfs/pin</span>
     <div class="gn-protocol-detail">
-      <div><span class="text-green">What's real:</span> CIDs are real content addresses. Gateway fetching works. Documents are retrievable. Gateway verification available via /api/ipfs/check endpoint.</div>
-      <div><span class="text-amber">What's simulated:</span> Pin counts are static (from missions.json). No live pinning API connected.</div>
-      <h4>STEPS TO MAKE FULLY LIVE</h4>
-      <ol>
-        <li>Connect to Pinata or web3.storage API for real pin tracking</li>
-        <li>Add IPFS node status checks via HTTP gateway</li>
-        <li>Implement pin verification and count updates</li>
-      </ol>
+      <div><span class="text-green">What's real:</span> CIDs are real content addresses. Gateway fetching works. Live pinning via Pinata API. Pin status tracking via /api/ipfs/pin-status.</div>
+      <div><span class="text-green">What's simulated:</span> Nothing — IPFS pinning is now live via Pinata.</div>
     </div>
   </div>
   <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="ots">
@@ -211,19 +205,13 @@
     </div>
   </div>
   <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="nostr">
-    <span class="gn-badge inactive">INACTIVE</span>
+    <span class="gn-badge live">LIVE</span>
     <span class="gn-protocol-name">Nostr</span>
-    <span class="gn-protocol-status">Config only</span>
+    <span class="gn-protocol-status"><span id="nostrRelayStatus">Connecting to relays...</span></span>
     <div class="gn-protocol-detail">
-      <div><span class="text-dim">What's real:</span> Configuration and key format definitions exist.</div>
-      <div><span class="text-dim">What's simulated:</span> No relay connections. No event publishing or subscribing.</div>
-      <h4>STEPS TO MAKE REAL</h4>
-      <ol>
-        <li>Import nostr-tools library</li>
-        <li>Generate keypair (or import existing nsec)</li>
-        <li>Connect to public relays (e.g., relay.damus.io)</li>
-        <li>Publish and subscribe to GN events (kind:1 notes, kind:30023 articles)</li>
-      </ol>
+      <div><span class="text-green">What's real:</span> Keypair generation and storage. WebSocket relay connections. Event publishing and subscribing on #gn-v2 channel.</div>
+      <div><span class="text-green">What's simulated:</span> Nothing — Nostr relay connections are live.</div>
+      <div style="margin-top:8px"><span class="text-cyan">Your pubkey:</span> <span id="nostrPubkey" style="font-family:'Courier Prime',monospace;font-size:0.8em;word-break:break-all">—</span></div>
     </div>
   </div>
   <div class="gn-protocol-item" onclick="toggleProtocol(this)" data-proto="lora">
@@ -648,10 +636,24 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="js/nav.js"></script>
 <script src="js/particles.js"></script>
+<script src="js/nostr.js"></script>
 <script src="js/gameplay.js"></script>
 <script>
   GN_GAME.init(gun);
   GN_GAME.renderPlayerBar('playerBarContent');
+
+  GN_NOSTR.init().then(function(info) {
+    var el = document.getElementById('nostrPubkey');
+    if (el) el.textContent = info.pubkey.slice(0, 16) + '…' + info.pubkey.slice(-8);
+  });
+  window.addEventListener('nostr-status', function(e) {
+    var d = e.detail;
+    var el = document.getElementById('nostrRelayStatus');
+    if (el) {
+      el.textContent = d.connected + '/' + d.total + ' relays connected';
+      el.style.color = d.connected > 0 ? 'var(--green)' : 'var(--amber)';
+    }
+  });
 </script>
 </body>
 </html>
