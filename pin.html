@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPERATION: FIRST PIN — Guardian Network</title>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <style>
+    :root {
+      --bg:#060a12; --panel:#0c1422; --deep:#040810;
+      --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
+      --amber:#f59e0b; --red:#ef4444; --lora:#c084fc; --edge:#1a2840;
+      --text:#cbd5e1; --text-dim:#64748b;
+      --font:'Courier Prime','Courier New',monospace;
+      --glow-g:0 0 12px rgba(34,197,94,0.5);
+      --glow-c:0 0 12px rgba(56,189,248,0.5);
+      --glow-a:0 0 12px rgba(245,158,11,0.5);
+      --glow-l:0 0 12px rgba(192,132,252,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.7}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999}
+
+    /* ── Toolbar ── */
+    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100}
+    .logo{font-size:15px;color:var(--amber);text-shadow:var(--glow-a);letter-spacing:2px}
+    .tb-right{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:13px}
+    .tb-right a{color:var(--text-dim);text-decoration:none}
+    .tb-right a:hover{color:var(--cyan)}
+    .xp-badge{background:rgba(34,197,94,0.08);border:1px solid var(--green-d);color:var(--green);font-size:13px;padding:3px 10px;letter-spacing:1px}
+
+    /* ── Layout ── */
+    .page{max-width:860px;margin:0 auto;padding:32px 20px 80px}
+
+    /* ── Hero ── */
+    .hero{text-align:center;padding:40px 0 32px;border-bottom:1px solid var(--edge);margin-bottom:40px}
+    .hero-tag{font-size:11px;color:var(--amber);letter-spacing:3px;margin-bottom:12px}
+    .hero-title{font-size:28px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px;text-shadow:var(--glow-c)}
+    .hero-sub{font-size:15px;color:var(--text);max-width:620px;margin:0 auto 24px;line-height:1.9}
+    .hero-stats{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+    .hero-stat{text-align:center}
+    .hero-stat-val{font-size:22px;color:var(--green)}
+    .hero-stat-label{font-size:11px;color:var(--text-dim);letter-spacing:1px}
+
+    /* ── Section headers ── */
+    .section-num{display:inline-block;background:var(--amber);color:#000;font-size:12px;padding:1px 7px;margin-right:8px;font-weight:700}
+    .section-title{font-size:18px;color:var(--amber);letter-spacing:1px;margin-bottom:6px}
+    .section-sub{font-size:13px;color:var(--text-dim);margin-bottom:20px}
+    .section{margin-bottom:48px}
+
+    /* ── Method cards ── */
+    .method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:20px}
+    .method-card{background:var(--panel);border:2px solid var(--edge);padding:18px 16px;cursor:pointer;transition:all .15s;position:relative}
+    .method-card:hover{border-color:var(--cyan);box-shadow:var(--glow-c)}
+    .method-card.selected{border-color:var(--green);box-shadow:var(--glow-g);background:rgba(34,197,94,0.04)}
+    .method-card.selected::before{content:'✓ SELECTED';position:absolute;top:8px;right:10px;font-size:10px;color:var(--green);letter-spacing:1px}
+    .method-difficulty{font-size:10px;letter-spacing:1.5px;margin-bottom:6px}
+    .diff-easy{color:var(--green)}
+    .diff-medium{color:var(--amber)}
+    .diff-advanced{color:var(--lora)}
+    .method-name{font-size:15px;color:var(--text);margin-bottom:6px;letter-spacing:.5px}
+    .method-desc{font-size:12px;color:var(--text-dim);line-height:1.7}
+    .method-free{font-size:11px;color:var(--green);margin-top:6px}
+
+    /* ── Method instructions (expandable) ── */
+    .method-detail{display:none;background:rgba(34,197,94,0.04);border:1px solid var(--green-d);padding:20px 22px;margin-top:-2px;font-size:14px;color:var(--text);line-height:1.9}
+    .method-detail.visible{display:block}
+    .step-list{counter-reset:steps;list-style:none;padding:0}
+    .step-list li{counter-increment:steps;padding:8px 0 8px 32px;position:relative;border-bottom:1px solid rgba(26,40,64,0.5)}
+    .step-list li:last-child{border-bottom:none}
+    .step-list li::before{content:counter(steps);position:absolute;left:0;top:8px;background:var(--green-d);color:#000;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+    .cmd{background:var(--deep);border:1px solid var(--edge);color:var(--green);padding:6px 12px;font-family:var(--font);font-size:13px;cursor:pointer;display:inline-block;margin:4px 0;position:relative;transition:border-color .15s}
+    .cmd:hover{border-color:var(--green)}
+    .cmd::after{content:'copy';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text-dim);letter-spacing:1px}
+    .cmd.copied::after{content:'✓';color:var(--green)}
+    .note-box{background:rgba(245,158,11,0.06);border-left:3px solid var(--amber);padding:10px 14px;margin:12px 0;font-size:13px;color:var(--text-dim)}
+    .note-box .hl{color:var(--amber)}
+    a.ext-link{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(56,189,248,0.3)}
+    a.ext-link:hover{color:var(--text);border-bottom-color:var(--text)}
+
+    /* ── Pinset menu ── */
+    .pinset-grid{display:grid;gap:14px}
+    .pinset-card{background:var(--panel);border:2px solid var(--edge);padding:18px 20px;cursor:pointer;transition:all .15s;display:grid;grid-template-columns:1fr auto;gap:10px}
+    .pinset-card:hover{border-color:var(--cyan)}
+    .pinset-card.selected{border-color:var(--amber);box-shadow:var(--glow-a)}
+    .pinset-priority{font-size:10px;letter-spacing:2px;margin-bottom:5px}
+    .pri-critical{color:var(--red)}
+    .pri-high{color:var(--amber)}
+    .pri-medium{color:var(--green)}
+    .pinset-title{font-size:15px;color:var(--text);margin-bottom:6px}
+    .pinset-why{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:8px}
+    .pinset-cid{font-size:12px;color:var(--text-dim);word-break:break-all;background:var(--deep);padding:5px 9px;border:1px solid var(--edge);margin-bottom:6px}
+    .pinset-cid span{color:var(--cyan)}
+    .pinset-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-dim)}
+    .pinset-meta .copies{color:var(--green)}
+    .pinset-meta .needed{color:var(--red)}
+    .pinset-xp{font-size:13px;color:var(--amber);white-space:nowrap;align-self:start;padding:3px 8px;border:1px solid rgba(245,158,11,0.3)}
+
+    /* ── Progress bar ── */
+    .prog-track{height:5px;background:#0a1628;border:1px solid var(--edge);margin:8px 0 0}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));transition:width .4s}
+
+    /* ── Execute panel ── */
+    .execute-panel{background:rgba(56,189,248,0.04);border:1px solid var(--cyan-d);padding:22px 24px;margin-bottom:20px}
+    .execute-head{font-size:13px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px}
+    .cid-display{background:var(--deep);border:1px solid var(--edge);padding:10px 14px;font-size:13px;color:var(--green);word-break:break-all;margin-bottom:12px;position:relative;cursor:pointer}
+    .cid-display:hover{border-color:var(--green)}
+    .pin-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .pin-btn{background:rgba(56,189,248,0.08);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 16px;cursor:pointer;letter-spacing:1px;text-decoration:none;display:inline-block;transition:all .15s;white-space:nowrap}
+    .pin-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    .pin-btn.primary{background:rgba(34,197,94,0.1);border-color:var(--green-d);color:var(--green)}
+    .pin-btn.primary:hover{box-shadow:var(--glow-g);border-color:var(--green)}
+    .no-cid-msg{color:var(--text-dim);font-size:13px;line-height:1.8}
+
+    /* ── Claim XP ── */
+    .claim-panel{background:rgba(245,158,11,0.04);border:2px solid var(--amber);padding:24px;text-align:center;margin-top:20px}
+    .claim-head{font-size:20px;color:var(--amber);letter-spacing:2px;margin-bottom:8px}
+    .claim-sub{font-size:14px;color:var(--text-dim);margin-bottom:16px}
+    .claim-name-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+    .claim-input{background:var(--deep);border:1px solid var(--lora);color:var(--text);font-family:var(--font);font-size:15px;padding:8px 12px;outline:none;min-width:220px}
+    .claim-input:focus{border-color:#d8b4fe}
+    .claim-btn{background:var(--amber);color:#000;border:none;font-family:var(--font);font-size:14px;padding:9px 20px;cursor:pointer;letter-spacing:2px;font-weight:700}
+    .claim-btn:hover{background:#fbbf24}
+    .claim-btn:disabled{opacity:.4;cursor:not-allowed}
+    .claim-result{display:none;margin-top:16px;font-size:14px;color:var(--green);letter-spacing:1px}
+    .claim-result.visible{display:block}
+
+    /* ── Live pins feed ── */
+    .pins-feed{background:var(--panel);border:1px solid var(--edge);padding:14px 16px;max-height:200px;overflow-y:auto;margin-top:16px}
+    .pin-entry{font-size:12px;color:var(--text-dim);padding:3px 0;border-bottom:1px solid rgba(26,40,64,0.5)}
+    .pin-entry .g{color:var(--green)}
+    .pin-entry .a{color:var(--amber)}
+    .pin-entry .c{color:var(--cyan)}
+
+    /* ── Footer note ── */
+    .footer-note{margin-top:48px;padding:20px;border:1px solid var(--edge);font-size:13px;color:var(--text-dim);line-height:1.9}
+    .footer-note .hl{color:var(--cyan)}
+
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:var(--deep)}
+    ::-webkit-scrollbar-thumb{background:var(--edge)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .fade-in{animation:fadeIn .3s ease forwards}
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span class="logo">📌 OPERATION: FIRST PIN</span>
+  <div class="tb-right">
+    <span class="xp-badge" id="sessionXp">XP: 0</span>
+    <a href="onboard.html">QUESTS ↗</a>
+    <a href="index.html">NET ↗</a>
+    <a href="chat.html">CHAT ↗</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="hero-tag">GUARDIAN NETWORK · ARCHIVE OPERATIONS</div>
+    <div class="hero-title">OPERATION: FIRST PIN</div>
+    <div class="hero-sub">
+      Every copy of a document is a vote for historical record. Governments can take down websites.
+      They cannot take down mathematics. This mission walks you through becoming a mirror —
+      in under 10 minutes, with free tools, no technical experience required.
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="statTotalPins">—</div>
+        <div class="hero-stat-label">TOTAL PINS CLAIMED</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="statGuardians">—</div>
+        <div class="hero-stat-label">GUARDIANS CONTRIBUTING</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">FREE</div>
+        <div class="hero-stat-label">MINIMUM COST</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">&lt;10 min</div>
+        <div class="hero-stat-label">TIME TO FIRST PIN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Choose method ── -->
+  <div class="section" id="section-method">
+    <div class="section-title"><span class="section-num">01</span> CHOOSE YOUR WEAPON</div>
+    <div class="section-sub">How do you want to pin? All options below are free for getting started. Easier = more dependent on a company. More control = runs on your machine.</div>
+
+    <div class="method-grid" id="methodGrid">
+      <!-- filled by JS -->
+    </div>
+
+    <div id="methodDetail" class="method-detail"></div>
+  </div>
+
+  <!-- ── STEP 2: Pick a pinset ── -->
+  <div class="section" id="section-pinset">
+    <div class="section-title"><span class="section-num">02</span> PICK A MISSION ARCHIVE</div>
+    <div class="section-sub">These are real documents that need more mirrors. Pick one — or pin them all. Each pin you claim adds to the community counter.</div>
+
+    <div class="pinset-grid" id="pinsetGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Execute ── -->
+  <div class="section" id="section-execute">
+    <div class="section-title"><span class="section-num">03</span> EXECUTE THE PIN</div>
+    <div class="section-sub">Follow the steps for your chosen method. The CID (Content Identifier) is the document's permanent address — it never changes.</div>
+
+    <div id="executePanel">
+      <div style="color:var(--text-dim);font-size:13px;padding:20px;border:1px solid var(--edge)">
+        ← Complete steps 01 and 02 first: choose your method and select a mission archive.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Claim XP ── -->
+  <div class="section" id="section-claim">
+    <div class="section-title"><span class="section-num">04</span> VERIFY + CLAIM YOUR XP</div>
+    <div class="section-sub">Verify the pin is live, then claim your XP. This records your contribution to the Guardian Network's live counter.</div>
+
+    <div class="claim-panel">
+      <div class="claim-head">CONFIRM YOUR PIN</div>
+      <div class="claim-sub" id="claimSub">Select an archive above to see the verification URL.</div>
+
+      <div id="verifyLink" style="margin-bottom:16px;display:none">
+        <a id="verifyBtn" href="#" target="_blank" class="pin-btn">
+          🔍 VERIFY PIN IS LIVE (opens IPFS gateway)
+        </a>
+      </div>
+
+      <div class="claim-name-row">
+        <input class="claim-input" id="claimName" placeholder="your guardian name…" maxlength="20" autocomplete="off" spellcheck="false">
+        <button class="claim-btn" id="claimBtn" onclick="claimXP()" disabled>CLAIM XP →</button>
+      </div>
+      <div class="claim-result" id="claimResult"></div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px">LIVE GUARDIAN PINS</div>
+      <div class="pins-feed" id="pinsFeed">
+        <div class="pin-entry" style="color:var(--text-dim)">Connecting to P2P network…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="footer-note">
+    <div style="color:var(--amber);margin-bottom:8px;letter-spacing:1px">ABOUT IPFS PINNING</div>
+    <span class="hl">What is pinning?</span> IPFS nodes automatically discard files that aren't "pinned" —
+    pinning tells your node (or a service) to keep a file indefinitely. Each additional pinner is an independent
+    mirror in a different jurisdiction.<br><br>
+    <span class="hl">What is a CID?</span> A Content Identifier is a cryptographic fingerprint of a file.
+    The same file always produces the same CID. If anyone changes even one byte, the CID changes —
+    making tampering detectable and impossible to hide.<br><br>
+    <span class="hl">Why not just save a URL?</span> URLs can return 404. Domain names can be seized.
+    Hosting providers can delete content under legal pressure. A CID addresses content by <em>what it is</em>,
+    not where it lives. 200 mirrors across 40 countries with the same CID = effectively uncensorable.<br><br>
+    <span class="hl">Privacy note:</span> Running your own IPFS node makes your IP address visible to
+    others fetching the same content. If this is a concern for your threat model, use a pinning service
+    (Pinata, web3.storage) rather than a local node.
+  </div>
+
+</div><!-- end .page -->
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const GUN_PEERS = ['https://gun-manhattan.herokuapp.com/gun'];
+const NS = 'guardian-pins-v1';
+let gun;
+let selectedMethod = null;
+let selectedPinset = null;
+let sessionXp = 0;
+
+// ── METHODS ─────────────────────────────────────────────────────────────────
+const METHODS = [
+  {
+    id: 'free-cloud',
+    name: 'Free Cloud Pinning',
+    difficulty: 'easy',
+    desc: 'Use one of several free browser-based pinning services. No install. No credit card needed. Pick one from the list.',
+    free: '✓ 100% free options available · No install required',
+    steps: [
+      `<strong style="color:var(--cyan)">Storacha (web3.storage)</strong> — <a class="ext-link" href="https://storacha.network" target="_blank">storacha.network ↗</a> — 5GB free, no credit card. Built on Filecoin. Sign up → Files → Upload by CID.`,
+      `<strong style="color:var(--cyan)">nft.storage</strong> — <a class="ext-link" href="https://nft.storage" target="_blank">nft.storage ↗</a> — Free for public-good content (Protocol Labs funded). Sign up → Upload → paste CID. Stored on Filecoin forever.`,
+      `<strong style="color:var(--cyan)">4EVERLAND</strong> — <a class="ext-link" href="https://www.4everland.org" target="_blank">4everland.org ↗</a> — Free tier IPFS hosting. Log in with GitHub → IPFS → Pin → CID.`,
+      `<strong style="color:var(--cyan)">Filebase</strong> — <a class="ext-link" href="https://filebase.com" target="_blank">filebase.com ↗</a> — 5GB free, no credit card. Create bucket → set network to IPFS → upload or pin by CID.`,
+      `<strong style="color:var(--cyan)">Pinata</strong> — <a class="ext-link" href="https://app.pinata.cloud/register" target="_blank">app.pinata.cloud ↗</a> — 1GB free. Upload → CID → paste CID → Import. Note: gateway bandwidth has paid tiers above free limits.`,
+      `After pinning on any service, copy the IPFS gateway URL and verify it loads. Then claim XP in step 04.`,
+    ],
+    note: 'All services listed are US-based companies subject to legal requests. For sensitive content in high-risk situations, run your own node (see IPFS Desktop or Kubo CLI options below). Storacha and nft.storage back data with Filecoin deals — more resilient against single-provider shutdown than Pinata.',
+  },
+  {
+    id: 'desktop',
+    name: 'IPFS Desktop',
+    difficulty: 'medium',
+    desc: 'Run a full IPFS node on your computer. GUI app. Your machine becomes a permanent mirror.',
+    free: '✓ Free · Open source · Your own infrastructure',
+    steps: [
+      `Download IPFS Desktop from <a class="ext-link" href="https://github.com/ipfs/ipfs-desktop/releases" target="_blank">github.com/ipfs/ipfs-desktop ↗</a>`,
+      `Install and launch it. A node starts automatically and shows in your system tray.`,
+      `Click the IPFS icon → <strong style="color:var(--amber)">Import → From IPFS</strong>`,
+      `Paste the CID and click Import. IPFS Desktop fetches and pins it to your node.`,
+      `Your node is now serving this content to the IPFS network. It stays pinned until you remove it.`,
+    ],
+    note: 'Your node\'s IP is visible to other IPFS peers. If you need to pin without revealing your IP, use a pinning service or route traffic through a VPN.',
+  },
+  {
+    id: 'cli',
+    name: 'Kubo CLI',
+    difficulty: 'medium',
+    desc: 'The reference IPFS implementation. Full control via terminal. Best for automation and large pinsets.',
+    free: '✓ Free · Open source · Fastest method',
+    steps: [
+      `Install Kubo: <a class="ext-link" href="https://docs.ipfs.tech/install/command-line/" target="_blank">docs.ipfs.tech/install/command-line ↗</a>`,
+      `Initialize your node: run <span class="cmd" onclick="copyCmd(this)">ipfs init</span>`,
+      `Start the daemon: <span class="cmd" onclick="copyCmd(this)">ipfs daemon</span>`,
+      `In a new terminal, pin the CID: <span class="cmd" id="cliPinCmd" onclick="copyCmd(this)">ipfs pin add &lt;paste-CID-here&gt;</span>`,
+      `Verify: <span class="cmd" id="cliVerifyCmd" onclick="copyCmd(this)">ipfs pin ls --type=recursive | grep &lt;CID&gt;</span>`,
+    ],
+    note: 'Keep the daemon running to serve content. Use <code style="color:var(--cyan)">ipfs pin ls</code> to see all pinned CIDs.',
+  },
+  {
+    id: 'cluster',
+    name: 'IPFS Cluster',
+    difficulty: 'advanced',
+    desc: 'Coordinate multiple nodes to share a pinset. Best for running a persistent Guardian archive cluster.',
+    free: '✓ Free · Best for long-term hosting · Multi-node replication',
+    steps: [
+      `Install ipfs-cluster from <a class="ext-link" href="https://ipfscluster.io/download/" target="_blank">ipfscluster.io/download ↗</a>`,
+      `Run <span class="cmd" onclick="copyCmd(this)">ipfs-cluster-service init</span> on each node`,
+      `Configure the cluster secret (shared across your nodes) in <code style="color:var(--cyan)">service.json</code>`,
+      `Download the Guardian Network pinset config: <a class="ext-link" href="data/guardian-pinset.json" target="_blank">data/guardian-pinset.json ↗</a>`,
+      `Import the pinset: <span class="cmd" onclick="copyCmd(this)">ipfs-cluster-ctl pin add --replication-min=2 --replication-max=3 &lt;CID&gt;</span>`,
+      `All cluster members automatically replicate pinned CIDs. One node pins → all nodes mirror.`,
+    ],
+    note: 'IPFS Cluster is the most resilient option but requires running your own infrastructure. Ideal for organizations or technical guardians who want to commit long-term.',
+  },
+];
+
+// ── PINSETS ──────────────────────────────────────────────────────────────────
+const PINSETS = [
+  {
+    id: 'm001',
+    priority: 'critical',
+    title: 'US Constitution — Congressional Archive',
+    why: 'constitution.congress.gov returned 403 errors in July 2025. The founding document of American law must not exist only at government-controlled URLs.',
+    cid: 'bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq',
+    copies: 47, target: 200,
+    size: '~180 KB (HTML)',
+    category: 'Constitutional Documents',
+    xp: 75,
+    verifyUrl: 'https://ipfs.io/ipfs/bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq',
+  },
+  {
+    id: 'm003',
+    priority: 'high',
+    title: 'From Dictatorship to Democracy — Gene Sharp',
+    why: 'The foundational guide to nonviolent resistance. Used by democracy movements in 30+ countries. Has survived every attempt to suppress it — let\'s keep it that way.',
+    cid: 'bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq',
+    copies: 89, target: 500,
+    size: '~1.2 MB (PDF)',
+    category: 'Resistance Literature',
+    xp: 50,
+    verifyUrl: 'https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq',
+  },
+  {
+    id: 'm006',
+    priority: 'critical',
+    title: 'Declaration of Independence — National Archives',
+    why: 'Primary source documents of American democracy. National Archives content has faced targeted removal attempts.',
+    cid: 'bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n32',
+    copies: 22, target: 150,
+    size: '~45 KB',
+    category: 'Constitutional Documents',
+    xp: 75,
+    verifyUrl: 'https://ipfs.io/ipfs/bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n32',
+  },
+  {
+    id: 'm007',
+    priority: 'high',
+    title: 'Universal Declaration of Human Rights (UN, 1948)',
+    why: 'The foundational international human rights document. Hosted at un.org which is subject to political pressure. Every democracy needs multiple copies outside governmental control.',
+    cid: 'bafkreihztptdgioepnvivkjkzjqy4xzgmhclmqk7zyibn65wbhpwww4k5i',
+    copies: 34, target: 300,
+    size: '~95 KB',
+    category: 'Human Rights',
+    xp: 60,
+    verifyUrl: 'https://ipfs.io/ipfs/bafkreihztptdgioepnvivkjkzjqy4xzgmhclmqk7zyibn65wbhpwww4k5i',
+  },
+  {
+    id: 'm008',
+    priority: 'medium',
+    title: 'Surveillance Self-Defense Guide — EFF',
+    why: 'The Electronic Frontier Foundation\'s guide to digital security and surveillance resistance. Essential knowledge for activists — must remain accessible even if eff.org goes dark.',
+    cid: 'bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m',
+    copies: 18, target: 100,
+    size: '~2.4 MB (archived site)',
+    category: 'Digital Security',
+    xp: 50,
+    verifyUrl: 'https://ipfs.io/ipfs/bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m',
+  },
+  {
+    id: 'm009',
+    priority: 'high',
+    title: 'Voter Suppression Documentation 2020–2026',
+    why: 'Court filings, firsthand accounts, and photographic evidence of voting rights incidents. Submitted by Guardian contributors. The historical record of democracy under pressure.',
+    cid: null,
+    copies: 3, target: 30,
+    size: 'Multiple files — see Guardian Chat #investigation',
+    category: 'Election Integrity',
+    xp: 100,
+    verifyUrl: null,
+    noDirectPin: true,
+  },
+];
+
+// ── BUILD METHOD CARDS ───────────────────────────────────────────────────────
+function buildMethods() {
+  const grid = document.getElementById('methodGrid');
+  METHODS.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'method-card';
+    card.id = 'method-' + m.id;
+    const diffClass = { easy:'diff-easy', medium:'diff-medium', advanced:'diff-advanced' }[m.difficulty];
+    card.innerHTML = `
+      <div class="method-difficulty ${diffClass}">${m.difficulty.toUpperCase()}</div>
+      <div class="method-name">${m.name}</div>
+      <div class="method-desc">${m.desc}</div>
+      <div class="method-free">${m.free}</div>
+    `;
+    card.addEventListener('click', () => selectMethod(m.id));
+    grid.appendChild(card);
+  });
+}
+
+function selectMethod(id) {
+  selectedMethod = METHODS.find(m => m.id === id);
+  document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('method-' + id).classList.add('selected');
+
+  const detail = document.getElementById('methodDetail');
+  const stepsHtml = selectedMethod.steps.map(s => `<li>${s}</li>`).join('');
+  detail.innerHTML = `
+    <div style="color:var(--green);margin-bottom:12px;letter-spacing:1px">${selectedMethod.name} — SETUP GUIDE</div>
+    <ol class="step-list">${stepsHtml}</ol>
+    ${selectedMethod.note ? `<div class="note-box"><span class="hl">⚠ NOTE:</span> ${selectedMethod.note}</div>` : ''}
+  `;
+  detail.classList.add('visible');
+  updateExecutePanel();
+  updateCliCommands();
+}
+
+// ── BUILD PINSET CARDS ───────────────────────────────────────────────────────
+function buildPinsets() {
+  const grid = document.getElementById('pinsetGrid');
+  PINSETS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'pinset-card';
+    card.id = 'pinset-' + p.id;
+    const pct = Math.min(100, Math.round(p.copies / p.target * 100));
+    const priClass = { critical:'pri-critical', high:'pri-high', medium:'pri-medium' }[p.priority];
+    const cidDisplay = p.cid
+      ? `<div class="pinset-cid">CID: <span>${p.cid}</span></div>`
+      : `<div class="pinset-cid" style="color:var(--text-dim)">CID: not yet assigned — see pin guide in Guardian Chat</div>`;
+    card.innerHTML = `
+      <div>
+        <div class="pinset-priority ${priClass}">${p.priority.toUpperCase()} · ${p.category}</div>
+        <div class="pinset-title">${p.title}</div>
+        <div class="pinset-why">${p.why}</div>
+        ${cidDisplay}
+        <div class="pinset-meta">
+          <span class="copies">⬤ ${p.copies} mirrors</span>
+          <span class="needed">need ${p.target}</span>
+          <span>${pct}% of target</span>
+          <span>Size: ${p.size}</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="pinset-xp">+${p.xp} XP</div>
+    `;
+    card.addEventListener('click', () => selectPinset(p.id));
+    grid.appendChild(card);
+  });
+}
+
+function selectPinset(id) {
+  selectedPinset = PINSETS.find(p => p.id === id);
+  document.querySelectorAll('.pinset-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('pinset-' + id).classList.add('selected');
+  document.getElementById('claimSub').textContent = `Pinned: "${selectedPinset.title}" — verify and enter your name to claim ${selectedPinset.xp} XP.`;
+  document.getElementById('claimBtn').disabled = false;
+
+  if (selectedPinset.verifyUrl) {
+    const vb = document.getElementById('verifyBtn');
+    vb.href = selectedPinset.verifyUrl;
+    document.getElementById('verifyLink').style.display = '';
+  } else {
+    document.getElementById('verifyLink').style.display = 'none';
+  }
+
+  updateExecutePanel();
+  updateCliCommands();
+}
+
+function updateExecutePanel() {
+  const el = document.getElementById('executePanel');
+  if (!selectedMethod && !selectedPinset) {
+    el.innerHTML = `<div style="color:var(--text-dim);font-size:13px;padding:20px;border:1px solid var(--edge)">← Complete steps 01 and 02 first.</div>`;
+    return;
+  }
+  const method = selectedMethod ? selectedMethod.name : '(choose a method above)';
+  const pinset = selectedPinset ? selectedPinset.title : '(choose a mission above)';
+  const cid = selectedPinset?.cid;
+
+  let actionHtml = '';
+  if (cid) {
+    let storachaUrl = `https://storacha.network`;
+    let pinataUrl = `https://app.pinata.cloud/pinmanager?cid=${cid}`;
+    let gatewayUrl = `https://ipfs.io/ipfs/${cid}`;
+    actionHtml = `
+      <div class="cid-display" id="cidDisplay" onclick="copyCid()" title="Click to copy CID">
+        ${cid}
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-dim)" id="cidCopyLabel">click to copy</span>
+      </div>
+      <div class="pin-actions">
+        <a class="pin-btn primary" href="${storachaUrl}" target="_blank">📌 Pin on Storacha (free) →</a>
+        <a class="pin-btn" href="${pinataUrl}" target="_blank">📌 Pin on Pinata →</a>
+        <a class="pin-btn" href="${gatewayUrl}" target="_blank">🔍 Preview on Gateway →</a>
+        <button class="pin-btn" onclick="copyCid()">📋 Copy CID</button>
+      </div>
+    `;
+  } else if (selectedPinset?.noDirectPin) {
+    actionHtml = `<div class="no-cid-msg">This mission involves multiple files submitted by community members. <br>Join <a class="ext-link" href="chat.html">#investigation on Guardian Chat</a> to get the current CID list and coordination instructions.</div>`;
+  } else if (selectedPinset && !cid) {
+    actionHtml = `<div class="no-cid-msg">This archive is still being assembled. Check back soon or see pin guide in Guardian Chat for manual download + IPFS add instructions.</div>`;
+  } else {
+    actionHtml = `<div class="no-cid-msg" style="color:var(--text-dim)">← Select a mission archive in step 02 to see the CID and pinning actions.</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="execute-panel fade-in">
+      <div class="execute-head">PINNING ${selectedPinset ? `"${selectedPinset.title}"` : ''} via ${method}</div>
+      ${actionHtml}
+      ${cid && selectedMethod ? `
+        <div style="margin-top:14px;padding:12px;background:var(--deep);border:1px solid var(--edge);font-size:13px;color:var(--text-dim)">
+          <div style="color:var(--amber);margin-bottom:6px;letter-spacing:1px">QUICK REFERENCE — ${selectedMethod.name.toUpperCase()}</div>
+          ${buildQuickRef()}
+        </div>` : ''}
+    </div>
+  `;
+}
+
+function buildQuickRef() {
+  if (!selectedMethod) return '';
+  const cid = selectedPinset?.cid || 'bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq';
+  const refs = {
+    'free-cloud': `<b style="color:var(--cyan)">Storacha:</b> storacha.network → Files → Upload by CID<br><b style="color:var(--cyan)">nft.storage:</b> nft.storage → Upload → CID<br><b style="color:var(--cyan)">4EVERLAND:</b> 4everland.org → IPFS → Pin → CID<br><b style="color:var(--cyan)">Filebase:</b> filebase.com → IPFS bucket → Pin by CID`,
+    desktop:      `1. Download IPFS Desktop → Import → From IPFS → paste CID`,
+    cli:          `<span class="cmd" onclick="copyCmd(this)">ipfs pin add ${cid}</span>`,
+    cluster:      `<span class="cmd" onclick="copyCmd(this)">ipfs-cluster-ctl pin add ${cid}</span>`,
+  };
+  return refs[selectedMethod.id] || '';
+}
+
+function updateCliCommands() {
+  if (!selectedPinset?.cid) return;
+  const cid = selectedPinset.cid;
+  const pc = document.getElementById('cliPinCmd');
+  const vc = document.getElementById('cliVerifyCmd');
+  if (pc) pc.textContent = `ipfs pin add ${cid}`;
+  if (vc) vc.textContent = `ipfs pin ls --type=recursive | grep ${cid.slice(0,20)}`;
+}
+
+// ── COPY HELPERS ─────────────────────────────────────────────────────────────
+function copyCid() {
+  if (!selectedPinset?.cid) return;
+  navigator.clipboard.writeText(selectedPinset.cid).catch(() => {});
+  const lbl = document.getElementById('cidCopyLabel');
+  if (lbl) { lbl.textContent = '✓ copied!'; lbl.style.color = 'var(--green)'; setTimeout(() => { lbl.textContent = 'click to copy'; lbl.style.color = ''; }, 2000); }
+}
+
+function copyCmd(el) {
+  const text = el.textContent.replace('copy','').replace('✓','').trim();
+  navigator.clipboard.writeText(text).catch(() => {});
+  el.classList.add('copied');
+  setTimeout(() => el.classList.remove('copied'), 2000);
+}
+
+// ── GUN: CLAIM XP ─────────────────────────────────────────────────────────────
+function initGun() {
+  gun = Gun(GUN_PEERS);
+  // Load live stats
+  gun.get(NS).get('pins').map().on((data) => {
+    if (!data) return;
+    refreshStats();
+  });
+  // Load recent pins into feed
+  gun.get(NS).get('recent').map().on((data) => {
+    if (!data || !data.name) return;
+    addToFeed(data);
+  });
+  refreshStats();
+}
+
+function claimXP() {
+  const name = document.getElementById('claimName').value.trim().replace(/[^a-zA-Z0-9_\- ]/g,'').slice(0,20);
+  if (!name) { alert('Enter your guardian name first.'); return; }
+  if (!selectedPinset) { alert('Select a mission archive first.'); return; }
+
+  const claimBtn = document.getElementById('claimBtn');
+  claimBtn.disabled = true;
+  claimBtn.textContent = 'RECORDING…';
+
+  const xp = selectedPinset.xp;
+  const entry = {
+    name,
+    pinsetId: selectedPinset.id,
+    pinsetTitle: selectedPinset.title,
+    cid: selectedPinset.cid || 'none',
+    xp,
+    ts: Date.now(),
+    method: selectedMethod?.id || 'unspecified',
+  };
+
+  // Write to GUN
+  gun.get(NS).get('pins').set(entry);
+  gun.get(NS).get('recent').set(entry);
+
+  // Local XP
+  sessionXp += xp;
+  document.getElementById('sessionXp').textContent = `XP: ${sessionXp}`;
+
+  const result = document.getElementById('claimResult');
+  result.innerHTML = `<span style="font-size:22px">✓</span> +${xp} XP claimed, ${name}! Thank you for protecting the record.<br><span style="color:var(--text-dim);font-size:13px">Your pin has been recorded in the Guardian Network. Share the URL to recruit more mirrors.</span>`;
+  result.classList.add('visible');
+
+  claimBtn.textContent = '✓ CLAIMED';
+  setTimeout(() => { claimBtn.disabled = false; claimBtn.textContent = 'CLAIM XP →'; }, 5000);
+
+  // Increment local copy count display
+  const card = document.getElementById('pinset-' + selectedPinset.id);
+  if (card) {
+    const copiesEl = card.querySelector('.copies');
+    if (copiesEl) {
+      const current = parseInt(copiesEl.textContent.match(/\d+/)?.[0] || '0');
+      copiesEl.textContent = `⬤ ${current + 1} mirrors`;
+    }
+  }
+}
+
+function addToFeed(data) {
+  const feed = document.getElementById('pinsFeed');
+  const first = feed.querySelector('[style*="Connecting"]');
+  if (first) first.remove();
+
+  const el = document.createElement('div');
+  el.className = 'pin-entry';
+  const ago = data.ts ? Math.round((Date.now() - data.ts) / 60000) : 0;
+  const agoStr = ago < 1 ? 'just now' : ago < 60 ? `${ago}m ago` : `${Math.round(ago/60)}h ago`;
+  el.innerHTML = `<span class="g">✓ ${esc(data.name)}</span> pinned <span class="a">${esc(data.pinsetTitle || data.pinsetId)}</span> via <span class="c">${data.method||'?'}</span> <span style="color:var(--text-dim);float:right">${agoStr}</span>`;
+  feed.insertBefore(el, feed.firstChild);
+  while (feed.children.length > 30) feed.removeChild(feed.lastChild);
+}
+
+function refreshStats() {
+  gun.get(NS).get('pins').once(allPins => {
+    if (!allPins) return;
+    const entries = Object.entries(allPins).filter(([k,v]) => k !== '_' && v && v.name);
+    const total = entries.length;
+    const guardians = new Set(entries.map(([,v]) => v.name)).size;
+    document.getElementById('statTotalPins').textContent = total || '—';
+    document.getElementById('statGuardians').textContent = guardians || '—';
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+buildMethods();
+buildPinsets();
+// Pre-fill name from localStorage
+const savedName = localStorage.getItem('gchat_name');
+if (savedName) document.getElementById('claimName').value = savedName;
+document.getElementById('claimName').addEventListener('input', e => {
+  localStorage.setItem('gchat_name', e.target.value.trim());
+});
+initGun();
+</script>
+</body>
+</html>

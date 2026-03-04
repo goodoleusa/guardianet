@@ -159,6 +159,7 @@
   </div>
   <nav class="header-nav">
     <a class="nav-link" href="onboard.html">QUESTS</a>
+    <a class="nav-link" href="pin.html">📌 PIN</a>
     <a class="nav-link" href="guardian-globe.html">GLOBE</a>
     <a class="nav-link" href="chain.html">CHAIN</a>
     <a class="nav-link" href="chat.html">CHAT</a>
@@ -432,7 +433,10 @@ async function loadMissions() {
           <div class="op-progress"><span>${m.copies_pinned} copies pinned</span><span>target: ${m.target_copies}</span></div>
           <div class="op-bar"><div class="op-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
         ` : ''}
-        <a class="op-action" href="${m.archive_url||'witness.html'}" target="_blank">▸ ${m.pin_guide ? 'PIN THIS FILE ↗' : 'VIEW SOURCE ↗'}</a>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <a class="op-action" href="pin.html">▸ START PINNING ↗</a>
+          ${m.archive_url ? `<a class="op-action" href="${m.archive_url}" target="_blank" style="opacity:.7;font-size:10px;padding:3px 8px">source ↗</a>` : ''}
+        </div>
       `;
       grid.appendChild(card);
     });

@@ -1,0 +1,80 @@
+{
+  "_note": "Guardian Network IPFS pinset. Import into ipfs-cluster-ctl to mirror all active archives.",
+  "_updated": "2026-03-03",
+  "_usage": "ipfs-cluster-ctl pin add --replication-min=2 --replication-max=5 <cid>",
+  "_bulk_usage": "cat guardian-pinset.json | jq -r '.pins[].cid | select(. != null)' | xargs -I{} ipfs-cluster-ctl pin add {}",
+  "cluster_name": "guardian-network-archive",
+  "replication_min": 2,
+  "replication_max": 5,
+  "pins": [
+    {
+      "id": "m001",
+      "name": "US Constitution — Congressional Archive",
+      "cid": "bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq",
+      "priority": "critical",
+      "size_bytes": 184320,
+      "size_human": "~180 KB",
+      "category": "constitutional",
+      "added": "2025-07-22",
+      "verify_url": "https://ipfs.io/ipfs/bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq"
+    },
+    {
+      "id": "m003",
+      "name": "From Dictatorship to Democracy — Gene Sharp",
+      "cid": "bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq",
+      "priority": "high",
+      "size_bytes": 1258291,
+      "size_human": "~1.2 MB",
+      "category": "resistance_literature",
+      "added": "2025-07-22",
+      "verify_url": "https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq"
+    },
+    {
+      "id": "m006",
+      "name": "Declaration of Independence — National Archives",
+      "cid": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n32",
+      "priority": "critical",
+      "size_bytes": 46080,
+      "size_human": "~45 KB",
+      "category": "constitutional",
+      "added": "2026-03-03",
+      "verify_url": "https://ipfs.io/ipfs/bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n32"
+    },
+    {
+      "id": "m007",
+      "name": "Universal Declaration of Human Rights (UN, 1948)",
+      "cid": "bafkreihztptdgioepnvivkjkzjqy4xzgmhclmqk7zyibn65wbhpwww4k5i",
+      "priority": "high",
+      "size_bytes": 97280,
+      "size_human": "~95 KB",
+      "category": "human_rights",
+      "added": "2026-03-03",
+      "verify_url": "https://ipfs.io/ipfs/bafkreihztptdgioepnvivkjkzjqy4xzgmhclmqk7zyibn65wbhpwww4k5i"
+    },
+    {
+      "id": "m008",
+      "name": "Surveillance Self-Defense Guide — EFF",
+      "cid": "bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m",
+      "priority": "medium",
+      "size_bytes": 2516582,
+      "size_human": "~2.4 MB",
+      "category": "digital_security",
+      "added": "2026-03-03",
+      "verify_url": "https://ipfs.io/ipfs/bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m"
+    }
+  ],
+  "cluster_setup": {
+    "ipfs_cluster_version": "1.0+",
+    "recommended_storage": "20GB minimum",
+    "peers": [
+      "See Guardian Chat #hardware-lab for trusted cluster peer IDs"
+    ],
+    "quick_start": [
+      "1. Install ipfs-cluster: https://ipfscluster.io/download/",
+      "2. ipfs-cluster-service init",
+      "3. Set CLUSTER_SECRET to the shared Guardian Network secret (request in #hardware-lab)",
+      "4. ipfs-cluster-service daemon &",
+      "5. Run: cat guardian-pinset.json | jq -r '.pins[].cid' | xargs -I{} ipfs-cluster-ctl pin add {}"
+    ]
+  }
+}
