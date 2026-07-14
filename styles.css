@@ -106,6 +106,10 @@ strong, b {
   min-width: 0;
 }
 
+.gn-header-left a > div:last-child {
+  min-width: 0;
+}
+
 .gn-logo-icon {
   width: 42px;
   height: 42px;
@@ -724,6 +728,9 @@ textarea.gn-input {
     -webkit-backdrop-filter: none;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1 1 auto;
+    min-width: 0;
     gap: 4px;
     padding: 0;
     border-left: none;
@@ -737,8 +744,9 @@ textarea.gn-input {
   .gn-nav-backdrop { display: none !important; }
 
   .gn-nav-link {
-    font-size: 0.94rem;
-    padding: 10px 16px;
+    font-size: 0.8rem;
+    padding: 8px 9px;
+    letter-spacing: 0.5px;
     border: 1px solid transparent;
     opacity: 1;
     transform: none;
@@ -758,6 +766,6 @@ textarea.gn-input {
 }
 
 @media (min-width: 1024px) {
-  .gn-logo-text { font-size: 1.5rem; letter-spacing: 2px; }
+  .gn-logo-text { font-size: clamp(1.05rem, 1.4vw, 1.4rem); letter-spacing: 1.5px; }
   .gn-logo-sub { font-size: 0.82rem; letter-spacing: 2px; }
 }
