@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GN Admin — [redacted project name]</title>
+  <title>Guardian Admin — Guardian Net</title>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -206,7 +206,7 @@
 
 <!-- ── Toolbar ── -->
 <div class="toolbar">
-  <span class="logo">◈ GN ADMIN</span>
+  <span class="logo">◈ GUARDIAN ADMIN</span>
   <div class="status-dot"></div>
   <span style="font-size:9px;color:var(--cyan-d)" id="tbStatus">loading registry…</span>
   <div class="toolbar-right">
@@ -320,7 +320,7 @@
   <!-- ── REGISTRY TAB ── -->
   <div class="tab-pane active" id="tpane-registry">
     <div class="sec-hdr">
-      <span>GN REGISTRY</span>
+      <span>GUARDIAN REGISTRY</span>
       <span style="color:var(--green)" id="regCount">— members</span>
       <div class="sec-hdr-right">
         <button class="tb-btn" onclick="toggleAddForm()">+ Add Member</button>
@@ -455,7 +455,7 @@ This message will appear as a system message in the selected room."></textarea>
           <div class="room-chip" onclick="quickBcast('🔴 ALERT: Network resilience check. All members please confirm heartbeat in Dead Man\'s Chain.')">🔴 Resilience Check</div>
           <div class="room-chip" onclick="quickBcast('📦 New evidence CID pinned. See #gn-ops for details.')">📦 New CID Pinned</div>
           <div class="room-chip" onclick="quickBcast('⛓ Dead Man\'s Chain maintenance. Expect brief interruption.')">⛓ Chain Maintenance</div>
-          <div class="room-chip" onclick="quickBcast('✅ GN network status: ALL SYSTEMS OPERATIONAL.')">✅ Status OK</div>
+          <div class="room-chip" onclick="quickBcast('✅ guardian network status: ALL SYSTEMS OPERATIONAL.')">✅ Status OK</div>
         </div>
       </div>
     </div>
@@ -548,7 +548,7 @@ This message will appear as a system message in the selected room."></textarea>
 
 <!-- ── Status bar ── -->
 <div class="statusbar">
-  <span>GN ADMIN</span>
+  <span>GUARDIAN ADMIN</span>
   <span>|</span>
   <span>TOTAL: <span class="sv" id="sbTotal">—</span></span>
   <span>ACTIVE: <span class="sv" id="sbActive">—</span></span>
@@ -831,7 +831,7 @@ function sendBroadcast() {
   if (!gun) { alert('P2P not connected'); return; }
   const key = `sys_${Date.now()}_${rndHex(2)}`;
   gun.get(CHAT_NS).get('rooms').get(selectedRoom).get('msgs').get(key).put({
-    from:'GN-ADMIN',
+    from:'GUARDIAN-ADMIN',
     text,
     time:ts(),
     room:selectedRoom,
@@ -879,27 +879,27 @@ function initGun() {
 // ── QUEST EDITOR ──────────────────────────────────────────────────────────────
 let QUEST_DATA = {
   archivist:[
-    {id:'A1',title:'THE INDESTRUCTIBLE FILE',xp:50,requires:[],color:'green',concept:'Files on IPFS are addressed by what they are — a cryptographic fingerprint of their content.',irl:'constitution.congress.gov returned 403 errors; 40+ IPFS nodes kept serving the same content.',threat:'IPFS is not anonymous. Your node reveals which CIDs you request.',mission:'Open an IPFS gateway URL and confirm the file loads.',links:[{label:'Open IPFS file via public gateway',url:'https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/'},{label:'What is IPFS? (official docs)',url:'https://docs.ipfs.tech/concepts/what-is-ipfs/'}]},
-    {id:'A2',title:'PIN YOUR FIRST FILE',xp:100,requires:['A1'],color:'green',concept:'Pinning means your device commits to hosting a specific file. Every person who pins is a mirror.',irl:'Hong Kong 2019–2020: activists pinned police documentation before accounts were suspended.',threat:'Pinning services are US companies subject to law enforcement requests.',mission:'Create a free Pinata account and pin the GN archive CID.',links:[{label:'Create free Pinata account',url:'https://app.pinata.cloud/register'},{label:'IPFS Cluster',url:'https://ipfscluster.io/'}]},
+    {id:'A1',title:'THE INDESTRUCTIBLE FILE',xp:50,requires:[],color:'green',concept:'Files on IPFS are addressed by what they are — a cryptographic fingerprint of their content.',irl:'A government document’s official URL returns a 403 — but 40+ IPFS nodes keep serving the same content at the same CID.',threat:'IPFS is not anonymous. Your node reveals which CIDs you request.',mission:'Open an IPFS gateway URL and confirm the file loads.',links:[{label:'Open IPFS file via public gateway',url:'https://ipfs.io/ipfs/bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/'},{label:'What is IPFS? (official docs)',url:'https://docs.ipfs.tech/concepts/what-is-ipfs/'}]},
+    {id:'A2',title:'PIN YOUR FIRST FILE',xp:100,requires:['A1'],color:'green',concept:'Pinning means your device commits to hosting a specific file. Every person who pins is a mirror.',irl:'Hong Kong 2019–2020: activists pinned police documentation before accounts were suspended.',threat:'Pinning services are US companies subject to law enforcement requests.',mission:'Create a free Pinata account and pin the guardian archive CID.',links:[{label:'Create free Pinata account',url:'https://app.pinata.cloud/register'},{label:'IPFS Cluster',url:'https://ipfscluster.io/'}]},
     {id:'A3',title:'THE BITCOIN WITNESS',xp:150,requires:['A1'],color:'green',concept:'OpenTimestamps anchors a document hash in Bitcoin, proving existence forever without trusting anyone.',irl:'Journalists use Bitcoin timestamps to prove documents existed before stories were published.',threat:'The Bitcoin transaction is public. Anyone can see that a timestamp occurred.',mission:'Open the Witness Chamber and complete a timestamping ceremony. Download your receipt.',links:[{label:'Open Witness Chamber →',url:'witness.html'},{label:'OpenTimestamps explained',url:'https://opentimestamps.org/'}]},
-    {id:'A4',title:'ARCHIVE A MISSION FILE',xp:125,requires:['A2'],color:'green',concept:'Active archive missions are documents that need more mirrors right now.',irl:"Gene Sharp's From Dictatorship to Democracy must never be unavailable.",threat:'In some jurisdictions, hosting specific political documents carries legal risk.',mission:'Choose a mission, download the file, add to IPFS, verify CID, post in #investigation.',links:[{label:'View Active Archive Missions →',url:'index.html#missions'},{label:'Open GN Chat →',url:'chat.html'}]}
+    {id:'A4',title:'ARCHIVE A MISSION FILE',xp:125,requires:['A2'],color:'green',concept:'Active archive missions are documents that need more mirrors right now.',irl:"Gene Sharp's From Dictatorship to Democracy must never be unavailable.",threat:'In some jurisdictions, hosting specific political documents carries legal risk.',mission:'Choose a mission, download the file, add to IPFS, verify CID, post in #investigation.',links:[{label:'View Active Archive Missions →',url:'index.html#missions'},{label:'Open Guardian Chat →',url:'chat.html'}]}
   ],
   communicator:[
-    {id:'C1',title:"THE MESH THAT CAN'T BE KILLED",xp:50,requires:[],color:'cyan',concept:'P2P networks have no center. GUN.js stores every message on every connected peer.',irl:'Iran blocked Signal 2021: Briar worked over BT/WiFi. Myanmar 2021: Meshtastic kept activists connected.',threat:'P2P is not anonymous. Your IP is visible to relay peers.',mission:'Join GN Chat — no account, no server.',links:[{label:'Open GN Chat →',url:'chat.html'},{label:'GUN.js',url:'https://gun.eco/'}]},
+    {id:'C1',title:"THE MESH THAT CAN'T BE KILLED",xp:50,requires:[],color:'cyan',concept:'P2P networks have no center. GUN.js stores every message on every connected peer.',irl:'Iran blocked Signal 2021: Briar worked over BT/WiFi. Myanmar 2021: Meshtastic kept activists connected.',threat:'P2P is not anonymous. Your IP is visible to relay peers.',mission:'Join Guardian Chat — no account, no server.',links:[{label:'Open Guardian Chat →',url:'chat.html'},{label:'GUN.js',url:'https://gun.eco/'}]},
     {id:'C2',title:"THE DEAD MAN'S SWITCH",xp:100,requires:['C1'],color:'cyan',concept:'Heartbeat every 48h. If silent, successor inherits. Chain heals itself.',irl:"Journalists use dead man's switches for evidence auto-release if detained.",threat:'Chain is public — positions and timing visible. Use codenames.',mission:"Join the Dead Man's Chain. Add yourself. Set your successor. Send first heartbeat.",links:[{label:"Open Dead Man's Chain →",url:'chain.html'}]},
     {id:'C3',title:'WHEN THE INTERNET DISAPPEARS',xp:100,requires:[],color:'cyan',concept:'LoRa radio: 10–40km range, $20–30 chip, no infrastructure. Meshtastic builds encrypted mesh.',irl:'Myanmar 2021 coup: LoRa mesh kept activists connected when military cut internet.',threat:'LoRa signals are detectable and triangulatable. Transmit briefly, move location.',mission:'Explore the LoRa hardware catalog in Circuit Lab.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'Meshtastic docs',url:'https://meshtastic.org'}]},
     {id:'C4',title:'CENSORSHIP-PROOF COMMS: THE HONEST GUIDE',xp:100,requires:['C1'],color:'amber',concept:'Threat model first, tool second. Signal for 1:1. Tor is circumvention, not secure comms.',irl:'Belarus activists exposed via Matrix homeserver seizure. Signal 1:1 users not compromised.',threat:'The safest tool is the one your contacts will actually use.',mission:'Review the Tools of Resistance library. Identify your backup comms stack.',links:[{label:'Browse Tools of Resistance →',url:'index.html#tools'},{label:'EFF SSD',url:'https://ssd.eff.org/'}]}
   ],
   hardware:[
-    {id:'H1',title:'THE $30 BROADCAST TOWER',xp:100,requires:[],color:'lora',concept:'ESP32 ($5) + SX1278 LoRa ($8–15) = community-owned mesh node. No license, no infrastructure.',irl:'Cumbre Vieja volcano 2021: LoRa networks kept coordination alive.',threat:'Check local regulations for radio equipment operation.',mission:'Open Circuit Lab, load GN Node example, explore component catalog.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'RadioLib',url:'https://github.com/jgromes/RadioLib'}]},
+    {id:'H1',title:'THE $30 BROADCAST TOWER',xp:100,requires:[],color:'lora',concept:'ESP32 ($5) + SX1278 LoRa ($8–15) = community-owned mesh node. No license, no infrastructure.',irl:'Cumbre Vieja volcano 2021: LoRa networks kept coordination alive.',threat:'Check local regulations for radio equipment operation.',mission:'Open Circuit Lab, load the Guardian Node example, explore component catalog.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'RadioLib',url:'https://github.com/jgromes/RadioLib'}]},
     {id:'H2',title:'FLASH A MESHTASTIC NODE',xp:175,requires:['H1'],color:'lora',concept:'Meshtastic = open-source firmware for $30 hardware. Flash once, works indefinitely without internet.',irl:'Ukrainian defense units used Meshtastic when military radio was unavailable.',threat:'Meshtastic encrypts content but broadcasts GPS by default. Disable if needed.',mission:'Use ESP Terminator to flash Meshtastic, or identify hardware to acquire.',links:[{label:'ESP Terminator',url:'https://espterminator.com'},{label:'Meshtastic getting started',url:'https://meshtastic.org/docs/getting-started/'}]},
-    {id:'H3',title:'DESIGN A CIRCUIT — SHARE VIA IPFS',xp:150,requires:['H1'],color:'lora',concept:'Circuit Lab → export JSON → IPFS. Permanent content-addressed hardware design anyone can build.',irl:'Arduino/ESP32 exist because designs were shared freely. GN extends this to resistance hardware.',threat:'Publishing certain radio designs may have legal implications.',mission:'Modify GN Node in Circuit Lab, export JSON, share via IPFS, post CID in #hardware-lab.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'GN Chat (#hardware-lab) →',url:'chat.html'}]},
-    {id:'H4',title:'THE SOLAR SENTINEL',xp:200,requires:['H2','H3'],color:'amber',concept:'Solar + LiPo = indefinite operation without grid. BOM: ~$40–60.',irl:'Puerto Rico 2017: pre-deployed solar mesh nodes had comms when no one else did.',threat:'Always-on transmitters are more detectable. Consider transmit-on-demand in high-repression environments.',mission:'Design solar GN Node variant (add TP4056 + LiPo + solar). Export, pin to IPFS.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'disaster.radio',url:'https://disaster.radio'}]}
+    {id:'H3',title:'DESIGN A CIRCUIT — SHARE VIA IPFS',xp:150,requires:['H1'],color:'lora',concept:'Circuit Lab → export JSON → IPFS. Permanent content-addressed hardware design anyone can build.',irl:'Arduino/ESP32 exist because designs were shared freely. GuardianNet extends this to resistance hardware.',threat:'Publishing certain radio designs may have legal implications.',mission:'Modify the Guardian Node example in Circuit Lab, export JSON, share via IPFS, post CID in #hardware-lab.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'Guardian Chat (#hardware-lab) →',url:'chat.html'}]},
+    {id:'H4',title:'THE SOLAR SENTINEL',xp:200,requires:['H2','H3'],color:'amber',concept:'Solar + LiPo = indefinite operation without grid. BOM: ~$40–60.',irl:'Puerto Rico 2017: pre-deployed solar mesh nodes had comms when no one else did.',threat:'Always-on transmitters are more detectable. Consider transmit-on-demand in high-repression environments.',mission:'Design a solar Guardian Node variant (add TP4056 + LiPo + solar). Export, pin to IPFS.',links:[{label:'Open Circuit Lab →',url:'circuit.html'},{label:'disaster.radio',url:'https://disaster.radio'}]}
   ],
   explorer:[
-    {id:'E1',title:'WHY THIS EXISTS',xp:25,requires:[],color:'amber',concept:'Since Jan 2025: federal transparency data removed, 130+ CISA layoffs, constitutional pages returning 403s.',irl:'Authoritarian governments let records decay. The time to archive is before the deletion.',threat:'Decentralization raises costs for adversaries but does not make content invulnerable.',mission:'Read the Protect Democracy threat index. Note the current level.',links:[{label:'Protect Democracy Threat Index',url:'https://protectdemocracy.org/threat-index/'}]},
+    {id:'E1',title:'WHY THIS EXISTS',xp:25,requires:[],color:'amber',concept:'Government and institutional data disappears more often than people expect: sites get reorganized, pages return 403s, records get quietly removed.',irl:'Authoritarian governments let records decay. The time to archive is before the deletion.',threat:'Decentralization raises costs for adversaries but does not make content invulnerable.',mission:'Read up on a censorship or takedown monitoring project of your choice. Note the current landscape.',links:[{label:'OONI Explorer',url:'https://explorer.ooni.org/'}]},
     {id:'E2',title:'THE THREE THREATS',xp:25,requires:['E1'],color:'amber',concept:'CENSORSHIP: block access. SURVEILLANCE: monitor access. INFO WARFARE: flood with disinfo.',irl:'OONI Explorer tracks real-time censorship in 200+ countries.',threat:'Proportionate response: match tools to your actual threat model.',mission:'Check OONI Explorer for censorship in your country in the last 90 days.',links:[{label:'OONI Explorer',url:'https://explorer.ooni.org/'}]},
-    {id:'E3',title:'YOUR 5-MINUTE CONTRIBUTION',xp:50,requires:['E1'],color:'green',concept:'Easiest: pin a file via Pinata. Easy: install IPFS Companion. Medium: share a gateway link.',irl:'Internet Archive: 866 billion pages archived because people decided history mattered.',threat:'None. This is low-risk, high-impact.',mission:'Do one action from the list above. Then join GN Chat and tell us.',links:[{label:'Pinata',url:'https://app.pinata.cloud/register'},{label:'GN Chat →',url:'chat.html'}]}
+    {id:'E3',title:'YOUR 5-MINUTE CONTRIBUTION',xp:50,requires:['E1'],color:'green',concept:'Easiest: pin a file via Pinata. Easy: install IPFS Companion. Medium: share a gateway link.',irl:'Internet Archive: 866 billion pages archived because people decided history mattered.',threat:'None. This is low-risk, high-impact.',mission:'Do one action from the list above. Then join Guardian Chat and tell us.',links:[{label:'Pinata',url:'https://app.pinata.cloud/register'},{label:'Guardian Chat →',url:'chat.html'}]}
   ]
 };
 

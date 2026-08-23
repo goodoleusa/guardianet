@@ -196,7 +196,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             data = json.loads(body)
             cid = data.get('cid', '').strip()
-            name = data.get('name', 'GN-pin')
+            name = data.get('name', 'guardian-pin')
         except Exception:
             self.send_error(400, 'Invalid JSON')
             return
@@ -305,7 +305,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     with http.server.HTTPServer(('0.0.0.0', PORT), Handler) as httpd:
-        print(f'GN server on port {PORT}')
+        print(f'Guardian Net server on port {PORT}')
         print(f'  Static files: .')
         print(f'  OTS proxy:    /api/ots/stamp, /api/ots/verify')
         print(f'  IPFS check:   /api/ipfs/check?cid=...')

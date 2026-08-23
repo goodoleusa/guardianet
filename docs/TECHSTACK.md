@@ -1,4 +1,4 @@
-# GuardianNet × [redacted project name] — Technical Stack & Architecture Wiki
+# GuardianNet — Technical Stack & Architecture Wiki
 
 > Living document. Updated as the project evolves.
 > Last updated: 2026-03-04
@@ -157,92 +157,6 @@ leaderboard data to P2P network optionally.
 3. Works in any browser including Tor Browser
 4. Zero dependency on npm supply chain
 
-### [redacted-project-name] (React App on main)
-
-**Philosophy:** Full-featured civic engagement dashboard. Deployable on Replit. Connects to
-PostgreSQL for mission tracking. Rich UI with animations.
-
-```
-client/src/
-├── App.tsx             Router + providers
-├── pages/
-│   ├── Landing.tsx         Typewriter intro, accept/reject mission
-│   ├── MissionControl.tsx  6-category civic action dashboard
-│   ├── DemocracyInDanger.tsx  Roman temple threat visualization
-│   └── HowToDefendDemocracy.tsx  Defense action temple
-├── components/
-│   ├── MissionCard.tsx         Active/completed mission display
-│   ├── CreateMissionDialog.tsx  Personal mission creation
-│   ├── RomanTemple.tsx          SVG interactive temple
-│   ├── CrtOverlay.tsx           Retro CRT effect
-│   └── Typewriter.tsx           Animated typewriter text
-├── hooks/
-│   ├── use-missions.ts  TanStack Query API hooks
-│   └── use-mobile.tsx   Responsive breakpoint hook
-└── data/
-    └── pillars/         Threat + defense pillar data
-```
-
-**Dependencies:** React 18, Tailwind CSS, Framer Motion, Radix UI, wouter, TanStack Query,
-Express backend, Drizzle ORM (PostgreSQL optional).
-
----
-
-## The Merge: Why We're Combining These
-
-The two projects are philosophically identical but technically separate. Merging them:
-
-1. **Single entry point** — MissionControl becomes the hub for both civic action (GN) and
-   technical resistance tools (guardian-net)
-2. **Shared infrastructure** — GUN.js as a React hook, used by Chat, Chain, Quests, Pin
-3. **IPFS deployable** — with hash routing, the entire app can be pinned and served from IPFS
-4. **Replit compatible** — Express server stays; GUN.js is client-side only
-
-### Post-Merge Tech Stack
-
-```
-Layer           Technology              Purpose
-─────────────────────────────────────────────────────────────────
-Frontend        React 18 + Vite         SPA, fast builds
-Routing         wouter (hash mode)      IPFS-compatible deep links
-Styling         Tailwind + CSS vars     GN components + GN tools
-Animation       Framer Motion           Intro sequences, transitions
-State (server)  TanStack React Query    Mission tracking, API calls
-State (P2P)     GUN.js CRDT             Chat, chain, quest sync
-State (local)   localStorage            XP, codename, completed quests
-P2P DB          GUN.js                  Decentralized real-time sync
-IPFS            ipfs.io gateway + API   File pinning, CID verification
-Bitcoin         OpenTimestamps          Document timestamping
-Radio           LoRa/Meshtastic         Off-grid mesh (hardware layer)
-Backend         Express 5               API, session, optional DB
-Database        PostgreSQL (optional)   Mission persistence (Replit)
-Deploy          Replit OR IPFS          Both work simultaneously
-```
-
-### IPFS Hosting Path
-
-```bash
-# Build static output
-npm run build
-
-# Optional: switch to hash routing for IPFS
-# (already done if useHashLocation is configured in App.tsx)
-
-# Add to IPFS
-ipfs add -r dist/public/
-# → outputs CID: bafybei...
-
-# Pin with free services
-# Storacha/web3.storage: 5GB free, Filecoin-backed
-# nft.storage: Protocol Labs, free forever
-# Pinata: 1GB free
-# 4EVERLAND: free tier
-
-# Anyone with the CID gets the full app
-ipfs://bafybei.../  → full React app, no server needed
-```
-
----
 
 ## GUN.js Deep Dive
 
@@ -473,11 +387,6 @@ Low risk (educator, archivist):
 4. Add to navigation in index.html header
 5. Add route in manage.html if admin features needed
 
-### Adding a new React page to GN
-1. Create `client/src/pages/NewPage.tsx`
-2. Add `<Route path="/new-page" component={NewPage} />` in App.tsx
-3. Import and use `useGun()` hook for any P2P features
-4. Add navigation tile in MissionControl.tsx guardian tools section
 
 ### Adding a new quest
 1. Open `manage.html#quests` in admin panel

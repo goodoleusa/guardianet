@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WITNESS CHAMBER — [redacted project name]</title>
+  <title>WITNESS CHAMBER — Guardian Net</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -556,7 +556,7 @@
       <div class="receipt-wrap">
         <div class="receipt-header">
           <div class="receipt-title">◼ WITNESS RECEIPT</div>
-          <div style="font-size:9px; color:var(--gold)">GN · VERIFIED</div>
+          <div style="font-size:9px; color:var(--gold)">GUARDIAN · VERIFIED</div>
         </div>
         <div class="receipt-body">
           <div class="receipt-row">
@@ -657,7 +657,7 @@ pip install opentimestamps-client
 <script src="js/gameplay.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  WITNESS CHAMBER — GN v2.0
+//  WITNESS CHAMBER — Guardian Net v2.0
 //  Bitcoin timestamp ceremony via OpenTimestamps
 // ═══════════════════════════════════════════════════════════════
 
@@ -999,7 +999,7 @@ function drawReceiptCanvas() {
   ctx.fillText('◼ WITNESS RECEIPT', 16, 26);
   ctx.font = '9px Courier New';
   ctx.fillStyle = '#00ccff';
-  ctx.fillText('GN · BITCOIN TIMESTAMPED', W - 200, 26);
+  ctx.fillText('GUARDIAN · BITCOIN TIMESTAMPED', W - 200, 26);
 
   const fields = [
     ['MANIFEST HASH', (WS.manifestHash || '--').slice(0,40) + '...'],
@@ -1061,7 +1061,7 @@ function downloadOts() {
 
 // ── Share ──────────────────────────────────────────────────────
 function shareReceipt() {
-  const txt = `I witnessed the GN evidence (${(WS.manifestHash||'').slice(0,12)}...) ` +
+  const txt = `I witnessed the guardian-net evidence (${(WS.manifestHash||'').slice(0,12)}...) ` +
     `at Bitcoin block ${WS.btcBlock}. Verify: https://opentimestamps.org/`;
   if (navigator.share) {
     navigator.share({ title: 'My Witness Receipt', text: txt })

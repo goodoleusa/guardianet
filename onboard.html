@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GN QUESTS — [redacted project name]</title>
+  <title>GUARDIAN QUESTS — Guardian Net</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -186,10 +186,10 @@
 <!-- INTRO MODAL -->
 <div class="intro-overlay" id="introModal">
   <div class="intro-box">
-    <div class="intro-title">◈ GN QUESTS</div>
+    <div class="intro-title">◈ GUARDIAN QUESTS</div>
     <div class="intro-text">
       The tools of resistance are emerging technology — decentralized, open-source, and built for communities under pressure.<br><br>
-      GN fights erasure with <em>math, not authority</em>: content-addressed files that can't be silently altered, mesh networks that work without infrastructure, and Bitcoin-anchored timestamps that prove what existed and when.<br><br>
+      GuardianNet fights erasure with <em>math, not authority</em>: content-addressed files that can't be silently altered, mesh networks that work without infrastructure, and Bitcoin-anchored timestamps that prove what existed and when.<br><br>
       Each quest teaches one real skill and ends with a <strong>real action</strong>.
       No account needed. No data collected. Your progress stays in your browser — because tools for democracy shouldn't require surrendering your privacy.
     </div>
@@ -239,7 +239,7 @@
 <!-- HEADER -->
 <header class="hdr">
   <div class="logo-icon">◈</div>
-  <div class="logo-text">GN QUESTS</div>
+  <div class="logo-text">GUARDIAN QUESTS</div>
   <div class="hdr-xp">
     <span class="hdr-codename" id="displayName">—</span>
     <span class="hdr-rank" id="rankBadge" style="color:var(--cyan-d)">OBSERVER</span>
@@ -325,7 +325,7 @@ const QUESTS = {
 The same file has the same address everywhere on Earth. Forever. You cannot make the address point to something different. You cannot delete it by taking down a server.
 
 This is why IPFS files survive government takedowns, server shutdowns, and domain seizures.`,
-      irl:`In July 2025, <strong>constitution.congress.gov returned 403 errors</strong>. The constitutional text had already been archived by 40+ IPFS nodes. Same content. Same address. The government URL became irrelevant.`,
+      irl:`A government-hosted document's official URL starts returning 403 errors. It doesn't matter — the same text was already archived by 40+ IPFS nodes. Same content. Same address. The official URL became irrelevant.`,
       threat:`IPFS is not anonymous. Your IPFS node reveals which CIDs you request. If you're fetching sensitive content from a restricted environment, use a <strong>public IPFS gateway</strong> (like ipfs.io) through Tor — your node doesn't have to participate in the swarm.`,
       mission:`Open this IPFS gateway URL in your browser and confirm the file loads. This is IPFS working — no central server.`,
       links:[
@@ -342,11 +342,11 @@ When you pin a CID on IPFS, you become part of the network serving that content.
 Free pinning services: Pinata (1GB free), Filebase, web3.storage. Or run your own IPFS node.`,
       irl:`During the 2019–2020 Hong Kong protests, activists pinned documentation of police actions to IPFS before accounts were suspended. When Twitter/Instagram content was removed, the IPFS versions remained.`,
       threat:`Pinning services (Pinata, web3.storage) are US companies subject to DMCA and law enforcement requests. For the highest-risk content, run your own IPFS node or use distributed pinning clusters. Your node's IP is publicly visible in the IPFS DHT.`,
-      mission:`Create a free Pinata account and pin the GN archive CID. Then verify your pin is live.`,
+      mission:`Create a free Pinata account and pin the guardian archive CID. Then verify your pin is live.`,
       links:[
         {label:'Create free Pinata account', url:'https://app.pinata.cloud/register'},
         {label:'IPFS Cluster — self-host pinning', url:'https://ipfscluster.io/'},
-        {label:'GN archive missions →', url:'index.html#missions'}
+        {label:'guardian archive missions →', url:'index.html#missions'}
       ]
     },
     {
@@ -371,10 +371,10 @@ The cost: near-zero (shared across all documents in the batch).`,
 Every pin is a vote for historical record. When 500 people mirror a document, it's as permanent as anything can be.`,
       irl:`Gene Sharp's <em>From Dictatorship to Democracy</em> has helped topple authoritarian governments in Serbia, Egypt, Tunisia, and elsewhere. It must never be unavailable. <strong>Every copy is infrastructure for future resistance movements you'll never meet.</strong>`,
       threat:`Be mindful of what you host. In some jurisdictions, hosting specific political documents carries legal risk. Use a VPN or Tor when pinning if this applies to you.`,
-      mission:`Choose a mission from the Active Operations panel. Download the file, add it to IPFS, and verify the CID. Post your CID in #investigation on GN Chat.`,
+      mission:`Choose a mission from the Active Operations panel. Download the file, add it to IPFS, and verify the CID. Post your CID in #investigation on Guardian Chat.`,
       links:[
         {label:'View Active Archive Missions →', url:'index.html#missions'},
-        {label:'Open GN Chat →', url:'chat.html'},
+        {label:'Open Guardian Chat →', url:'chat.html'},
         {label:'IPFS Desktop (run a full node)', url:'https://github.com/ipfs/ipfs-desktop/releases'}
       ]
     }
@@ -390,9 +390,9 @@ P2P networks have no center. Data lives on every node. Shutting down one node ma
 GUN.js (what this chat uses) stores every message on every connected peer. There's no server to subpoena.`,
       irl:`When Iran blocked Signal in 2021, P2P apps like Briar kept working over Bluetooth and WiFi without internet. When Myanmar's military cut internet access for 7 days in 2021, Meshtastic mesh networks kept activist communication alive.`,
       threat:`P2P ≠ anonymous. In GUN.js, your IP address is visible to relay peers. In Scuttlebutt, your social graph is public. Know your threat model: P2P is about <em>resilience</em>, not necessarily privacy. For anonymity, add Tor.`,
-      mission:`Join GN Chat — no account, no server. Pick a codename and say hello in #general.`,
+      mission:`Join Guardian Chat — no account, no server. Pick a codename and say hello in #general.`,
       links:[
-        {label:'Open GN Chat →', url:'chat.html'},
+        {label:'Open Guardian Chat →', url:'chat.html'},
         {label:'GUN.js — the database for freedom fighters', url:'https://gun.eco/'}
       ]
     },
@@ -417,9 +417,9 @@ This is also a political organizing model: build succession into your structure 
 The network scales with participants. 5 nodes in a city = limited range. 50 nodes = city-wide coverage. 500 nodes = regional network that survives a full internet shutdown.`,
       irl:`During the 2021 Myanmar coup, activists used LoRa mesh to coordinate when military cut internet. Ukrainian civilian defense networks used Meshtastic for communication during infrastructure attacks. GoTenna mesh was used by activists in areas of police signal jamming.`,
       threat:`<strong>LoRa signals are detectable and triangulatable.</strong> Direction-finding equipment can locate active transmitters. In a high-repression environment: transmit briefly, move location, use directional antennas. LoRa ≠ invisible — it's resilient, not covert. Meshtastic adds encryption but the radio signal itself is detectable.`,
-      mission:`Explore the LoRa hardware catalog in Circuit Lab. Load the "GN Node" example and review the components.`,
+      mission:`Explore the LoRa hardware catalog in Circuit Lab. Load the "Guardian Node" example and review the components.`,
       links:[
-        {label:'Open Circuit Lab (load GN Node example) →', url:'circuit.html'},
+        {label:'Open Circuit Lab (load the Guardian Node example) →', url:'circuit.html'},
         {label:'Meshtastic — official documentation', url:'https://meshtastic.org'},
         {label:'disaster.radio — solar-powered mesh', url:'https://disaster.radio'}
       ]
@@ -456,9 +456,9 @@ These mesh automatically. Each node relays messages from every other — so the 
 The circuit also supports GPS, cellular backup (SIM800L), and solar charging.`,
       irl:`Disaster.radio built this concept into solar-powered community infrastructure. When the Cumbre Vieja volcano erupted in La Palma (2021) and cut communications, ham radio + LoRa networks kept coordination alive for weeks.`,
       threat:`Building and operating radio equipment has legal frameworks in most countries. At low power, LoRa modules are license-exempt in most jurisdictions (check local regs). Operating at higher power or on restricted frequencies may require licensing. Understand your local regulations.`,
-      mission:`Open Circuit Lab, load the "GN Node" example schematic, and explore the component catalog. Note what each component does.`,
+      mission:`Open Circuit Lab, load the "Guardian Node" example schematic, and explore the component catalog. Note what each component does.`,
       links:[
-        {label:'Open Circuit Lab (GN Node example) →', url:'circuit.html'},
+        {label:'Open Circuit Lab (Guardian Node example) →', url:'circuit.html'},
         {label:'ESP32 dev boards on Tindie', url:'https://www.tindie.com/'},
         {label:'RadioLib — LoRa library for Arduino/ESP32', url:'https://github.com/jgromes/RadioLib'}
       ]
@@ -484,12 +484,12 @@ Hardware options: LILYGO T-Deck, Heltec V3, T3S3, RAK WisBlock. All under $50.`,
       concept:`Open-source hardware means anyone can build your design. Circuit Lab lets you design schematics visually, export as JSON, and share the design via IPFS — where it has a permanent content-addressed URL.
 
 This creates a decentralized library of censorship-resistant hardware designs. Anyone who pins your schematic can build from it. A government can't take down a CID any more than they can change the laws of mathematics.`,
-      irl:`The entire open-source hardware ecosystem (Arduino, ESP32, Raspberry Pi) exists because hardware designs were shared freely. GN extends this to resistance hardware: off-grid comms, sensor networks, SDR (software defined radio) for signals intelligence.`,
+      irl:`The entire open-source hardware ecosystem (Arduino, ESP32, Raspberry Pi) exists because hardware designs were shared freely. GuardianNet extends this to resistance hardware: off-grid comms, sensor networks, SDR (software defined radio) for signals intelligence.`,
       threat:`Be thoughtful about what hardware designs you publish. In some jurisdictions, publishing certain radio designs or frequency configurations has legal implications.`,
-      mission:`Modify the GN Node schematic in Circuit Lab — add a solar charging circuit or GPS module. Export the JSON and share via IPFS. Post the CID in #hardware-lab.`,
+      mission:`Modify the Guardian Node schematic in Circuit Lab — add a solar charging circuit or GPS module. Export the JSON and share via IPFS. Post the CID in #hardware-lab.`,
       links:[
         {label:'Open Circuit Lab →', url:'circuit.html'},
-        {label:'Open GN Chat (#hardware-lab) →', url:'chat.html'}
+        {label:'Open Guardian Chat (#hardware-lab) →', url:'chat.html'}
       ]
     },
     {
@@ -501,7 +501,7 @@ Design: ESP32 + LoRa + TP4056 solar charge controller + 18650 LiPo + small solar
 These can be mounted on rooftops, trees, lamp posts — anywhere with line-of-sight to sky. They increase the mesh's range and survivability.`,
       irl:`During the 2017 Puerto Rico hurricane response, community mesh networks kept functioning for weeks after the grid failed. First responders who had pre-deployed solar mesh nodes had operational communication when no one else did.`,
       threat:`Persistent outdoor transmitters are more detectable because they're always on. In high-repression environments, transmit-on-demand rather than always-on may be safer. Know your threat model.`,
-      mission:`Design a solar-powered GN Node variant in Circuit Lab (add TP4056 + LiPo + solar panel to the base design). Export, pin to IPFS, and share the schematic.`,
+      mission:`Design a solar-powered Guardian Node variant in Circuit Lab (add TP4056 + LiPo + solar panel to the base design). Export, pin to IPFS, and share the schematic.`,
       links:[
         {label:'Open Circuit Lab →', url:'circuit.html'},
         {label:'TP4056 solar charge module (Tindie)', url:'https://www.tindie.com/'},
@@ -513,21 +513,20 @@ These can be mounted on rooftops, trees, lamp posts — anywhere with line-of-si
   explorer: [
     {
       id:'E1', title:'WHY THIS EXISTS', xp:25, requires:[], color:'amber',
-      concept:`Since January 2025:
-— Federal spending transparency data was removed and courts had to order partial restoration
-— 130+ CISA cybersecurity employees were laid off, removing institutional threat knowledge
-— constitution.congress.gov returned 403 errors during a period of constitutional scrutiny
-— Federal web properties are being redesigned, with historical pages going offline
+      concept:`Public information infrastructure is more fragile than it looks:
+— Government datasets get removed or reorganized, sometimes requiring legal action to restore
+— Institutional staff turnover can quietly erase hard-won threat/security knowledge
+— Official document URLs return 403s during periods of scrutiny or transition
+— Web properties get redesigned, and historical pages go offline in the process
 
-None of these events are individually catastrophic. Collectively, they represent a pattern: <em>information infrastructure is being selectively degraded</em>. The historical record is becoming dependent on who controls the servers.
+None of these events are individually catastrophic. Collectively, they represent a pattern: <em>information infrastructure can be selectively degraded</em>. The historical record becomes dependent on who controls the servers.
 
-GN's answer: distribute the record. Make it math.`,
-      irl:`Authoritarian governments don't usually destroy records dramatically — they let them decay. Links die. Pages redirect. Archives get "reorganized." By the time anyone notices, the record is gone. <strong>The time to archive is before the deletion, not after.</strong>`,
+GuardianNet's answer: distribute the record. Make it math.`,
+      irl:`Institutions don't usually destroy records dramatically — they let them decay. Links die. Pages redirect. Archives get "reorganized." By the time anyone notices, the record is gone. <strong>The time to archive is before the deletion, not after.</strong>`,
       threat:`Decentralization is not a magic solution. It is a risk distribution strategy. The question is always: what is your adversary capable of? For a nation-state adversary, distributed storage raises costs but does not make content invulnerable.`,
-      mission:`Read the Protect Democracy threat index. Note the current level.`,
+      mission:`Look up a censorship or takedown monitoring project of your choice. Note the current landscape.`,
       links:[
-        {label:'Protect Democracy Threat Index', url:'https://protectdemocracy.org/threat-index/'},
-        {label:'OONI Censorship Explorer (US)', url:'https://explorer.ooni.org/country/US'}
+        {label:'OONI Censorship Explorer', url:'https://explorer.ooni.org/'}
       ]
     },
     {
@@ -562,15 +561,15 @@ These three often operate together — surveillance enables targeting, censorshi
 
 <strong>Medium:</strong> Contact your representative about digital transparency using Democracy.io.
 
-<strong>If technical:</strong> Set up a free Pinata account, get an API key, and run the automated pinning script from the GN README.`,
+<strong>If technical:</strong> Set up a free Pinata account, get an API key, and run the automated pinning script from the project README.`,
       irl:`The Internet Archive has been running on donations and volunteer effort since 1996. Its Wayback Machine has archived <strong>866 billion web pages</strong> — because people decided that history mattered. Every pin is a small vote for the same principle.`,
       threat:`None. This is the low-risk, high-impact action. Pin a document. Tell someone about IPFS. Vote with your storage.`,
-      mission:`Do one action from the list above. Then join GN Chat and tell us what you did.`,
+      mission:`Do one action from the list above. Then join Guardian Chat and tell us what you did.`,
       links:[
         {label:'Pinata — free IPFS pinning', url:'https://app.pinata.cloud/register'},
         {label:'IPFS Companion browser extension', url:'https://github.com/ipfs/ipfs-companion#readme'},
         {label:'Democracy.io — contact Congress', url:'https://democracy.io/#!/'},
-        {label:'Join GN Chat →', url:'chat.html'}
+        {label:'Join Guardian Chat →', url:'chat.html'}
       ]
     }
   ]

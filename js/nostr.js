@@ -7,8 +7,8 @@
     'wss://nostr-pub.wellorder.net'
   ];
   const CHANNEL_TAG = '#gn-v2';
-  const LS_KEY_SK = 'mdd_nostr_sk';
-  const LS_KEY_PK = 'mdd_nostr_pk';
+  const LS_KEY_SK = 'gn_nostr_sk';
+  const LS_KEY_PK = 'gn_nostr_pk';
 
   let sockets = {};
   let subscriptions = {};
@@ -152,7 +152,7 @@
   }
 
   function subscribe(filter) {
-    const id = 'mdd_' + (++subIdCounter);
+    const id = 'gn_' + (++subIdCounter);
     const sub = { id: id, filter: filter };
     subscriptions[id] = sub;
     Object.keys(sockets).forEach(function(url) {

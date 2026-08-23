@@ -1,8 +1,8 @@
 {
-  "_comment": "[redacted project name] config",
-  "site_name": "[redacted project name]",
+  "_comment": "Guardian Net config — point this at your own IPFS-hosted site",
+  "site_name": "Guardian Net",
   "site_description": "Open-source tools for communities resisting surveillance and censorship. The future is distributed.",
-  "site_url": "https://[redacted-private-deployment-url]",
+  "site_url": "https://example.org",
   "site_cid": "bafybeiabc123xyz456def789ghi012jkl345mno678pqr",
   "registry_url": "data/guardian_registry.json",
   "ipfs_gateways": [

@@ -1,5 +1,5 @@
 const GN_GAME = (function() {
-  const STORAGE_KEY = 'mdd_player';
+  const STORAGE_KEY = 'gn_player';
   const GUN_NS = 'gn-gameplay-v1';
   const RANKS = [
     { name: 'RECRUIT', minXP: 0, color: '#94a3b8' },
@@ -14,20 +14,20 @@ const GN_GAME = (function() {
     first_mission:    { name: 'First Steps', desc: 'Accept your first mission', xp: 10, icon: '🏁' },
     first_pin:        { name: 'Pinned It', desc: 'Pin your first IPFS file', xp: 25, icon: '📌' },
     first_witness:    { name: 'Witness', desc: 'Complete a Bitcoin timestamp', xp: 30, icon: '⧖' },
-    first_chat:       { name: 'Connected', desc: 'Send a message in GN Chat', xp: 10, icon: '💬' },
+    first_chat:       { name: 'Connected', desc: 'Send a message in Guardian Chat', xp: 10, icon: '💬' },
     chain_joined:     { name: 'In The Chain', desc: 'Join the Dead Man\'s Chain', xp: 20, icon: '⛓' },
     five_missions:    { name: 'Dedicated', desc: 'Accept 5 missions', xp: 40, icon: '⭐' },
     ten_missions:     { name: 'Committed', desc: 'Accept 10 missions', xp: 75, icon: '🌟' },
     quest_complete:   { name: 'Quest Master', desc: 'Complete a quest path', xp: 50, icon: '🏆' },
     circuit_designed: { name: 'Engineer', desc: 'Design a circuit in Circuit Lab', xp: 20, icon: '⚡' },
-    globe_explored:   { name: 'Global View', desc: 'Visit the GN Globe', xp: 5, icon: '🌐' },
+    globe_explored:   { name: 'Global View', desc: 'Visit the Guardian Globe', xp: 5, icon: '🌐' },
     three_paths:      { name: 'Renaissance', desc: 'Start quests on 3 different paths', xp: 60, icon: '🎯' },
     profile_backed_up:{ name: 'Vault Keeper', desc: 'Export your profile backup', xp: 15, icon: '🔐' },
     profile_restored: { name: 'Phoenix', desc: 'Import a saved profile', xp: 10, icon: '🔄' },
     chat_educator:    { name: 'Knowledge Share', desc: 'Read 5 behind-the-scenes tips in chat', xp: 15, icon: '📚' },
     hw_designer:      { name: 'Hardware Hacker', desc: 'Design and share a circuit schematic', xp: 25, icon: '🔧' },
-    chat_10:          { name: 'Chatterbox', desc: 'Send 10 messages in GN Chat', xp: 15, icon: '🗣' },
-    chat_50:          { name: 'Community Voice', desc: 'Send 50 messages in GN Chat', xp: 30, icon: '📢' },
+    chat_10:          { name: 'Chatterbox', desc: 'Send 10 messages in Guardian Chat', xp: 15, icon: '🗣' },
+    chat_50:          { name: 'Community Voice', desc: 'Send 50 messages in Guardian Chat', xp: 30, icon: '📢' },
   };
 
   let _gun = null;

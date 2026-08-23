@@ -6,7 +6,7 @@
   function ensureCanvas() {
     if (canvas) return;
     canvas = document.createElement('canvas');
-    canvas.id = 'mddParticles';
+    canvas.id = 'gnParticles';
     canvas.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;';
     document.body.appendChild(canvas);
     ctx = canvas.getContext('2d');

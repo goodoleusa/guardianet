@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OPERATION: FIRST PIN — [redacted project name]</title>
+  <title>OPERATION: FIRST PIN — Guardian Net</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
@@ -160,7 +160,7 @@
 
   <!-- ── Hero ── -->
   <div class="hero">
-    <div class="hero-tag">GN · ARCHIVE OPERATIONS</div>
+    <div class="hero-tag">GUARDIAN · ARCHIVE OPERATIONS</div>
     <div class="hero-title">OPERATION: FIRST PIN</div>
     <div class="hero-sub">
       Every copy of a document is a vote for historical record. Governments can take down websites.
@@ -224,7 +224,7 @@
   <!-- ── STEP 4: Claim XP ── -->
   <div class="section" id="section-claim">
     <div class="section-title"><span class="section-num">04</span> VERIFY + CLAIM YOUR XP</div>
-    <div class="section-sub">Verify the pin is live, then claim your XP. This records your contribution to the GN Network's live counter.</div>
+    <div class="section-sub">Verify the pin is live, then claim your XP. This records your contribution to the Guardian Network's live counter.</div>
 
     <div class="claim-panel">
       <div class="claim-head">CONFIRM YOUR PIN</div>
@@ -244,7 +244,7 @@
     </div>
 
     <div style="margin-top:16px">
-      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px">LIVE GN PINS</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px">LIVE GUARDIAN PINS</div>
       <div class="pins-feed" id="pinsFeed">
         <div class="pin-entry" style="color:var(--text-dim)">Connecting to P2P network…</div>
       </div>
@@ -283,17 +283,17 @@ let sessionXp = 0;
 const METHODS = [
   {
     id: 'gn-auto',
-    name: 'GN Auto-Pin',
+    name: 'Guardian Auto-Pin',
     difficulty: 'easy',
     desc: 'One click. We pin the CID directly via our Pinata infrastructure. No account needed. Instant.',
     free: '✓ Free · Instant · No account required',
     steps: [
       `Select a mission archive in Step 02 below.`,
-      `Click the <strong style="color:var(--green)">⚡ PIN NOW VIA GN</strong> button that appears in Step 03.`,
+      `Click the <strong style="color:var(--green)">⚡ PIN NOW VIA GUARDIAN</strong> button that appears in Step 03.`,
       `The server pins the CID to Pinata infrastructure immediately. No sign-up required.`,
       `After pinning, verify the document loads on the IPFS gateway in Step 04.`,
     ],
-    note: 'This uses the GN project\'s Pinata API key. The CID is pinned to professional IPFS infrastructure. For maximum resilience, also pin via your own node (see other methods).',
+    note: 'This uses the project's Pinata API key. The CID is pinned to professional IPFS infrastructure. For maximum resilience, also pin via your own node (see other methods).',
     autoPin: true,
   },
   {
@@ -346,13 +346,13 @@ const METHODS = [
     id: 'cluster',
     name: 'IPFS Cluster',
     difficulty: 'advanced',
-    desc: 'Coordinate multiple nodes to share a pinset. Best for running a persistent GN archive cluster.',
+    desc: 'Coordinate multiple nodes to share a pinset. Best for running a persistent guardian archive cluster.',
     free: '✓ Free · Best for long-term hosting · Multi-node replication',
     steps: [
       `Install ipfs-cluster from <a class="ext-link" href="https://ipfscluster.io/download/" target="_blank">ipfscluster.io/download ↗</a>`,
       `Run <span class="cmd" onclick="copyCmd(this)">ipfs-cluster-service init</span> on each node`,
       `Configure the cluster secret (shared across your nodes) in <code style="color:var(--cyan)">service.json</code>`,
-      `Download the GN pinset config: <a class="ext-link" href="data/guardian-pinset.json" target="_blank">data/guardian-pinset.json ↗</a>`,
+      `Download the guardian pinset config: <a class="ext-link" href="data/guardian-pinset.json" target="_blank">data/guardian-pinset.json ↗</a>`,
       `Import the pinset: <span class="cmd" onclick="copyCmd(this)">ipfs-cluster-ctl pin add --replication-min=2 --replication-max=3 &lt;CID&gt;</span>`,
       `All cluster members automatically replicate pinned CIDs. One node pins → all nodes mirror.`,
     ],
@@ -365,8 +365,8 @@ const PINSETS = [
   {
     id: 'm001',
     priority: 'critical',
-    title: 'US Constitution — Congressional Archive',
-    why: 'constitution.congress.gov returned 403 errors in July 2025. The founding document of American law must not exist only at government-controlled URLs.',
+    title: 'US Constitution — Congressional Archive (Example)',
+    why: 'Government-hosted copies of important documents sometimes go offline or move. This example demonstrates ensuring the founding document doesn\'t exist only at one official URL.',
     cid: 'bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq',
     copies: 47, target: 200,
     size: '~180 KB (HTML)',
@@ -425,12 +425,12 @@ const PINSETS = [
   {
     id: 'm009',
     priority: 'high',
-    title: 'Voter Suppression Documentation 2020–2026',
-    why: 'Court filings, firsthand accounts, and photographic evidence of voting rights incidents. Submitted by GN contributors. The historical record of democracy under pressure.',
+    title: 'Community-Submitted Evidence Archive (Example)',
+    why: 'A generic example of crowd-sourced evidence preservation — firsthand accounts and documentation submitted by a community and preserved regardless of who controls the official record.',
     cid: null,
     copies: 3, target: 30,
-    size: 'Multiple files — see GN Chat #investigation',
-    category: 'Election Integrity',
+    size: 'Multiple files — see Guardian Chat #investigation',
+    category: 'Community Archive',
     xp: 100,
     verifyUrl: null,
     noDirectPin: true,
@@ -484,7 +484,7 @@ function buildPinsets() {
     const priClass = { critical:'pri-critical', high:'pri-high', medium:'pri-medium' }[p.priority];
     const cidDisplay = p.cid
       ? `<div class="pinset-cid">CID: <span>${p.cid}</span></div>`
-      : `<div class="pinset-cid" style="color:var(--text-dim)">CID: not yet assigned — see pin guide in GN Chat</div>`;
+      : `<div class="pinset-cid" style="color:var(--text-dim)">CID: not yet assigned — see pin guide in Guardian Chat</div>`;
     card.innerHTML = `
       <div>
         <div class="pinset-priority ${priClass}">${p.priority.toUpperCase()} · ${p.category}</div>
@@ -543,7 +543,7 @@ function updateExecutePanel() {
 
     let autoPinBtn = '';
     if (selectedMethod && selectedMethod.autoPin) {
-      autoPinBtn = `<button class="pin-btn primary" id="autoPinBtn" onclick="autoPinViaMDD()" style="background:rgba(0,255,65,0.1);border-color:var(--green);font-size:15px;padding:14px 20px">⚡ PIN NOW VIA GN</button>
+      autoPinBtn = `<button class="pin-btn primary" id="autoPinBtn" onclick="autoPinViaGuardian()" style="background:rgba(0,255,65,0.1);border-color:var(--green);font-size:15px;padding:14px 20px">⚡ PIN NOW VIA GUARDIAN</button>
         <div id="autoPinResult" style="margin-top:10px;font-size:13px;display:none"></div>`;
     }
 
@@ -561,9 +561,9 @@ function updateExecutePanel() {
       </div>
     `;
   } else if (selectedPinset?.noDirectPin) {
-    actionHtml = `<div class="no-cid-msg">This mission involves multiple files submitted by community members. <br>Join <a class="ext-link" href="chat.html">#investigation on GN Chat</a> to get the current CID list and coordination instructions.</div>`;
+    actionHtml = `<div class="no-cid-msg">This mission involves multiple files submitted by community members. <br>Join <a class="ext-link" href="chat.html">#investigation on Guardian Chat</a> to get the current CID list and coordination instructions.</div>`;
   } else if (selectedPinset && !cid) {
-    actionHtml = `<div class="no-cid-msg">This archive is still being assembled. Check back soon or see pin guide in GN Chat for manual download + IPFS add instructions.</div>`;
+    actionHtml = `<div class="no-cid-msg">This archive is still being assembled. Check back soon or see pin guide in Guardian Chat for manual download + IPFS add instructions.</div>`;
   } else {
     actionHtml = `<div class="no-cid-msg" style="color:var(--text-dim)">← Select a mission archive in step 02 to see the CID and pinning actions.</div>`;
   }
@@ -585,7 +585,7 @@ function buildQuickRef() {
   if (!selectedMethod) return '';
   const cid = selectedPinset?.cid || 'bafybeibml5uieyxa5tufngvg7fgwbkwynlnfe2lg2we8nhiazfy3bhrpwq';
   const refs = {
-    'gn-auto':   `Click <b style="color:var(--green)">⚡ PIN NOW VIA GN</b> above. One click — we handle the rest via Pinata API.`,
+    'gn-auto':   `Click <b style="color:var(--green)">⚡ PIN NOW VIA GUARDIAN</b> above. One click — we handle the rest via Pinata API.`,
     'free-cloud': `<b style="color:var(--cyan)">Storacha:</b> storacha.network → Files → Upload by CID<br><b style="color:var(--cyan)">nft.storage:</b> nft.storage → Upload → CID<br><b style="color:var(--cyan)">4EVERLAND:</b> 4everland.org → IPFS → Pin → CID<br><b style="color:var(--cyan)">Filebase:</b> filebase.com → IPFS bucket → Pin by CID`,
     desktop:      `1. Download IPFS Desktop → Import → From IPFS → paste CID`,
     cli:          `<span class="cmd" onclick="copyCmd(this)">ipfs pin add ${cid}</span>`,
@@ -611,7 +611,7 @@ function copyCid() {
   if (lbl) { lbl.textContent = '✓ copied!'; lbl.style.color = 'var(--green)'; setTimeout(() => { lbl.textContent = 'click to copy'; lbl.style.color = ''; }, 2000); }
 }
 
-async function autoPinViaMDD() {
+async function autoPinViaGuardian() {
   if (!selectedPinset?.cid) { alert('Select a mission archive first.'); return; }
   const btn = document.getElementById('autoPinBtn');
   const result = document.getElementById('autoPinResult');
@@ -700,7 +700,7 @@ function claimXP() {
   document.getElementById('sessionXp').textContent = `XP: ${sessionXp}`;
 
   const result = document.getElementById('claimResult');
-  result.innerHTML = `<span style="font-size:22px">✓</span> +${xp} XP claimed, ${name}! Thank you for protecting the record.<br><span style="color:var(--text-dim);font-size:13px">Your pin has been recorded in the GN Network. Share the URL to recruit more mirrors.</span>`;
+  result.innerHTML = `<span style="font-size:22px">✓</span> +${xp} XP claimed, ${name}! Thank you for protecting the record.<br><span style="color:var(--text-dim);font-size:13px">Your pin has been recorded in the Guardian Network. Share the URL to recruit more mirrors.</span>`;
   result.classList.add('visible');
 
   claimBtn.textContent = '✓ CLAIMED';

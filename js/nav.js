@@ -81,5 +81,5 @@
     init();
   }
 
-  window.mddNav = { open: open, close: close };
+  window.gnNav = { open: open, close: close };
 })();

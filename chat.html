@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GN Chat</title>
+  <title>Guardian Chat</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
@@ -239,7 +239,7 @@
   <div class="modal-win">
     <div class="titlebar">
       <span class="titlebar-icon">🏃</span>
-      <span class="titlebar-text">Welcome to GN Chat</span>
+      <span class="titlebar-text">Welcome to Guardian Chat</span>
       <div class="wbtn close">✕</div>
     </div>
     <div class="modal-body">
@@ -267,7 +267,7 @@
   <div class="bl-win" id="blWin">
     <div class="titlebar">
       <span class="titlebar-icon" style="color:var(--aim-yellow)">🏃</span>
-      <span class="titlebar-text">GN Buddy List</span>
+      <span class="titlebar-text">Guardian Buddy List</span>
       <div style="display:flex;gap:2px">
         <div class="wbtn">–</div>
         <div class="wbtn">□</div>
@@ -325,7 +325,7 @@
   <div class="chat-win">
     <div class="titlebar">
       <span class="titlebar-icon">💬</span>
-      <span class="titlebar-text" id="winTitle">GN Chat</span>
+      <span class="titlebar-text" id="winTitle">Guardian Chat</span>
       <div style="display:flex;gap:2px">
         <div class="wbtn">–</div>
         <div class="wbtn">□</div>
@@ -454,7 +454,7 @@ function linkify(raw) {
 function toast(msg, ms=3500) {
   const el = document.createElement('div');
   el.className = 'aol-toast';
-  el.innerHTML = `<b>GN Chat:</b><br>${esc(msg)}`;
+  el.innerHTML = `<b>Guardian Chat:</b><br>${esc(msg)}`;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), ms);
 }
@@ -564,7 +564,7 @@ function switchRoom(roomId) {
   unread[roomId] = 0;
   buildRoomList(); buildTabs();
   const r = ROOMS.find(x=>x.id===roomId);
-  document.getElementById('winTitle').textContent = `GN Chat — ${r.label}`;
+  document.getElementById('winTitle').textContent = `Guardian Chat — ${r.label}`;
   document.getElementById('sbRoom').textContent   = r.label;
   document.getElementById('msgArea').innerHTML    = '';
   sysMsg(`You have entered ${r.label} — ${r.desc}`);
@@ -601,7 +601,7 @@ const BEHIND_THE_SCENES = [
   'Behind the scenes: The Dead Man\u2019s Chain uses Gun.js to maintain a succession relay. If a node goes dark for 48h, its successor auto-promotes.',
   'Behind the scenes: Bitcoin timestamps via OpenTimestamps don\u2019t store your data ON the blockchain. They store a hash \u2014 a mathematical fingerprint \u2014 proving the data existed at that time.',
 ];
-var tipsShown = parseInt(localStorage.getItem('mdd_tips_shown') || '0');
+var tipsShown = parseInt(localStorage.getItem('gn_tips_shown') || '0');
 
 function sendMsg(text) {
   text = text.trim();
@@ -620,7 +620,7 @@ function sendMsg(text) {
     var tip = BEHIND_THE_SCENES[Math.floor(Math.random() * BEHIND_THE_SCENES.length)];
     sysMsg(tip);
     tipsShown++;
-    localStorage.setItem('mdd_tips_shown', String(tipsShown));
+    localStorage.setItem('gn_tips_shown', String(tipsShown));
     if (tipsShown >= 5) GN_GAME.unlockAchievement('chat_educator');
   }
 }
@@ -697,7 +697,7 @@ function setScreenName(raw) {
   screenName = raw.replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,16) || genName();
   localStorage.setItem('gchat_name', screenName);
   document.getElementById('snDisplay').textContent = screenName;
-  document.title = `${screenName} — GN Chat`;
+  document.title = `${screenName} — Guardian Chat`;
 }
 
 // ── NAME GENERATION ───────────────────────────────────────────────────────────
