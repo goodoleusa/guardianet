@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuardianNet Demos</title>
+  <script src="/vendor/gun.js"></script>
+  <script src="/vendor/d3.v7.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Legacy global helpers shared by the demos (gameplay/achievements, particles, nostr).
+       These stay plain scripts on purpose -- they are used as globals (GN_GAME, GN_FX, GN_NOSTR)
+       by the ported Svelte components, same as the original static pages. -->
+  <script src="/js/particles.js"></script>
+  <script src="/js/gameplay.js"></script>
+  <script src="/js/nostr.js"></script>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

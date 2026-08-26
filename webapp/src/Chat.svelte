@@ -1,0 +1,858 @@
+<script>
+  import { onMount } from "svelte";
+
+  let toggleCat, focusInput;
+
+  onMount(() => {
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const ROOMS = [
+  { id:'general',       label:'#general',         icon:'💬', desc:'Open channel' },
+  { id:'investigation', label:'#investigation',    icon:'🔍', desc:'Evidence & analysis' },
+  { id:'collab',        label:'#collab-coding',    icon:'💻', desc:'Build together' },
+  { id:'gn-ops',  label:'#gn-ops',     icon:'🌐', desc:'Network ops' },
+  { id:'deadmans',      label:'#dead-mans-chain',  icon:'⛓', desc:'Relay chain' },
+];
+const IPFS_GW   = 'https://ipfs.io/ipfs/';
+const GUN_PEERS = ['https://gun-manhattan.herokuapp.com/gun','https://gun-us.herokuapp.com/gun'];
+const NS        = 'guardian-chat-v1';
+const AWAY_MS   = 65000;
+const HB_MS     = 22000;
+const MAX_MSGS  = 200;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let gun, screenName = '', currentRoom = ROOMS[0].id;
+let onlinePeers = {}, unread = {}, seenMsgs = new Set(), msgCount = 0;
+let typingTimers = {}, myTypingTimer = null;
+let soundsOn = true;
+
+// ── AUDIO ─────────────────────────────────────────────────────────────────────
+let ac;
+const getAC = () => ac || (ac = new (window.AudioContext||window.webkitAudioContext)());
+function tone(hz,type,dur,vol=0.12){try{const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=type;o.frequency.value=hz;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);o.start();o.stop(ctx.currentTime+dur)}catch(_){}}
+const sndOpen  = () => { if(!soundsOn)return; tone(880,'sine',.25,.1); setTimeout(()=>tone(1046,'sine',.18,.07),90); };
+const sndClose = () => { if(!soundsOn)return; tone(440,'sine',.18,.09); setTimeout(()=>tone(330,'sine',.25,.05),75); };
+const sndMsg   = () => { if(!soundsOn)return; tone(1318,'sine',.08,.07); setTimeout(()=>tone(1047,'sine',.12,.05),55); };
+const sndJoin  = () => { if(!soundsOn)return; tone(523,'triangle',.12,.05); setTimeout(()=>tone(659,'triangle',.12,.05),75); };
+document.getElementById('sndToggle').addEventListener('click', () => {
+  soundsOn = !soundsOn;
+  document.getElementById('sndToggle').textContent = soundsOn ? '🔈' : '🔇';
+});
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function rndHex(n){return[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()}
+function rndInt(max){const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]%max}
+function ts(){const d=new Date(),h=String(d.getHours()%12||12).padStart(2,' '),m=String(d.getMinutes()).padStart(2,'0');return`${h}:${m} ${d.getHours()<12?'AM':'PM'}`}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function linkify(raw) {
+  return esc(raw)
+    .replace(/(baf[ybz][a-z2-7]{40,})/gi, c =>
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener" title="${c}">${c.slice(0,14)}&#x2026;${c.slice(-4)} &#x2197;</a>`)
+    .replace(/(Qm[1-9A-HJ-NP-Za-km-z]{44,})/g, c =>
+      `<span class="cid-badge">IPFS</span><a href="${IPFS_GW}${c}" target="_blank" rel="noopener">${c.slice(0,12)}&#x2026; &#x2197;</a>`);
+}
+
+function toast(msg, ms=3500) {
+  const el = document.createElement('div');
+  el.className = 'aol-toast';
+  el.innerHTML = `<b>Guardian Chat:</b><br>${esc(msg)}`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), ms);
+}
+
+// ── BUDDY LIST ────────────────────────────────────────────────────────────────
+toggleCat = function(id) {
+  const body = document.getElementById('body-'+id);
+  const arr  = document.getElementById('arr-'+id);
+  body.classList.toggle('hidden');
+  arr.classList.toggle('cl');
+}
+
+function buildRoomList() {
+  const body = document.getElementById('body-catRooms');
+  body.innerHTML = '';
+  ROOMS.forEach(r => {
+    const cnt = unread[r.id] || 0;
+    const el  = document.createElement('div');
+    el.className = 'bitem' + (r.id === currentRoom ? ' cur' : '');
+    el.dataset.room = r.id;
+    el.innerHTML =
+      `<span class="bitem-ico">${r.icon}</span>` +
+      `<span class="bitem-name">${esc(r.label)}</span>` +
+      (cnt > 0 && r.id !== currentRoom ? `<span class="bitem-badge">${cnt}</span>` : '');
+    el.onclick = () => switchRoom(r.id);
+    body.appendChild(el);
+  });
+  document.getElementById('cnt-catRooms').textContent = ROOMS.length;
+}
+
+function buildBuddyList() {
+  const now    = Date.now();
+  const online = Object.entries(onlinePeers)
+    .filter(([n,t]) => n !== screenName && now - t < AWAY_MS)
+    .map(([n])=>n);
+
+  const body = document.getElementById('body-catOnline');
+  body.innerHTML = '';
+  if (!online.length) {
+    body.innerHTML = `<div class="bitem" style="color:#808080;cursor:default"><span class="bitem-ico">○</span><span class="bitem-name">No one online yet</span></div>`;
+  } else {
+    online.forEach(name => {
+      const el = document.createElement('div');
+      el.className = 'bitem';
+      el.innerHTML = `<span class="bitem-ico">🟢</span><span class="bitem-name">${esc(name)}</span>`;
+      body.appendChild(el);
+    });
+  }
+  document.getElementById('cnt-catOnline').textContent = `${online.length}/online`;
+  document.getElementById('sbOnline').textContent = online.length + 1;
+}
+
+function buildTabs() {
+  const strip = document.getElementById('tabStrip');
+  strip.innerHTML = '';
+  ROOMS.forEach(r => {
+    const t = document.createElement('div');
+    t.className = 'ctab' + (r.id === currentRoom ? ' active' : '');
+    t.textContent = r.label;
+    t.onclick = () => switchRoom(r.id);
+    strip.appendChild(t);
+  });
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────────────
+function renderMsg(roomId, key, data) {
+  if (seenMsgs.has(key)) return;
+  seenMsgs.add(key);
+
+  if (roomId !== currentRoom) {
+    unread[roomId] = (unread[roomId]||0) + 1;
+    buildRoomList(); buildTabs();
+    return;
+  }
+
+  const area  = document.getElementById('msgArea');
+  const isMe  = data.from === screenName;
+  const isSys = data.type === 'system';
+  const div   = document.createElement('div');
+  div.className = 'aim-msg';
+
+  if (isSys) {
+    div.innerHTML = `<span class="aim-who sys">-- ${linkify(data.text)} --</span>`;
+  } else {
+    div.innerHTML =
+      `<span class="aim-who ${isMe?'me':'them'}">${esc(data.from)}</span>` +
+      `<span class="aim-ts">(${data.time||'--:--'}):</span>` +
+      `<span class="aim-body">${linkify(data.text)}</span>`;
+  }
+
+  area.appendChild(div);
+  while (area.children.length > MAX_MSGS) area.removeChild(area.firstChild);
+  area.scrollTop = area.scrollHeight;
+  msgCount++;
+  document.getElementById('sbMsgs').textContent = msgCount;
+  if (!isMe && !isSys) sndMsg();
+}
+
+function sysMsg(text) {
+  const key = 'sys_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+  renderMsg(currentRoom, key, { type:'system', from:'SYSTEM', text, time:ts(), room:currentRoom });
+}
+
+// ── ROOM SWITCHING ────────────────────────────────────────────────────────────
+function switchRoom(roomId) {
+  currentRoom = roomId;
+  unread[roomId] = 0;
+  buildRoomList(); buildTabs();
+  const r = ROOMS.find(x=>x.id===roomId);
+  document.getElementById('winTitle').textContent = `Guardian Chat — ${r.label}`;
+  document.getElementById('sbRoom').textContent   = r.label;
+  document.getElementById('msgArea').innerHTML    = '';
+  sysMsg(`You have entered ${r.label} — ${r.desc}`);
+  sysMsg(`Welcome! ${r.label} is a P2P room. No central server.`);
+  if (gun) {
+    subscribeRoom(roomId);
+    // Re-sync pad for new room if pad is open
+    const pad = document.getElementById('codePad');
+    if (!pad.classList.contains('hidden')) {
+      document.getElementById('padArea').value = '';
+      document.getElementById('padWho').textContent = 'loading room pad…';
+      subscribePad(roomId);
+    }
+  }
+}
+
+// ── GUN ───────────────────────────────────────────────────────────────────────
+function subscribeRoom(roomId) {
+  gun.get(NS).get('rooms').get(roomId).get('msgs').map().on((data, key) => {
+    if (!data || !data.text || !data.from || data.room !== roomId) return;
+    renderMsg(roomId, key, data);
+  });
+}
+
+const BEHIND_THE_SCENES = [
+  'Behind the scenes: Your messages are synced via Gun.js peer-to-peer. No central server stores them \u2014 every connected browser IS the server.',
+  'Behind the scenes: Gun.js uses a concept called CRDTs (Conflict-free Replicated Data Types) so messages merge correctly even when peers reconnect after being offline.',
+  'Behind the scenes: The CIDs you paste here (like bafybei... or Qm...) are content addresses. The hash IS the address \u2014 same content always produces the same hash.',
+  'Behind the scenes: Unlike Discord or Slack, this chat has no single point of failure. If one relay goes down, messages still sync through other peers.',
+  'Behind the scenes: IPFS CIDs starting with "bafybei" use CIDv1 (base32), while those starting with "Qm" use CIDv0 (base58). Both work the same way.',
+  'Behind the scenes: Your screen name is stored only in YOUR browser localStorage. We never see it, collect it, or store it on any server.',
+  'Behind the scenes: The "Warning Level" feature is a nod to classic AOL/AIM. In that era, enough warnings could actually disconnect someone!',
+  'Behind the scenes: When you share a circuit design from Circuit Lab, it creates a JSON file that anyone can import and modify \u2014 open-source hardware.',
+  'Behind the scenes: The Dead Man\u2019s Chain uses Gun.js to maintain a succession relay. If a node goes dark for 48h, its successor auto-promotes.',
+  'Behind the scenes: Bitcoin timestamps via OpenTimestamps don\u2019t store your data ON the blockchain. They store a hash \u2014 a mathematical fingerprint \u2014 proving the data existed at that time.',
+];
+var tipsShown = parseInt(localStorage.getItem('gn_tips_shown') || '0');
+
+function sendMsg(text) {
+  text = text.trim();
+  if (!text) return;
+  if (text.startsWith('/')) { handleCmd(text); return; }
+  const key  = `m${Date.now()}_${rndHex(2)}`;
+  gun.get(NS).get('rooms').get(currentRoom).get('msgs').get(key).put(
+    { from:screenName, text, time:ts(), room:currentRoom, t:Date.now() }
+  );
+  GN_GAME.trackStat('chatMessages');
+  var chatCount = GN_GAME.getPlayer().stats.chatMessages;
+  if (chatCount === 1) GN_GAME.unlockAchievement('first_chat');
+  if (chatCount >= 10) GN_GAME.unlockAchievement('chat_10');
+  if (chatCount >= 50) GN_GAME.unlockAchievement('chat_50');
+  if (chatCount % 5 === 0) {
+    var tip = BEHIND_THE_SCENES[Math.floor(Math.random() * BEHIND_THE_SCENES.length)];
+    sysMsg(tip);
+    tipsShown++;
+    localStorage.setItem('gn_tips_shown', String(tipsShown));
+    if (tipsShown >= 5) GN_GAME.unlockAchievement('chat_educator');
+  }
+}
+
+function handleCmd(raw) {
+  const parts = raw.trim().toLowerCase().split(/\s+/);
+  switch(parts[0]) {
+    case '/help':  sysMsg('/rooms · /name [new] · /clear · /asl · /cid [hash] · /help'); break;
+    case '/rooms': sysMsg('Rooms: ' + ROOMS.map(r=>r.label).join(' · ')); break;
+    case '/name':  if(parts[1]){setScreenName(parts.slice(1).join('_'));sysMsg('Screen name updated.');}else sysMsg('Name: '+screenName); break;
+    case '/clear': document.getElementById('msgArea').innerHTML=''; sysMsg('Cleared.'); break;
+    case '/asl':   sysMsg('a/s/l? This is Web3. Age = block height. Sex = public key. Location = your IPFS node.'); break;
+    case '/cid':   if(parts[1])sendMsg(parts[1]); break;
+    default: sysMsg(`Unknown command: ${parts[0]}  Try /help`);
+  }
+}
+
+function emitTyping() {
+  clearTimeout(myTypingTimer);
+  gun.get(NS).get('typing').get(screenName).put({ ts:Date.now(), room:currentRoom });
+  myTypingTimer = setTimeout(()=>gun.get(NS).get('typing').get(screenName).put({ts:0,room:currentRoom}), 3000);
+}
+
+function showTyping(name) {
+  clearTimeout(typingTimers[name]);
+  const row = document.getElementById('typingRow');
+  if (!row.querySelector(`[data-typer="${name}"]`)) {
+    const sp = document.createElement('span');
+    sp.dataset.typer = name;
+    sp.textContent = `${name} is typing... `;
+    row.appendChild(sp);
+  }
+  typingTimers[name] = setTimeout(()=>row.querySelector(`[data-typer="${name}"]`)?.remove(), 4500);
+}
+
+function initGun() {
+  gun = Gun(GUN_PEERS);
+  const pref = gun.get(NS).get('presence');
+  const beat = () => pref.get(screenName).put({ t:Date.now(), n:screenName });
+  beat(); setInterval(beat, HB_MS);
+
+  pref.map().on((d,k)=>{
+    if(!d||k===screenName)return;
+    const wasOn = onlinePeers[k]&&(Date.now()-onlinePeers[k])<AWAY_MS;
+    onlinePeers[k]=d.t||Date.now();
+    if(!wasOn&&(Date.now()-onlinePeers[k])<AWAY_MS){sndJoin();toast(`${k} is now online`);}
+    buildBuddyList();
+  });
+
+  setInterval(()=>{
+    const now=Date.now(); let changed=false;
+    Object.keys(onlinePeers).forEach(k=>{if(now-onlinePeers[k]>=AWAY_MS){delete onlinePeers[k];changed=true;}});
+    if(changed){sndClose();buildBuddyList();}
+  }, 12000);
+
+  gun.get(NS).get('typing').map().on((d,k)=>{
+    if(!d||k===screenName||d.room!==currentRoom)return;
+    if(d.ts&&Date.now()-d.ts<4000)showTyping(k);
+  });
+
+  GN_GAME.init(gun);
+  var p = GN_GAME.getPlayer();
+  document.getElementById('sbRank').textContent = p.rank || 'RECRUIT';
+  GN_GAME.onChange(function(player) {
+    document.getElementById('sbRank').textContent = player.rank || 'RECRUIT';
+  });
+  document.getElementById('tbConn').textContent='● Connected (P2P)';
+  document.getElementById('tbConn').style.color='green';
+  ROOMS.forEach(r => subscribeRoom(r.id));
+}
+
+// ── SCREEN NAME ───────────────────────────────────────────────────────────────
+function setScreenName(raw) {
+  screenName = raw.replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,16) || genName();
+  localStorage.setItem('gchat_name', screenName);
+  document.getElementById('snDisplay').textContent = screenName;
+  document.title = `${screenName} — Guardian Chat`;
+}
+
+// ── NAME GENERATION ───────────────────────────────────────────────────────────
+const ADJ  = ['Cyber','Neon','Ghost','Dark','Shadow','Rogue','Crypto','Binary','Quantum','Static','Pixel','Stealth','Cipher','Null','Vector','Chrome','Echo','Phantom','Turbo','Hyper','Proxy','Relay','Anon','Void','Pulse','Flux','Glitch','Node','Packet','Signal'];
+const NOUN = ['Hawk','Wolf','Fox','Ghost','Recon','Watch','Guard','Node','Relay','Vault','Sentinel','Runner','Coder','Hacker','Pilgrim','Nomad','Keeper','Warden','Wraith','Drifter','Witness','Oracle','Sage','Scout','Ranger','Rider','Monk','Archivist','Courier','Specter'];
+function genName()    { return ADJ[rndInt(ADJ.length)]+NOUN[rndInt(NOUN.length)]+String(rndInt(99)+1).padStart(2,'0'); }
+function genNames(n)  { return Array.from({length:n},genName); }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+function boot(name) {
+  setScreenName(name);
+  document.getElementById('nameModal').classList.add('hidden');
+  document.getElementById('appRoot').classList.remove('hidden');
+  sndOpen();
+  buildRoomList(); buildBuddyList(); buildTabs();
+  initGun();
+  initPad();
+  switchRoom('general');
+
+  const inp = document.getElementById('chatInput');
+  const btn = document.getElementById('sendBtn');
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} }
+    else emitTyping();
+  });
+  btn.addEventListener('click', () => { const v=inp.value; if(v.trim()){sendMsg(v);inp.value='';} inp.focus(); });
+
+  document.getElementById('snDisplay').addEventListener('click', () => {
+    const n = prompt('New screen name:', screenName); if(n){setScreenName(n);sysMsg(`You are now known as ${screenName}`);}
+  });
+  document.getElementById('warnBtn').addEventListener('click', () => {
+    const wl = document.getElementById('warnLv');
+    const cur = parseInt(wl.textContent) || 0;
+    wl.textContent = Math.min(cur+5,100)+'%';
+    sysMsg(`You warned the room. Warning level increased. (Classic AOL feature — cosmetic only.)`);
+  });
+  document.getElementById('blChatBtn').onclick = () => focusInput();
+
+  const blToggle = document.getElementById('blToggle');
+  const blOverlay = document.getElementById('blOverlay');
+  const blWin = document.getElementById('blWin');
+  function openBuddyPanel() { blWin.classList.add('mobile-open'); blOverlay.classList.add('visible'); }
+  function closeBuddyPanel() { blWin.classList.remove('mobile-open'); blOverlay.classList.remove('visible'); }
+  blToggle.addEventListener('click', openBuddyPanel);
+  blOverlay.addEventListener('click', closeBuddyPanel);
+
+  inp.focus();
+}
+
+focusInput = function() { document.getElementById('chatInput').focus(); }
+
+// ── CODE PAD ──────────────────────────────────────────────────────────────────
+let padDebounce = null;
+let padEditing  = false;
+let padRoomSub  = null;
+
+function initPad() {
+  const area = document.getElementById('padArea');
+
+  area.addEventListener('input', () => {
+    padEditing = true;
+    clearTimeout(padDebounce);
+    padDebounce = setTimeout(() => {
+      gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
+        content: area.value,
+        author:  screenName,
+        time:    ts(),
+        room:    currentRoom,
+        t:       Date.now()
+      });
+      padEditing = false;
+    }, 400);
+  });
+
+  // Tab key inserts 2 spaces (standard for a code editor)
+  area.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = area.selectionStart, end = area.selectionEnd;
+      area.value = area.value.slice(0,s) + '  ' + area.value.slice(end);
+      area.selectionStart = area.selectionEnd = s + 2;
+      area.dispatchEvent(new Event('input'));
+    }
+  });
+
+  document.getElementById('padCopy').onclick = () => {
+    navigator.clipboard.writeText(area.value)
+      .then(() => toast('Code copied to clipboard'))
+      .catch(() => { area.select(); document.execCommand('copy'); toast('Copied'); });
+  };
+
+  document.getElementById('padClear').onclick = () => {
+    if (!confirm('Clear the shared pad? Everyone in the room will see it cleared.')) return;
+    area.value = '';
+    gun.get(NS).get('rooms').get(currentRoom).get('pad').put({
+      content:'', author:screenName, time:ts(), room:currentRoom, t:Date.now()
+    });
+    document.getElementById('padWho').textContent = 'cleared by ' + screenName;
+  };
+
+  document.getElementById('padClose').onclick  = togglePad;
+  document.getElementById('padToggleBtn').onclick = togglePad;
+}
+
+function subscribePad(roomId) {
+  gun.get(NS).get('rooms').get(roomId).get('pad').on((data) => {
+    if (!data || data.room !== roomId) return;
+    if (padEditing) return;   // don't overwrite while I'm typing
+    const area = document.getElementById('padArea');
+    if (data.content !== undefined) area.value = data.content;
+    if (data.author) {
+      document.getElementById('padWho').textContent =
+        `last edit: ${esc(data.author)} at ${data.time||''}`;
+    }
+  });
+}
+
+function togglePad() {
+  const panel = document.getElementById('codePad');
+  const isHidden = panel.classList.toggle('hidden');
+  document.getElementById('padToggleBtn').style.fontWeight = isHidden ? '' : 'bold';
+  if (!isHidden) {
+    subscribePad(currentRoom);
+    document.getElementById('padArea').focus();
+    sysMsg('CodePad open — shared in real-time with everyone in this room.');
+  }
+}
+
+// ── STARTUP ───────────────────────────────────────────────────────────────────
+const saved = localStorage.getItem('gchat_name');
+if (saved) {
+  boot(saved);
+} else {
+  const ni   = document.getElementById('nameInput');
+  const nb   = document.getElementById('nameBtn');
+  const grid = document.getElementById('nameGrid');
+  const shuf = document.getElementById('shuffleBtn');
+  let chosen = '';
+
+  function buildGrid() {
+    grid.innerHTML = '';
+    genNames(4).forEach(name => {
+      const btn = document.createElement('button');
+      btn.className='name-opt'; btn.textContent=name;
+      btn.onclick=()=>{ grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); btn.classList.add('picked'); ni.value=name; chosen=name; };
+      grid.appendChild(btn);
+    });
+  }
+
+  buildGrid();
+  shuf.addEventListener('click', ()=>{ chosen=''; ni.value=''; buildGrid(); });
+
+  const go = () => boot(ni.value.trim()||chosen||genName());
+  nb.addEventListener('click', go);
+  ni.addEventListener('keydown', e=>{ if(e.key==='Enter')go(); if(e.key.length===1)grid.querySelectorAll('.name-opt').forEach(b=>b.classList.remove('picked')); });
+  requestAnimationFrame(()=>ni.focus());
+}
+
+  });
+</script>
+
+
+<!-- ── Screen name modal ─────────────────────────────────────────────────── -->
+<div class="modal-ov" id="nameModal">
+  <div class="modal-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">🏃</span>
+      <span class="titlebar-text">Welcome to Guardian Chat</span>
+      <div class="wbtn close">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label"><b>Choose your screen name:</b></div>
+      <div class="name-grid" id="nameGrid"></div>
+      <a class="shuffle-lnk" id="shuffleBtn">↻ Generate more names</a>
+      <div class="modal-div">— or enter your own below —</div>
+      <div class="modal-label">Screen name:</div>
+      <input class="w98-btn" style="width:100%;padding:3px 6px;background:white;border:2px solid;border-color:#808080 #fff #fff #808080;font:12px Tahoma;color:#000;outline:none" id="nameInput" maxlength="16" autocomplete="off" spellcheck="false">
+      <div class="modal-footer">
+        <button class="w98-btn def" id="nameBtn" style="padding:3px 20px">Sign On</button>
+      </div>
+      <div class="modal-note">No account required. Name saved locally.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Desktop ───────────────────────────────────────────────────────────── -->
+<div class="desktop hidden" id="appRoot">
+
+  <button class="bl-toggle" id="blToggle" title="Show Buddy List">☰ Buddies</button>
+  <div class="bl-overlay" id="blOverlay"></div>
+
+  <!-- Buddy List window -->
+  <div class="bl-win" id="blWin">
+    <div class="titlebar">
+      <span class="titlebar-icon" style="color:var(--aim-yellow)">🏃</span>
+      <span class="titlebar-text">Guardian Buddy List</span>
+      <div style="display:flex;gap:2px">
+        <div class="wbtn">–</div>
+        <div class="wbtn">□</div>
+        <div class="wbtn close">✕</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <span class="mitem">File</span>
+      <span class="mitem">Edit</span>
+      <span class="mitem">People</span>
+      <span class="mitem">Help</span>
+    </div>
+
+    <!-- My SN -->
+    <div class="sn-bar">
+      <div class="sn-icon">🏃</div>
+      <div class="sn-info">
+        <div class="sn-name" id="snDisplay" title="Click to change">(loading)</div>
+        <div class="sn-status">● Available</div>
+      </div>
+    </div>
+
+    <!-- Buddy scroll -->
+    <div class="buddy-scroll" id="buddyScroll">
+      <!-- Chat Rooms category -->
+      <div class="bcat" id="catRooms">
+        <div class="bcat-hdr" on:click={() => toggleCat('catRooms')}>
+          <span class="bcat-arr" id="arr-catRooms">▼</span>
+          Chat Rooms
+          <span class="bcat-cnt" id="cnt-catRooms">5</span>
+        </div>
+        <div class="bcat-body" id="body-catRooms"></div>
+      </div>
+      <!-- Online guardians category -->
+      <div class="bcat" id="catOnline">
+        <div class="bcat-hdr" on:click={() => toggleCat('catOnline')}>
+          <span class="bcat-arr" id="arr-catOnline">▼</span>
+          Online Members
+          <span class="bcat-cnt" id="cnt-catOnline">0</span>
+        </div>
+        <div class="bcat-body" id="body-catOnline"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="bl-toolbar">
+      <button class="w98-btn" title="Send an Instant Message" on:click={focusInput}>IM</button>
+      <button class="w98-btn" title="Go to chat room" id="blChatBtn">Chat</button>
+      <button class="w98-btn" style="color:#808080" title="Set Away message">Away</button>
+      <button class="w98-btn" style="margin-left:auto" title="Preferences" on:click={() => (location.href='/index.html')}>Missions ↗</button>
+    </div>
+  </div>
+
+  <!-- Chat window -->
+  <div class="chat-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">💬</span>
+      <span class="titlebar-text" id="winTitle">Guardian Chat</span>
+      <div style="display:flex;gap:2px">
+        <div class="wbtn">–</div>
+        <div class="wbtn">□</div>
+        <div class="wbtn close" on:click={() => (location.href='/index.html')}>✕</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <span class="mitem">File</span>
+      <span class="mitem">Edit</span>
+      <span class="mitem">Insert</span>
+      <span class="mitem">People</span>
+      <span class="mitem">Smileys</span>
+      <span class="mitem" style="margin-left:auto;text-decoration:none;color:#808080" id="tbConn">connecting…</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-strip" id="tabStrip"></div>
+
+    <!-- Messages -->
+    <div class="msg-panel">
+      <div class="msg-area" id="msgArea"></div>
+    </div>
+
+    <!-- Typing -->
+    <!-- Code Pad — shared live buffer -->
+    <div class="codepad hidden" id="codePad">
+      <div class="codepad-bar">
+        <span class="codepad-lbl">📝 CodePad</span>
+        <span class="codepad-who" id="padWho">shared · real-time P2P sync</span>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padCopy">Copy</button>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClear">Clear</button>
+        <button class="w98-btn" style="font-size:9px;padding:1px 7px" id="padClose">Close</button>
+      </div>
+      <textarea class="codepad-area" id="padArea" spellcheck="false"
+        placeholder="// Shared code pad — everyone in this room sees your changes in real-time&#10;// Paste a snippet, draft a function, or drop a CID for review&#10;// No server — synced via Gun.js P2P"></textarea>
+    </div>
+
+    <div class="typing-row" id="typingRow"></div>
+
+    <!-- Format bar -->
+    <div class="fmt-bar">
+      <button class="fmt-btn" title="Bold"><b>A</b></button>
+      <button class="fmt-btn" title="Color" style="color:#0000cc">A</button>
+      <div class="fmt-sep"></div>
+      <button class="fmt-btn" id="sndToggle" title="Toggle sounds">🔈</button>
+      <button class="fmt-btn" id="padToggleBtn" style="min-width:56px;font-size:10px;letter-spacing:0" title="Toggle shared code pad">📝 CodePad</button>
+      <div class="fmt-sep"></div>
+      <span class="fmt-spacer"></span>
+      <span class="warn-lv">Warning Level: <span id="warnLv">0%</span></span>
+    </div>
+
+    <!-- Input -->
+    <div class="input-row">
+      <input class="chat-input" id="chatInput" placeholder="Type a message here…" autocomplete="off" spellcheck="false">
+      <button class="w98-btn def" id="sendBtn" style="padding:3px 16px">Send</button>
+      <button class="w98-btn" id="warnBtn" title="Warn (classic AOL feature)">Warn</button>
+    </div>
+
+    <!-- Status bar -->
+    <div class="aim-sb">
+      <span>Room: <b id="sbRoom">—</b></span>
+      <div class="sb-sep"></div>
+      <span>Online: <b id="sbOnline">1</b></span>
+      <div class="sb-sep"></div>
+      <span>Msgs: <b id="sbMsgs">0</b></span>
+      <div class="sb-sep" style="margin-left:auto"></div>
+      <span style="color:#808080">P2P · No server · <a href="guardian-globe.html" style="color:var(--aim-link)">Globe ↗</a></span>
+      <div class="sb-sep"></div>
+      <span style="color:#808080">Rank: <b id="sbRank">RECRUIT</b></span>
+    </div>
+  </div>
+
+</div>
+
+
+<svelte:head>
+<style>
+    :root {
+      --bg:        #d4d0c8;    /* Windows 98 grey */
+      --white:     #ffffff;
+      --black:     #000000;
+      --hi:        #dfdfdf;    /* highlight edge */
+      --shadow:    #808080;    /* shadow edge */
+      --darkshadow:#404040;    /* dark shadow */
+      --titleL:    #000080;    /* title bar gradient start */
+      --titleR:    #1084d0;    /* title bar gradient end */
+      --desktop:   #008080;    /* Win98 teal desktop */
+      --aim-blue:  #0033bb;
+      --aim-link:  #0000cc;
+      --aim-yellow:#ffcc00;
+      --msg-self:  #0000cc;    /* classic AIM blue for self */
+      --msg-other: #cc0000;    /* classic AIM red for others */
+      --msg-sys:   #007700;
+      --font-ui:   'Tahoma','Arial',sans-serif;
+      --font-msg:  'Arial','Helvetica',sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--desktop); font-family: var(--font-ui); font-size: 11px; color: var(--black); }
+
+    /* ── Win98 primitives ── */
+    .raised  { border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); box-shadow:inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow); }
+    .sunken  { border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); box-shadow:inset 1px 1px 0 var(--darkshadow); }
+
+    .titlebar { background:linear-gradient(90deg,var(--titleL),var(--titleR)); height:22px; padding:2px 4px 2px 6px; display:flex; align-items:center; gap:4px; user-select:none; flex-shrink:0; }
+    .titlebar-text { color:white; font:bold 11px 'Tahoma',sans-serif; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .titlebar-icon { font-size:13px; flex-shrink:0; }
+
+    .wbtn { width:16px; height:14px; background:var(--bg); border:1px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); font:bold 8px 'Arial'; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:#000; flex-shrink:0; }
+    .wbtn:hover { background:#e8e8e8; }
+    .wbtn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); }
+    .wbtn.close { font-size:9px; }
+
+    .menubar { background:var(--bg); display:flex; align-items:center; padding:1px 2px; border-bottom:1px solid var(--shadow); height:19px; flex-shrink:0; }
+    .mitem { padding:1px 6px; font:11px 'Tahoma'; cursor:pointer; }
+    .mitem:hover { background:#000080; color:white; }
+
+    .w98-btn { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); padding:2px 8px; font:11px 'Tahoma'; cursor:pointer; color:#000; white-space:nowrap; min-width:36px; }
+    .w98-btn:hover { background:#e8e8e8; }
+    .w98-btn:active { border-color:var(--darkshadow) var(--white) var(--white) var(--darkshadow); padding:3px 7px 1px 9px; }
+    .w98-btn:disabled { color:var(--shadow); cursor:default; }
+    .w98-btn.def { border-color:var(--shadow) var(--hi) var(--hi) var(--shadow); } /* default button has extra dark border */
+
+    /* ── Layout ── */
+    .desktop { display:flex; height:100vh; gap:3px; padding:3px; }
+
+    /* ── Buddy List window ── */
+    .bl-win { width:188px; min-width:188px; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); }
+
+    .sn-bar { background:white; border-bottom:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; display:flex; align-items:center; gap:5px; flex-shrink:0; }
+    .sn-icon { font-size:18px; }
+    .sn-info { flex:1; min-width:0; }
+    .sn-name { font:bold 12px 'Tahoma'; color:var(--aim-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+    .sn-name:hover { text-decoration:underline; }
+    .sn-status { font:9px 'Tahoma'; color:var(--shadow); }
+
+    .buddy-scroll { flex:1; overflow-y:auto; background:white; }
+
+    .bcat { }
+    .bcat-hdr { background:var(--bg); padding:2px 4px 2px 6px; font:bold 11px 'Tahoma'; cursor:pointer; display:flex; align-items:center; gap:3px; user-select:none; border-bottom:1px solid var(--shadow); }
+    .bcat-hdr:hover { background:#e4e0d8; }
+    .bcat-arr { font-size:7px; transition:transform 0.1s; }
+    .bcat-arr.cl { transform:rotate(-90deg); }
+    .bcat-cnt { margin-left:auto; font:10px 'Tahoma'; color:var(--shadow); font-weight:normal; }
+    .bcat-body { background:white; }
+    .bcat-body.hidden { display:none; }
+
+    .bitem { display:flex; align-items:center; gap:5px; padding:2px 6px 2px 18px; cursor:pointer; font:11px 'Tahoma'; }
+    .bitem:hover { background:#000080; color:white; }
+    .bitem:hover .bitem-sub { color:#a0b8ff; }
+    .bitem.cur { background:#000080; color:white; font-weight:bold; }
+    .bitem.cur .bitem-sub { color:#a0b8ff; }
+    .bitem-ico { font-size:13px; flex-shrink:0; }
+    .bitem-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bitem-sub { font-size:9px; color:var(--shadow); }
+    .bitem-badge { margin-left:auto; background:#cc0000; color:white; font:bold 8px 'Tahoma'; padding:0 3px; min-width:13px; text-align:center; border-radius:1px; }
+
+    .bl-toolbar { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:4px 4px 3px; display:flex; gap:3px; flex-shrink:0; }
+    .bl-toolbar .w98-btn { padding:2px 5px; font-size:10px; }
+
+    /* ── Chat window ── */
+    .chat-win { flex:1; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); }
+
+    .tab-strip { background:var(--bg); border-bottom:1px solid var(--shadow); display:flex; padding:3px 4px 0; gap:2px; overflow-x:auto; flex-shrink:0; }
+    .ctab { background:#b8b4ac; border:1px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); border-bottom:none; padding:2px 10px; font:11px 'Tahoma'; cursor:pointer; position:relative; top:1px; white-space:nowrap; }
+    .ctab:hover { background:#c8c4bc; }
+    .ctab.active { background:var(--bg); font-weight:bold; border-bottom:2px solid var(--bg); }
+
+    /* Message area */
+    .msg-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; margin:3px 3px 0; }
+    .msg-area { flex:1; background:white; overflow-y:auto; padding:6px 8px; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Arial'; }
+
+    /* AIM-style messages */
+    .aim-msg { margin-bottom:3px; line-height:1.55; }
+    .aim-who { font:bold 11px 'Tahoma'; }
+    .aim-who.me { color:var(--msg-self); }
+    .aim-who.them { color:var(--msg-other); }
+    .aim-who.sys { color:var(--msg-sys); font-style:italic; font-weight:normal; }
+    .aim-ts { font:9px 'Tahoma'; color:var(--shadow); margin-left:3px; font-weight:normal; }
+    .aim-body { display:block; font:12px 'Arial'; color:#000; padding-left:4px; }
+    .aim-body a { color:var(--aim-link); text-decoration:underline; }
+    .aim-body a:hover { color:blue; }
+    .cid-badge { background:#eef0ff; border:1px solid #0000bb; padding:0 3px; font:10px 'Tahoma'; color:#0000bb; margin-right:2px; }
+    .aim-divider { border:none; border-top:1px solid #e0e0e0; margin:5px 0; }
+
+    /* Format bar */
+    .fmt-bar { background:var(--bg); border-top:1px solid var(--shadow); border-bottom:1px solid #c0bdb5; padding:2px 6px; display:flex; align-items:center; gap:2px; flex-shrink:0; }
+    .fmt-btn { background:var(--bg); border:1px solid transparent; padding:1px 5px; cursor:pointer; font-size:11px; color:#000; min-width:20px; text-align:center; }
+    .fmt-btn:hover { border-color:var(--shadow); background:#e4e0d8; }
+    .fmt-sep { width:1px; height:14px; background:var(--shadow); margin:0 2px; }
+    .fmt-spacer { flex:1; }
+    .warn-lv { font:10px 'Tahoma'; color:var(--shadow); white-space:nowrap; }
+
+    /* Typing row */
+    .typing-row { height:16px; padding:0 8px; font:italic 10px 'Tahoma'; color:var(--shadow); flex-shrink:0; overflow:hidden; }
+
+    /* Input */
+    .input-row { display:flex; gap:4px; padding:3px 4px; background:var(--bg); flex-shrink:0; }
+    .chat-input { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:3px 5px; font:12px 'Arial'; color:#000; outline:none; }
+
+    /* Status bar */
+    .aim-sb { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); padding:1px 8px; font:10px 'Tahoma'; color:#000; display:flex; gap:12px; height:19px; align-items:center; flex-shrink:0; }
+    .sb-sep { width:1px; height:12px; background:var(--shadow); }
+
+    /* ── Modal ── */
+    .modal-ov { position:fixed; inset:0; background:rgba(0,0,60,0.5); display:flex; align-items:center; justify-content:center; z-index:100; }
+    .modal-win { background:var(--bg); border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); width:310px; }
+    .modal-body { padding:14px 16px; }
+    .modal-label { font:11px 'Tahoma'; margin-bottom:6px; }
+    .name-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px; }
+    .name-opt { background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); padding:5px 6px; font:11px 'Tahoma'; cursor:pointer; text-align:center; color:var(--aim-blue); }
+    .name-opt:hover,.name-opt.picked { background:#000080; color:white; border-color:#000080; }
+    .shuffle-lnk { font:10px 'Tahoma'; color:var(--aim-link); cursor:pointer; text-decoration:underline; text-align:center; display:block; margin-bottom:10px; }
+    .shuffle-lnk:hover { color:blue; }
+    .modal-div { text-align:center; font:10px 'Tahoma'; color:var(--shadow); margin:6px 0; }
+    .modal-footer { display:flex; justify-content:flex-end; gap:6px; margin-top:12px; }
+    .modal-note { font:9px 'Tahoma'; color:var(--shadow); margin-top:8px; text-align:center; }
+
+    /* AOL toast */
+    .aol-toast { position:fixed; bottom:8px; right:8px; background:#ffffcc; border:2px solid; border-color:var(--hi) var(--darkshadow) var(--darkshadow) var(--hi); padding:8px 12px; font:11px 'Tahoma'; color:#000; z-index:200; max-width:240px; box-shadow:2px 2px 4px rgba(0,0,0,0.4); animation:tIn .15s ease; }
+    @keyframes tIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+    ::-webkit-scrollbar { width:16px; }
+    ::-webkit-scrollbar-track { background:var(--bg); border:1px solid var(--shadow); }
+    ::-webkit-scrollbar-thumb { background:var(--bg); border:2px solid; border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white); }
+
+    /* ── Code Pad ── */
+    .codepad { background:var(--bg); border-top:2px solid; border-color:var(--white) var(--shadow) var(--shadow) var(--white); display:flex; flex-direction:column; flex-shrink:0; height:180px; }
+    .codepad-bar { padding:2px 5px; display:flex; align-items:center; gap:4px; height:23px; border-bottom:1px solid var(--shadow); background:var(--bg); }
+    .codepad-lbl { font:bold 11px 'Tahoma'; }
+    .codepad-who { font:italic 10px 'Tahoma'; color:var(--shadow); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:6px; }
+    .codepad-area { flex:1; background:white; border:2px solid; border-color:var(--shadow) var(--white) var(--white) var(--shadow); font:12px 'Courier New','Lucida Console',monospace; padding:4px 6px; color:#000; outline:none; resize:none; margin:3px; tab-size:2; }
+    .codepad-area::placeholder { color:#b0b0b0; }
+
+    .hidden { display:none!important; }
+
+    .bl-toggle {
+      display:none;
+      position:fixed;
+      top:6px;
+      left:6px;
+      z-index:50;
+      background:var(--bg);
+      border:2px solid;
+      border-color:var(--white) var(--darkshadow) var(--darkshadow) var(--white);
+      padding:4px 8px;
+      font:bold 11px 'Tahoma';
+      cursor:pointer;
+      color:#000;
+    }
+
+    .aim-msg { line-height:1.55; }
+    .aim-body { font-size:15px; }
+    .msg-area { font-size:15px; }
+    .chat-input { min-height:44px; font-size:15px; }
+
+    @media (max-width:600px) {
+      .bl-win {
+        display:none;
+        position:fixed;
+        top:0; left:0; bottom:0;
+        width:80vw;
+        max-width:300px;
+        z-index:90;
+        box-shadow:4px 0 16px rgba(0,0,0,0.5);
+      }
+      .bl-win.mobile-open {
+        display:flex!important;
+      }
+      .bl-toggle {
+        display:block;
+      }
+      .bl-overlay {
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.4);
+        z-index:80;
+        display:none;
+      }
+      .bl-overlay.visible {
+        display:block;
+      }
+      .desktop {
+        padding:0;
+        gap:0;
+      }
+      .chat-win {
+        width:100%;
+      }
+      .aim-body { font-size:16px; }
+      .msg-area { font-size:16px; padding:8px 10px; }
+      .chat-input { min-height:48px; font-size:16px; padding:8px 10px; }
+      .input-row { padding:4px 6px; }
+      .aim-who { font-size:13px; }
+      .aim-ts { font-size:10px; }
+      .tab-strip { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .ctab { font-size:12px; padding:4px 8px; }
+      .menubar .mitem { font-size:12px; }
+      .codepad-area { font-size:14px; }
+      .modal-win { width:92vw; max-width:340px; }
+    }
+</style>
+</svelte:head>

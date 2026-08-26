@@ -1,0 +1,1588 @@
+<script>
+  import { onMount } from "svelte";
+
+  let loadExample, clearCanvas, autoLayout, showPowerBudget, shareCircuit, toggleLive, switchSTab, applyProps, deleteSelected, calculatePowerBudget, saveProblemDefinition, buildBOM, buildFit, exportBOM, toggleJson, renderFromJson, exportJson;
+
+  onMount(() => {
+document.title = 'CIRCUIT LAB — Guardian Net';
+// ── COMPONENT CATALOG ─────────────────────────────────────────────────────────
+// price: typical USD from North American suppliers (Adafruit/SparkFun/DigiKey/Amazon)
+// buy: search URL — opens results, not a specific product (links stay valid)
+const CATALOG = {
+  MCU: [
+    { type:'arduino_uno',   label:'Arduino Uno',    icon:'🔲', color:'#38bdf8', price:28.00, dim:'69×53mm',  buy:'https://www.adafruit.com/search?q=arduino+uno',      pins:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','5V','3V3','GND','VIN'] },
+    { type:'arduino_nano',  label:'Arduino Nano',   icon:'🔲', color:'#38bdf8', price:22.00, dim:'45×18mm',  buy:'https://www.adafruit.com/search?q=arduino+nano',     pins:['D0-D13','A0-A7','5V','3V3','GND','VIN','RST'] },
+    { type:'arduino_mega',  label:'Arduino Mega',   icon:'🔲', color:'#38bdf8', price:48.00, dim:'102×53mm', buy:'https://www.digikey.com/en/products/filter?q=arduino+mega', pins:['D0-D53','A0-A15','5V','3V3','GND','VIN'] },
+    { type:'esp32',         label:'ESP32 Dev Board',icon:'📡', color:'#22c55e', price: 9.00, dim:'51×25mm',  buy:'https://www.adafruit.com/search?q=esp32+dev+board',  pins:['GPIO0-39','3V3','GND','EN','VIN'] },
+    { type:'esp8266',       label:'ESP8266 NodeMCU',icon:'📡', color:'#22c55e', price: 8.00, dim:'49×26mm',  buy:'https://www.adafruit.com/search?q=esp8266+nodemcu',  pins:['GPIO0-16','3V3','GND','VCC','TXD','RXD'] },
+    { type:'attiny85',      label:'ATtiny85',        icon:'▪',  color:'#0ea5e9', price: 2.50, dim:'9×7mm DIP8',buy:'https://www.digikey.com/en/products/filter?q=attiny85',  pins:['PB0','PB1','PB2','PB3','PB4','VCC','GND','RST'] },
+    { type:'stm32f103',     label:'STM32F103 Blue Pill',icon:'🔲',color:'#6366f1',price:8.00,dim:'52×23mm', buy:'https://www.amazon.com/s?k=stm32+blue+pill',       pins:['PA0-15','PB0-15','PC0-15','3V3','GND','NRST','BOOT0'] },
+    { type:'raspberry_pi',  label:'Raspberry Pi 4B',icon:'🍓', color:'#ec4899', price:55.00, dim:'85×56mm',  buy:'https://www.adafruit.com/search?q=raspberry+pi+4',  pins:['GPIO0-27','5V','3V3','GND','SDA','SCL','MOSI','MISO','SCLK','CE0','CE1','TXD','RXD'] },
+  ],
+  SENSOR: [
+    { type:'dht22',   label:'DHT22 T/H',     icon:'🌡', color:'#22c55e', price: 9.95, dim:'27×14mm breakout', buy:'https://www.adafruit.com/search?q=dht22',     pins:['VCC','DATA','NC','GND'] },
+    { type:'bmp280',  label:'BMP280 P/T',    icon:'🌡', color:'#22c55e', price: 9.95, dim:'18×18mm breakout', buy:'https://www.adafruit.com/search?q=bmp280',     pins:['VIN','GND','SCK','SDI','SDO','CSB'] },
+    { type:'hcsr04',  label:'HC-SR04 Sonar', icon:'📡', color:'#22c55e', price: 3.95, dim:'45×20×15mm',       buy:'https://www.adafruit.com/search?q=hc-sr04',   pins:['VCC','TRIG','ECHO','GND'] },
+    { type:'pir',     label:'PIR Motion',    icon:'👁', color:'#22c55e', price: 7.95, dim:'32×24mm + dome',   buy:'https://www.adafruit.com/search?q=pir+motion', pins:['VCC','OUT','GND'] },
+    { type:'mpu6050', label:'MPU-6050 IMU',  icon:'⬡',  color:'#22c55e', price: 6.95, dim:'20×16mm breakout', buy:'https://www.sparkfun.com/search/results?term=mpu6050', pins:['VCC','GND','SCL','SDA','XDA','XCL','ADO','INT'] },
+    { type:'ds18b20', label:'DS18B20 Temp',  icon:'🌡', color:'#22c55e', price: 9.95, dim:'6mm dia TO-92',    buy:'https://www.adafruit.com/search?q=ds18b20',   pins:['GND','DQ','VDD'] },
+    { type:'gy521',   label:'GY-521 Accel',  icon:'⬡',  color:'#22c55e', price: 6.95, dim:'20×16mm breakout', buy:'https://www.amazon.com/s?k=gy-521+mpu6050',   pins:['VCC','GND','SCL','SDA','INT'] },
+    { type:'photores',label:'Photoresistor', icon:'☀',  color:'#84cc16', price: 0.95, dim:'5mm dia',          buy:'https://www.adafruit.com/search?q=photoresistor', pins:['1','2'] },
+  ],
+  DISPLAY: [
+    { type:'oled_128x64', label:'OLED 128×64 I2C', icon:'🖥', color:'#f59e0b', price:13.95, dim:'27×27mm breakout', buy:'https://www.adafruit.com/search?q=oled+128x64',    pins:['VCC','GND','SCL','SDA'] },
+    { type:'lcd_16x2',    label:'LCD 16×2 I2C',    icon:'🖥', color:'#f59e0b', price: 9.95, dim:'80×36mm',         buy:'https://www.adafruit.com/search?q=lcd+16x2+i2c',   pins:['VCC','GND','SDA','SCL'] },
+    { type:'tft_240x320', label:'TFT 240×320',      icon:'🖥', color:'#f97316', price:14.95, dim:'57×40mm',         buy:'https://www.adafruit.com/search?q=tft+240x320',    pins:['VCC','GND','CS','RST','DC','SDI','SCK','LED'] },
+    { type:'neopixel',    label:'NeoPixel Strip',   icon:'💡', color:'#ef4444', price: 9.95, dim:'variable strip',  buy:'https://www.adafruit.com/search?q=neopixel+strip',  pins:['5V','DIN','GND'] },
+    { type:'max7219',     label:'LED Matrix 8×8',   icon:'⊞',  color:'#ef4444', price: 7.95, dim:'32×32mm',         buy:'https://www.amazon.com/s?k=max7219+led+matrix',    pins:['VCC','GND','DIN','CS','CLK'] },
+    { type:'sevenseg',    label:'7-Segment 4-digit',icon:'7️⃣', color:'#f97316', price: 5.95, dim:'43×19mm',         buy:'https://www.adafruit.com/search?q=7+segment+display', pins:['a','b','c','d','e','f','g','dp','GND'] },
+  ],
+  POWER: [
+    { type:'battery_9v',  label:'9V Battery',       icon:'🔋', color:'#fbbf24', price: 2.95, buy:'https://www.amazon.com/s?k=9v+alkaline+battery',    pins:['+','-'] },
+    { type:'lm7805',      label:'LM7805 5V Reg',    icon:'⚡', color:'#fbbf24', price: 1.50, buy:'https://www.digikey.com/en/products/filter?q=lm7805', pins:['IN','GND','OUT'] },
+    { type:'lipo_3v7',    label:'LiPo 3.7V 1000mAh',icon:'🔋',color:'#fbbf24', price: 9.95, buy:'https://www.adafruit.com/search?q=lipo+battery+3.7v', pins:['+','-'] },
+    { type:'tp4056',      label:'TP4056 LiPo Charger',icon:'⚡',color:'#fbbf24',price: 2.95, buy:'https://www.amazon.com/s?k=tp4056+lipo+charger',    pins:['IN+','IN-','BAT+','BAT-','OUT+','OUT-'] },
+    { type:'usb_power',   label:'USB 5V Power Bank', icon:'🔌', color:'#fbbf24', price: 8.00, buy:'https://www.amazon.com/s?k=usb+power+bank+5v',      pins:['5V','GND'] },
+    { type:'solar_panel', label:'Solar Panel 6V/2W', icon:'☀',  color:'#fbbf24', price:12.95, buy:'https://www.adafruit.com/search?q=solar+panel+6v',  pins:['+','-'] },
+  ],
+  PASSIVE: [
+    { type:'resistor',  label:'Resistors (assorted)', icon:'▭', color:'#94a3b8', price: 5.95, buy:'https://www.adafruit.com/search?q=resistor+kit',    pins:['1','2'] },
+    { type:'capacitor', label:'Capacitors (assorted)', icon:'⊢', color:'#94a3b8', price: 5.95, buy:'https://www.amazon.com/s?k=capacitor+assortment+kit', pins:['+','-'] },
+    { type:'led',       label:'LEDs (assorted 5mm)',  icon:'●',  color:'#f87171', price: 4.95, buy:'https://www.adafruit.com/search?q=led+assortment',   pins:['+','-'] },
+    { type:'button',    label:'Tactile Buttons',      icon:'⊙',  color:'#94a3b8', price: 2.50, buy:'https://www.adafruit.com/search?q=tactile+button',  pins:['1','2'] },
+    { type:'pot',       label:'10kΩ Potentiometer',   icon:'↻',  color:'#94a3b8', price: 0.95, buy:'https://www.sparkfun.com/search/results?term=potentiometer+10k', pins:['1','WIPER','2'] },
+    { type:'relay_5v',  label:'5V Relay Module',      icon:'⏻',  color:'#94a3b8', price: 3.95, buy:'https://www.amazon.com/s?k=5v+relay+module+arduino', pins:['VCC','GND','IN','NO','COM','NC'] },
+  ],
+  CELLULAR: [
+    { type:'sim800l',  label:'SIM800L GSM/GPRS',  icon:'📱', color:'#f97316', price:12.00, dim:'23×23mm bare chip', buy:'https://www.amazon.com/s?k=sim800l+gsm+module',   pins:['VCC','GND','RXD','TXD','RST','DTR','RING','PWRKEY'] },
+    { type:'sim7600e', label:'SIM7600E 4G LTE',   icon:'📱', color:'#f97316', price:55.00, dim:'30×42mm (miniPCIe)', buy:'https://www.amazon.com/s?k=sim7600e+4g+module',   pins:['VCC','GND','RXD','TXD','RST','PWRKEY','STATUS'] },
+    { type:'a9g',      label:'A9G GSM+GPS',        icon:'🛰',  color:'#fb923c', price:15.00, dim:'27×32mm',          buy:'https://www.amazon.com/s?k=a9g+gsm+gps+module',  pins:['VCC','GND','UART_TX','UART_RX','RST','WAKEUP','GPS_TX','GPS_RX'] },
+    { type:'sim7000g', label:'SIM7000G NB-IoT',   icon:'📡', color:'#f97316', price:45.00, dim:'24×24mm bare chip', buy:'https://www.amazon.com/s?k=sim7000g+nb-iot',      pins:['VCC','GND','RXD','TXD','RST','PWRKEY','DTR'] },
+    { type:'ec21',     label:'EC21 LTE Cat-1',    icon:'📱', color:'#ea580c', price:65.00, dim:'33×28mm (miniPCIe)', buy:'https://www.digikey.com/en/products/filter?q=ec21+quectel', pins:['VCC','GND','UART_TX','UART_RX','RST','PWRKEY'] },
+  ],
+  GPS: [
+    { type:'neo6m',    label:'NEO-6M GPS',        icon:'🛰',  color:'#4ade80', price:10.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=neo-6m+gps+module',   pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'neo8m',    label:'NEO-8M GPS',         icon:'🛰',  color:'#4ade80', price:12.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=neo-8m+gps+module',   pins:['VCC','GND','TX','RX','PPS','TIMEPULSE'] },
+    { type:'l76k',     label:'L76K GPS (Quectel)', icon:'🛰',  color:'#22d3ee', price:20.00, dim:'10×10mm chip only',   buy:'https://www.digikey.com/en/products/filter?q=l76k+quectel', pins:['VCC','GND','TXD','RXD','PPS','NRESET','FORCE_ON'] },
+    { type:'gtu7',     label:'GT-U7 GPS',          icon:'🛰',  color:'#22d3ee', price: 8.00, dim:'25×35mm (w/antenna)', buy:'https://www.amazon.com/s?k=gt-u7+gps+module',    pins:['VCC','GND','TX','RX','PPS'] },
+    { type:'atgm336h', label:'ATGM336H GPS/BDS',   icon:'🛰',  color:'#22d3ee', price:10.00, dim:'18×18mm bare module', buy:'https://www.amazon.com/s?k=atgm336h+gps+module', pins:['VCC','GND','TXD1','RXD1','PPS','NRESET'] },
+  ],
+  LORA: [
+    { type:'sx1276',        label:'SX1276 Ra-02 868MHz',  icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+sx1276+lora+module', pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'sx1278',        label:'SX1278 Ra-02 433MHz',  icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+sx1278+lora+433',   pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','RST'] },
+    { type:'rfm95w',        label:'RFM95W LoRa (Adafruit)',icon:'📻',color:'#a855f7', price:19.95, dim:'16×17mm',  buy:'https://www.adafruit.com/search?q=rfm95w',             pins:['VCC','GND','SCK','MISO','MOSI','NSS','DIO0','DIO1','RST'] },
+    { type:'ra02',          label:'Ra-02 LoRa 433',       icon:'📻', color:'#c084fc', price: 8.00, dim:'16×17mm',  buy:'https://www.amazon.com/s?k=ra-02+433mhz+lora',        pins:['GND','3.3V','MOSI','MISO','SCK','NSS','REST','DIO0'] },
+    { type:'rylr896',       label:'RYLR896 LoRa UART',    icon:'📻', color:'#d946ef', price:20.00, dim:'46×24mm',  buy:'https://www.amazon.com/s?k=rylr896+lora+module',      pins:['VCC','GND','TXD','RXD','RST'] },
+    { type:'e32_433',       label:'E32-433T LoRa',        icon:'📻', color:'#a855f7', price:12.00, dim:'38×20mm',  buy:'https://www.amazon.com/s?k=e32-433+lora+module',      pins:['M0','M1','RXD','TXD','AUX','VCC','GND'] },
+    { type:'heltec_lora32', label:'Heltec LoRa32 V2',     icon:'📟', color:'#9333ea', price:24.95, dim:'51×25×9mm',buy:'https://www.amazon.com/s?k=heltec+lora32+v2',        pins:['GPIO0-39','3V3','GND','SCK','MOSI','MISO','NSS','DIO0','RST','OLED_SDA','OLED_SCL'] },
+  ],
+  RADIO: [
+    { type:'hc05',     label:'HC-05 Bluetooth',  icon:'📶', color:'#60a5fa', price: 7.00, buy:'https://www.amazon.com/s?k=hc-05+bluetooth+module', pins:['VCC','GND','TXD','RXD','KEY','STATE'] },
+    { type:'nrf24l01', label:'nRF24L01 2.4GHz',  icon:'📶', color:'#60a5fa', price: 4.95, buy:'https://www.sparkfun.com/search/results?term=nrf24l01', pins:['GND','VCC','CE','CSN','SCK','MOSI','MISO','IRQ'] },
+    { type:'hc12',     label:'HC-12 433MHz',     icon:'📶', color:'#818cf8', price: 8.00, buy:'https://www.amazon.com/s?k=hc-12+433+wireless',    pins:['VCC','GND','TXD','RXD','SET'] },
+  ],
+};
+
+// Connection signal type → color
+const SIG_COLOR = {
+  power:'#ff4455', pwr:'#ff4455', vcc:'#ff4455', vin:'#ff4455', '5v':'#ff4455', '3v3':'#ff4455',
+  gnd:'#606060', ground:'#606060',
+  i2c:'#00ccff', sda:'#00ccff', scl:'#00ccff',
+  spi:'#ffaa00', mosi:'#ffaa00', miso:'#ffaa00', sck:'#ffaa00', cs:'#ffaa00', nss:'#ffaa00',
+  uart:'#ff66ff', tx:'#ff66ff', rx:'#ff66ff', txd:'#ff66ff', rxd:'#ff66ff',
+  gpio:'#00ff41', data:'#00ff41', sig:'#00ff41',
+  pwm:'#88ffaa',
+  lora:'#cc44ff', dio:'#cc44ff', rst:'#cc44ff',
+  gps:'#44ffaa', pps:'#44ffaa',
+  gsm:'#ff6633', cell:'#ff6633', pwrkey:'#ff6633',
+};
+function sigColor(label) {
+  const key = (label||'').toLowerCase().replace(/[\s\-_]/g,'');
+  for (const [k,v] of Object.entries(SIG_COLOR)) { if (key.includes(k)) return v; }
+  return '#4488aa';
+}
+
+function getCatColor(cat) {
+  return {
+    MCU:'#00ccff', SENSOR:'#00ff41', DISPLAY:'#ffaa00', POWER:'#ffcc00',
+    PASSIVE:'#888888', CELLULAR:'#ff6633', GPS:'#44ffaa', LORA:'#cc44ff', RADIO:'#4488ff',
+  }[cat] || '#00ccff';
+}
+function getCatForType(type) {
+  for (const [cat, items] of Object.entries(CATALOG)) {
+    if (items.find(i=>i.type===type)) return cat;
+  }
+  return 'MCU';
+}
+function getCompDef(type) {
+  for (const items of Object.values(CATALOG)) { const f=items.find(i=>i.type===type); if(f)return f; }
+  return null;
+}
+
+// ── CIRCUIT STATE ─────────────────────────────────────────────────────────────
+let circuit = { title:'Untitled Circuit', components:[], connections:[] };
+let selectedId = null;
+let activeNodes = [], activeLinks = [], activeNodeAll = null, activeLinkAll = null;
+let gun;
+
+// ── D3 SETUP ──────────────────────────────────────────────────────────────────
+const svgEl = document.getElementById('circuitSvg');
+const svg   = d3.select(svgEl);
+let W = 0, H = 0;
+
+function getSvgSize() {
+  const r = svgEl.getBoundingClientRect();
+  W = r.width; H = r.height;
+}
+
+// Zoom
+const zoom = d3.zoom().scaleExtent([0.2,4]).on('zoom', e => {
+  mainG.attr('transform', e.transform);
+});
+svg.call(zoom);
+
+const defs = svg.append('defs');
+// Arrowhead markers
+['gpio','i2c','spi','uart','pwr','gnd','def'].forEach(sig => {
+  const cols = {gpio:'#00ff41',i2c:'#00ccff',spi:'#ffaa00',uart:'#ff66ff',pwr:'#ff4455',gnd:'#606060',def:'#4488aa'};
+  defs.append('marker').attr('id','arr-'+sig).attr('viewBox','0 0 8 8').attr('refX',7).attr('refY',4)
+    .attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto')
+    .append('path').attr('d','M0,0 L8,4 L0,8 Z').attr('fill',cols[sig]);
+});
+
+const mainG  = svg.append('g').attr('class','main-g');
+const linksG = mainG.append('g').attr('class','links-g');
+const nodesG = mainG.append('g').attr('class','nodes-g');
+
+const NODE_W = 130, NODE_H = 48;
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderCircuit(circ) {
+  circuit = circ;
+  document.getElementById('circuitTitle').value = circ.title || 'Untitled';
+  document.getElementById('sbComps').textContent = circ.components.length;
+  document.getElementById('sbConns').textContent = circ.connections.length;
+  updateJson();
+  pushCollab(); // broadcast if live
+
+  getSvgSize();
+  // clear any stale state
+
+  const nodes = circ.components.map(c => ({
+    ...c,
+    id: c.id,
+    x: c.x != null ? c.x : W/2 + (Math.random()-0.5)*200,
+    y: c.y != null ? c.y : H/2 + (Math.random()-0.5)*200,
+  }));
+
+  const nodeMap = Object.fromEntries(nodes.map(n=>[n.id,n]));
+
+  const links = circ.connections.map((conn,i) => ({
+    ...conn, index:i,
+    source: nodeMap[conn.from?.split('.')[0]] || conn.from?.split('.')[0],
+    target: nodeMap[conn.to?.split('.')[0]]   || conn.to?.split('.')[0],
+    fromPin: conn.from?.split('.')[1]||'',
+    toPin:   conn.to?.split('.')[1]||'',
+    color:   sigColor(conn.label||conn.fromPin||conn.toPin),
+  })).filter(l => l.source && l.target && typeof l.source==='object' && typeof l.target==='object');
+
+  // Draw links
+  const link = linksG.selectAll('.link-group').data(links, (_,i)=>i);
+  link.exit().remove();
+  const linkEnter = link.enter().append('g').attr('class','link-group');
+  linkEnter.append('path').attr('class','link-line');
+  linkEnter.append('text').attr('class','link-label');
+  const linkAll = linkEnter.merge(link);
+  linkAll.select('path').attr('stroke', d=>d.color).attr('marker-end', d=>'url(#arr-def)');
+  linkAll.select('text').text(d => [d.fromPin,d.toPin].filter(Boolean).join('→')||d.label||'');
+
+  // Draw nodes with improved visuals
+  const node = nodesG.selectAll('.node-group').data(nodes, d=>d.id);
+  node.exit().remove();
+  const nodeEnter = node.enter().append('g').attr('class','node-group')
+    .call(d3.drag().on('start', dragStart).on('drag', dragged).on('end', dragEnd))
+    .on('click', (event, d) => { event.stopPropagation(); selectComp(d.id); });
+
+  // Create realistic component shapes based on type
+  nodeEnter.each(function(d) {
+    const g = d3.select(this);
+    const def = getCompDef(d.type);
+    const cat = getCatForType(d.type);
+    const color = getCatColor(cat);
+    
+    // Determine component shape and size
+    let shape = 'rect', width = NODE_W, height = NODE_H;
+    if (def?.type.includes('resistor') || def?.type.includes('capacitor') || def?.type.includes('led')) {
+      shape = 'rect';
+      width = 80; height = 30;
+    } else if (def?.type.includes('button')) {
+      shape = 'circle';
+      width = height = 40;
+    } else if (def?.type.includes('battery')) {
+      shape = 'rect';
+      width = 60; height = 80;
+    } else if (def?.type.includes('relay')) {
+      shape = 'rect';
+      width = 100; height = 60;
+    }
+
+    // Draw main shape
+    if (shape === 'rect') {
+      g.append('rect')
+        .attr('class','node-rect')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('x', -width/2)
+        .attr('y', -height/2)
+        .attr('rx', def?.type.includes('battery') ? 4 : 6)
+        .attr('ry', def?.type.includes('battery') ? 4 : 6)
+        .attr('fill', color + '18')
+        .attr('stroke', color)
+        .attr('stroke-width', 1);
+    } else {
+      g.append('circle')
+        .attr('class','node-rect')
+        .attr('r', width/2)
+        .attr('fill', color + '18')
+        .attr('stroke', color)
+        .attr('stroke-width', 1);
+    }
+
+    // Add component-specific details
+    if (def?.type.includes('resistor')) {
+      // Resistor zigzag pattern
+      const path = `M${-width/2+10},0 L${-width/2+20},-10 L${-width/2+30},10 L${-width/2+40},-10 L${-width/2+50},10 L${-width/2+60},-10 L${-width/2+70},0`;
+      g.append('path')
+        .attr('d', path)
+        .attr('fill', 'none')
+        .attr('stroke', '#ffaa00')
+        .attr('stroke-width', 2);
+    } else if (def?.type.includes('capacitor')) {
+      // Capacitor plates
+      g.append('line').attr('x1', -15).attr('y1', -10).attr('x2', -15).attr('y2', 10).attr('stroke', '#00ccff').attr('stroke-width', 2);
+      g.append('line').attr('x1', 15).attr('y1', -10).attr('x2', 15).attr('y2', 10).attr('stroke', '#00ccff').attr('stroke-width', 2);
+      g.append('line').attr('x1', -15).attr('y1', 0).attr('x2', 15).attr('y2', 0).attr('stroke', '#00ccff').attr('stroke-width', 1).attr('stroke-dasharray', '2,2');
+    } else if (def?.type.includes('led')) {
+      // LED symbol
+      g.append('path').attr('d', `M${-width/2+10},0 L${width/2-10},0`).attr('stroke', '#ff6666').attr('stroke-width', 2);
+      g.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 8).attr('fill', '#ff6666').attr('opacity', 0.3);
+      g.append('text').attr('x', 0).attr('y', 4).attr('text-anchor','middle').attr('font-size', 10).attr('fill', '#ff6666').text('LED');
+    } else if (def?.type.includes('battery')) {
+      // Battery terminals
+      g.append('rect').attr('x', -width/2-4).attr('y', -10).attr('width', 4).attr('height', 20).attr('fill', '#ffcc00');
+      g.append('rect').attr('x', width/2).attr('y', -10).attr('width', 4).attr('height', 20).attr('fill', '#ffcc00');
+      g.append('text').attr('x', 0).attr('y', 4).attr('text-anchor','middle').attr('font-size', 10).attr('fill', color).text('BATT');
+    } else if (def?.type.includes('button')) {
+      // Button press indicator
+      g.append('circle').attr('r', 12).attr('fill', '#aaaaaa').attr('opacity', 0.5);
+      g.append('circle').attr('r', 8).attr('fill', '#ffffff');
+    }
+  });
+
+  // Add labels
+  nodeEnter.append('text').attr('class','node-label-id').attr('y', -5).attr('text-anchor','middle').attr('font-size',11);
+  nodeEnter.append('text').attr('class','node-label-name').attr('y', 12).attr('text-anchor','middle').attr('font-size',9);
+  nodeEnter.append('text').attr('class','node-label-cat').attr('y', 24).attr('text-anchor','middle').attr('font-size',8).attr('opacity',0.5);
+
+  const nodeAll = nodeEnter.merge(node);
+  
+  // Update existing nodes
+  nodeAll.select('.node-label-id').text(d=>d.id).attr('fill',d=>getCatColor(getCatForType(d.type)));
+  nodeAll.select('.node-label-name').text(d=>d.label||d.type);
+  nodeAll.select('.node-label-cat').text(d=>getCatForType(d.type)).attr('fill',d=>getCatColor(getCatForType(d.type)));
+
+  svg.on('click', () => deselect());
+
+  // Static layout — no force simulation, pure drag-to-position
+  activeNodes = nodes;
+  activeLinks = links;
+  activeNodeAll = nodeAll;
+  activeLinkAll = linkAll;
+  redrawPositions();
+}
+
+function redrawPositions() {
+  if (!activeNodeAll) return;
+  activeNodeAll.attr('transform', d=>`translate(${d.x},${d.y})`);
+  activeLinkAll.select('path').attr('d', d => {
+    const dx = d.target.x - d.source.x;
+    const dy = d.target.y - d.source.y;
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const sx  = d.source.x + dx/len*(NODE_W/2+2);
+    const sy  = d.source.y + dy/len*(NODE_H/2+2);
+    const tx  = d.target.x - dx/len*(NODE_W/2+8);
+    const ty  = d.target.y - dy/len*(NODE_H/2+8);
+    const mx  = (sx+tx)/2 - dy/len*20;
+    const my  = (sy+ty)/2 + dx/len*20;
+    return `M${sx},${sy} Q${mx},${my} ${tx},${ty}`;
+  });
+  activeLinkAll.select('text').attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-8);
+  // Persist positions
+  activeNodes.forEach(n => { const orig=circuit.components.find(c=>c.id===n.id); if(orig){orig.x=Math.round(n.x);orig.y=Math.round(n.y);} });
+}
+
+function dragStart(event, d) { d._dragX=d.x; d._dragY=d.y; }
+function dragged(event, d)   { d.x=event.x; d.y=event.y; redrawPositions(); }
+function dragEnd(event, d)   { redrawPositions(); updateJson(); }
+
+// ── SELECTION ─────────────────────────────────────────────────────────────────
+function selectComp(id) {
+  selectedId = id;
+  nodesG.selectAll('.node-group').select('.node-rect').attr('stroke-width', d => d.id===id ? 2 : 1).attr('filter', d => d.id===id ? 'brightness(1.5)' : null);
+  const comp = circuit.components.find(c=>c.id===id);
+  if (comp) {
+    const def = getCompDef(comp.type);
+    document.getElementById('propsNoSel').style.display='none';
+    document.getElementById('propsPanel').style.display='';
+    document.getElementById('propId').value    = comp.id;
+    document.getElementById('propLabel').value = comp.label||'';
+    document.getElementById('propType').textContent = comp.type;
+    document.getElementById('propCat').textContent  = getCatForType(comp.type);
+    const pinList = document.getElementById('propPins');
+    pinList.innerHTML = (def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('');
+    switchSTab('props');
+    showWiki(comp.type);
+  }
+}
+
+function deselect() {
+  selectedId = null;
+  nodesG.selectAll('.node-group').select('.node-rect').attr('stroke-width',1).attr('filter',null);
+  document.getElementById('propsNoSel').style.display='';
+  document.getElementById('propsPanel').style.display='none';
+}
+
+applyProps = function() {
+  const comp = circuit.components.find(c=>c.id===selectedId);
+  if (!comp) return;
+  comp.id    = document.getElementById('propId').value.trim() || comp.id;
+  comp.label = document.getElementById('propLabel').value.trim();
+  selectedId = comp.id;
+  renderCircuit(circuit);
+}
+
+deleteSelected = function() {
+  if (!selectedId) return;
+  if (!confirm(`Delete component ${selectedId}?`)) return;
+  circuit.components  = circuit.components.filter(c=>c.id!==selectedId);
+  circuit.connections = circuit.connections.filter(c=>!c.from?.startsWith(selectedId)&&!c.to?.startsWith(selectedId));
+  deselect();
+  renderCircuit(circuit);
+}
+
+// ── CATALOG ───────────────────────────────────────────────────────────────────
+function buildCatalog() {
+  const pane = document.getElementById('spane-catalog');
+  pane.innerHTML = '';
+  Object.entries(CATALOG).forEach(([cat, items]) => {
+    const hdr = document.createElement('div');
+    hdr.className = 'cat-hdr';
+    hdr.innerHTML = `<span>▼ ${cat}</span><span style="color:var(--cyan-d)">${items.length}</span>`;
+    let bodyVisible = true;
+    const body = document.createElement('div');
+    body.className = 'cat-body';
+    hdr.addEventListener('click', () => { bodyVisible=!bodyVisible; body.style.display=bodyVisible?'':'none'; hdr.querySelector('span').textContent=(bodyVisible?'▼':'▶')+' '+cat; });
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'comp-entry';
+      const priceStr = item.price != null ? `<span style="color:var(--green);font-size:12px;margin-left:auto;white-space:nowrap">$${item.price.toFixed(2)}</span>` : '';
+      const buyBtn = item.buy ? `<a href="${item.buy}" target="_blank" title="Buy" onclick="event.stopPropagation()" style="color:var(--cyan);font-size:12px;text-decoration:none;white-space:nowrap;padding:1px 5px;border:1px solid rgba(56,189,248,0.3)">BUY</a>` : '';
+      el.innerHTML = `<span class="comp-icon">${item.icon||'▪'}</span><span class="comp-name" style="color:${item.color||'var(--text)'}">${item.label}</span>${priceStr}${buyBtn}`;
+      el.title = `${item.type} — click to add`;
+      el.addEventListener('click', () => addComponent(item));
+      body.appendChild(el);
+    });
+    pane.appendChild(hdr);
+    pane.appendChild(body);
+  });
+}
+
+buildBOM = function() {
+  const comps = circuit.components;
+  const bomEmpty = document.getElementById('bomEmpty');
+  const bomTable = document.getElementById('bomTable');
+  const bomTotal = document.getElementById('bomTotal');
+  if (!comps.length) { bomEmpty.style.display=''; bomTable.style.display='none'; bomTotal.style.display='none'; return; }
+  bomEmpty.style.display = 'none';
+
+  // Tally by type
+  const tally = {};
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d => d.type===c.type);
+    if (!tally[c.type]) tally[c.type] = { label: c.label, qty:0, price: def?.price||0, buy: def?.buy||'' };
+    tally[c.type].qty++;
+  });
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <tr style="color:var(--text-dim);border-bottom:1px solid var(--edge)">
+      <th style="text-align:left;padding:4px 2px;letter-spacing:.5px">PART</th>
+      <th style="text-align:center;padding:4px 2px">QTY</th>
+      <th style="text-align:right;padding:4px 2px">EA</th>
+      <th style="text-align:right;padding:4px 2px">LINE</th>
+    </tr>`;
+  let compCost = 0;
+  Object.values(tally).forEach(row => {
+    const line = row.price * row.qty;
+    compCost += line;
+    const buyLink = row.buy ? `<a href="${row.buy}" target="_blank" style="color:var(--cyan);text-decoration:none"> ↗</a>` : '';
+    html += `<tr style="border-bottom:1px solid rgba(26,40,64,0.5)">
+      <td style="padding:5px 2px;color:var(--text)">${row.label}${buyLink}</td>
+      <td style="text-align:center;padding:5px 2px;color:var(--text-dim)">${row.qty}</td>
+      <td style="text-align:right;padding:5px 2px;color:var(--text-dim)">$${row.price.toFixed(2)}</td>
+      <td style="text-align:right;padding:5px 2px;color:var(--green)">$${line.toFixed(2)}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  bomTable.innerHTML = html;
+  bomTable.style.display = '';
+
+  const shipping = compCost < 25 ? 6.95 : compCost < 75 ? 9.95 : 0;
+  document.getElementById('bomCompCost').textContent = '$'+compCost.toFixed(2);
+  document.getElementById('bomShipping').textContent = shipping===0 ? 'FREE (est.)' : '$'+shipping.toFixed(2);
+  document.getElementById('bomTotalVal').textContent = '$'+(compCost+shipping).toFixed(2);
+  bomTotal.style.display = '';
+}
+
+exportBOM = function() {
+  const comps = circuit.components;
+  if (!comps.length) { setStatus('No components to export.'); return; }
+  const tally = {};
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d => d.type===c.type);
+    if (!tally[c.type]) tally[c.type] = { label:c.label, qty:0, price:def?.price||0, buy:def?.buy||'' };
+    tally[c.type].qty++;
+  });
+  let csv = 'Part,Qty,Unit Price,Line Total,Buy Link\n';
+  Object.values(tally).forEach(r => {
+    csv += `"${r.label}",${r.qty},${r.price.toFixed(2)},${(r.price*r.qty).toFixed(2)},"${r.buy}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'gn-bom.csv'});
+  a.click(); URL.revokeObjectURL(a.href);
+  setStatus('BOM exported as gn-bom.csv');
+}
+
+// Common enclosures: [name, W, H, depth_mm, notes]
+const ENCLOSURES = [
+  { name:'Altoids Tin',        w:90,  h:58,  d:20, note:'Classic stealth — metal = RF shield bonus' },
+  { name:'Hammond 1591M',      w:80,  h:40,  d:20, note:'Slim ABS, no mounting, pocketable' },
+  { name:'Hammond 1591B',      w:111, h:62,  d:27, note:'Standard project box, most popular' },
+  { name:'Hammond 1591XXLBK', w:188, h:120, d:56, note:'Large — fits Raspberry Pi + shields' },
+  { name:'Pelican 1010',       w:88,  h:63,  d:29, note:'Waterproof, IP67, shockproof' },
+  { name:'Pelican 1015',       w:104, h:77,  d:37, note:'Waterproof, slightly larger' },
+  { name:'Serpac A20',         w:66,  h:38,  d:18, note:'Very compact, belt-clip available' },
+  { name:'PVC Conduit 40mm',   w:40,  h:40,  d:200,note:'Pipe housing — great for outdoor nodes' },
+];
+
+function parseDim(dimStr) {
+  if (!dimStr) return null;
+  const m = dimStr.match(/(\d+)[×x](\d+)/);
+  if (!m) return null;
+  return { w: parseInt(m[1]), h: parseInt(m[2]) };
+}
+
+buildFit = function() {
+  const comps = circuit.components;
+  const el = document.getElementById('fitEstimator');
+  if (!comps.length) { el.style.display='none'; return; }
+
+  // Compute total area from component dims
+  let totalArea = 0;
+  const dimList = [];
+  comps.forEach(c => {
+    const def = Object.values(CATALOG).flat().find(d=>d.type===c.type);
+    const d = parseDim(def?.dim);
+    if (d) {
+      totalArea += d.w * d.h;
+      dimList.push(`${c.label||c.type}: ${def.dim}`);
+    }
+  });
+
+  if (!totalArea) { el.style.display='none'; return; }
+
+  // Packing factor 1.4 (wires, spacing, connectors)
+  const neededArea = Math.round(totalArea * 1.4);
+  const neededSide = Math.round(Math.sqrt(neededArea));
+
+  const fits = ENCLOSURES.filter(e => e.w * e.h >= neededArea);
+  const tight = ENCLOSURES.filter(e => e.w * e.h >= totalArea && e.w * e.h < neededArea);
+
+  let html = `<div style="padding:10px;background:var(--deep);border:1px solid var(--edge);font-size:12px">
+    <div style="color:var(--amber);margin-bottom:8px;letter-spacing:1px">📐 PHYSICAL FIT ESTIMATOR</div>
+    <div style="color:var(--text-dim);margin-bottom:4px">Component footprint total: <span style="color:var(--text)">${totalArea} mm²</span></div>
+    <div style="color:var(--text-dim);margin-bottom:10px">With wiring/spacing (×1.4): <span style="color:var(--green)">${neededArea} mm² (~${neededSide}×${neededSide}mm square)</span></div>`;
+
+  if (fits.length) {
+    html += `<div style="color:var(--green);margin-bottom:4px;letter-spacing:.5px">✓ FITS IN:</div>`;
+    fits.slice(0,4).forEach(e => {
+      html += `<div style="margin-bottom:3px;padding:3px 0;border-bottom:1px solid rgba(26,40,64,0.5)"><span style="color:var(--text)">${e.name}</span> <span style="color:var(--text-dim)">${e.w}×${e.h}mm</span> <span style="color:var(--cyan);font-size:11px"> — ${e.note}</span></div>`;
+    });
+  }
+  if (tight.length) {
+    html += `<div style="color:var(--amber);margin:6px 0 4px;letter-spacing:.5px">⚠ TIGHT (no spacing):</div>`;
+    tight.forEach(e => {
+      html += `<div style="margin-bottom:2px;color:var(--text-dim)">${e.name} ${e.w}×${e.h}mm</div>`;
+    });
+  }
+  if (!fits.length && !tight.length) {
+    html += `<div style="color:var(--red)">Too large for common enclosures — consider splitting into multiple units or custom fabrication.</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
+function addComponent(def) {
+  getSvgSize();
+  const used = circuit.components.filter(c=>c.type===def.type).length;
+  const prefix = def.type.toUpperCase().slice(0,1);
+  const id = prefix + (circuit.components.length+1);
+  // Place in next grid slot (180×140 cells), no random drift
+  const i = circuit.components.length;
+  const cols = Math.max(1, Math.floor((W - 80) / 180));
+  const gx = 90 + (i % cols) * 180;
+  const gy = 90 + Math.floor(i / cols) * 140;
+  const comp = { id, type:def.type, label:def.label, x:gx, y:gy };
+  circuit.components.push(comp);
+  renderCircuit(circuit);
+  selectComp(id);
+  setStatus(`Added ${id}: ${def.label}`);
+}
+
+// ── WIKI ──────────────────────────────────────────────────────────────────────
+// Each entry: { what, wiring, tips, lib? }
+const WIKI = {
+  arduino_uno: {
+    what: 'The Arduino Uno is the classic beginner microcontroller board. It runs at 5V, has 14 digital pins (6 can do PWM — like dimming an LED), 6 analog input pins (read variable voltages), 32KB of flash memory to store your program, and a 16MHz clock. It\'s slow compared to modern boards but incredibly well-documented.',
+    wiring: 'I2C: SDA→A4, SCL→A5 · SPI: MOSI D11, MISO D12, SCK D13, SS D10 · UART: TX D1, RX D0 (shares USB — use SoftwareSerial on other pins during debug)',
+    tips: '5V logic — connect 3.3V sensors via a voltage divider or level shifter. Vin pin accepts 7-12V DC. Analog pins read 0-1023 for 0-5V. Reset button re-runs setup().',
+    lib: 'Arduino IDE built-in — no library needed. Wire.h for I2C, SPI.h for SPI.',
+  },
+  esp32: {
+    what: 'The ESP32 is a powerful dual-core 240MHz chip with built-in WiFi and Bluetooth. It\'s the workhorse of guardian nodes: connect to the internet, run BLE beacons, talk to sensors, and go deep-sleep on battery. 3.3V logic (NOT 5V tolerant — use level shifters for 5V sensors).',
+    wiring: 'I2C: SDA GPIO21, SCL GPIO22 · SPI: MOSI GPIO23, MISO GPIO19, SCK GPIO18, CS GPIO5 · UART0: TX GPIO1/RX GPIO3 (USB), UART1: GPIO16/17 (use for GPS) · 3.3V on 3V3 pin, 5V in on VIN',
+    tips: 'GPIO34-39 are INPUT-only (no pullup). Avoid GPIO0 (boot mode), GPIO2 (LED). Deep sleep: wake from GPIO33 or touch pins. ESP.deepSleep(uS) — 10µA idle.',
+    lib: 'Arduino-ESP32 core. WiFiClient, HTTPClient, ArduinoJson, TinyGPS++.',
+  },
+  dht22: {
+    what: 'The DHT22 measures temperature and humidity using a single data wire. It\'s accurate to ±0.5°C and ±2-5% RH. Great for environmental monitoring. The DHT11 is cheaper but less accurate — for field nodes, always use DHT22.',
+    wiring: 'VCC→3.3-5V, GND→GND, DATA→any digital pin. REQUIRED: 10kΩ pullup resistor between VCC and DATA pin. Without it the signal floats and you get garbage readings.',
+    tips: 'Wait 2 seconds minimum between readings — the sensor needs time to stabilize. If you get NaN, check your pullup. Library automatically handles the single-wire timing protocol.',
+    lib: 'DHT sensor library by Adafruit (install via Library Manager).',
+  },
+  bmp280: {
+    what: 'The BMP280 measures barometric pressure (300-1100hPa) and temperature (-40 to 85°C). Pressure data lets you calculate altitude (useful for drones or elevation tracking). It also functions as a weather sensor — falling pressure predicts rain.',
+    wiring: 'I2C mode: VCC→3.3V, GND→GND, SDA/SCL to MCU I2C pins. SDO pin sets I2C address: SDO→GND = 0x76, SDO→VCC = 0x77. CSB→VCC for I2C mode.',
+    tips: 'Run two BMP280s on the same I2C bus by using different SDO states. SPI mode is faster — useful if bus is crowded. Use sea-level pressure (101325 Pa) as reference for relative altitude.',
+    lib: 'Adafruit BMP280 library or Bosch BSEC library for BME280 (includes humidity).',
+  },
+  oled_128x64: {
+    what: 'The 0.96" OLED display has 128×64 pixels — no backlight needed, each pixel emits its own light. Contrast is excellent in the dark, power consumption is very low (~20mA active). Perfect for field device status displays: GPS coords, battery %, signal strength.',
+    wiring: 'I2C (most common): VCC→3.3-5V, GND→GND, SDA/SCL to MCU I2C. Address is 0x3C (most modules) or 0x3D. Some modules have SPI: MOSI, SCK, CS, DC, RST.',
+    tips: 'Displays white text on black background by default. Use display.invertDisplay(true) for black-on-white. Avoid drawing the entire screen every loop — only redraw changed regions for power savings. Leave it off when not needed.',
+    lib: 'Adafruit SSD1306 + Adafruit GFX libraries (both required).',
+  },
+  hcsr04: {
+    what: 'The HC-SR04 is an ultrasonic distance sensor — it emits a 40kHz sound pulse and measures how long the echo takes to return. Range: 2cm to 400cm with ±3mm accuracy. Used for proximity detection, level sensing, people detection.',
+    wiring: 'VCC→5V (important: needs 5V, not 3.3V), GND→GND, TRIG→digital output pin, ECHO→digital input pin. If using with 3.3V MCU (ESP32), add a voltage divider on the ECHO line: 1kΩ + 2kΩ to bring 5V down to 3.3V.',
+    tips: 'Send a 10µs HIGH pulse on TRIG. Measure pulse width on ECHO. Distance (cm) = pulse_µs / 58. Objects less than 2cm may give unreliable readings. Cone angle is ~15° — point carefully.',
+    lib: 'No library needed — use pulseIn(). Or use NewPing library for cleaner code.',
+  },
+  nrf24l01: {
+    what: 'The nRF24L01+ is a 2.4GHz radio transceiver — same frequency as WiFi but cheaper and lower power. Range is 30-100m indoors, up to 1km with the PA+LNA version and antenna. Creates point-to-point or mesh radio links without needing WiFi infrastructure.',
+    wiring: 'SPI: MOSI, MISO, SCK + CE (chip enable, any digital) + CSN (chip select, any digital). VCC must be 3.3V — 5V will destroy it. On 5V Arduinos, use a 3.3V regulator for this module only.',
+    tips: 'The nRF24 is notoriously noisy — add a 100µF electrolytic + 100nF ceramic cap right at VCC/GND pins. Set PA level to RF24_PA_LOW to reduce power and interference indoors. Use static addressing (setAutoAck) for reliability.',
+    lib: 'RF24 library by TMRh20 (most maintained fork).',
+  },
+  sx1276: {
+    what: 'The SX1276 is the LoRa radio chip behind most long-range mesh links. LoRa (Long Range) uses a spread-spectrum chirp modulation — it trades data speed for incredible range. 5-15km line-of-sight, penetrates buildings. 868MHz (EU) or 915MHz (US/CA).',
+    wiring: 'SPI: MOSI, MISO, SCK, NSS (CS). Plus DIO0 (interrupt for TX/RX done), RST (optional). 3.3V only. Typical dev boards have all this broken out. IMPORTANT: never transmit without an antenna — can damage the RF front end.',
+    tips: 'Spreading Factor (SF7-SF12): higher SF = longer range but slower. SF12 can take ~2.5 seconds per packet at 125kHz BW. Use SF7-SF9 for in-field node-to-base links. Pair with GPS for timestamped position packets.',
+    lib: 'arduino-LoRa by sandeepmistry (simple). MCCI LMIC for full LoRaWAN stack.',
+  },
+  sx1278: {
+    what: 'The SX1278 is the 433MHz version of the SX1276 LoRa chip. Lower frequency means better building/wall penetration but a larger antenna (~17cm quarter-wave). Range 2-8km LoS. 433MHz is less congested than 868/915MHz in many areas.',
+    wiring: 'Same SPI pinout as SX1276. 3.3V only. Antenna: use a 17.3cm wire as a quarter-wave monopole or proper 433MHz dipole.',
+    tips: 'Check local regulations — 433MHz power limits vary by country. In Canada/US, 433MHz ISM band allows up to 1W but LoRa modules are far below that. Lower frequency = less affected by rain/humidity attenuation.',
+    lib: 'arduino-LoRa (set frequency to 433E6).',
+  },
+  rfm95w: {
+    what: 'The RFM95W is a complete LoRa module by Hope RF built around the SX1276 chipset. Popular on Adafruit Feather boards and compatible with The Things Network for LoRaWAN (internet connectivity without SIM card). 868/915MHz.',
+    wiring: 'SPI + DIO0/DIO1/DIO2 interrupt pins + RST. The Feather ecosystem makes this plug-and-play. Standalone: wire SPI + DIO0 minimum. 3.3V supply.',
+    tips: 'For LoRaWAN (connecting to TTN/Helium), you need DIO0+DIO1+DIO2 connected. For simple point-to-point LoRa, DIO0 alone is enough. The onboard u.FL connector works with SMA adapters for external antennas.',
+    lib: 'MCCI LMIC for LoRaWAN. arduino-LoRa for P2P.',
+  },
+  ra02: {
+    what: 'The Ra-02 is a cheap SX1278 module from AI-Thinker at 433MHz. Comes with a small PCB trace antenna and U.FL connector. Popular in Chinese maker kits. 3.3V only — it will be damaged by 5V. Range up to 5km LoS with good antennas.',
+    wiring: 'SPI: MOSI, MISO, SCK, NSS + RST + DIO0. 3.3V VCC only. If using with 5V Arduino, put level shifters on all SPI lines and NSS.',
+    tips: 'The module\'s castellated edges make soldering to a PCB easy. The default PCB antenna is short — for better range, solder a 17.3cm wire to the IPEX/U.FL connector. Use a 100nF decoupling cap at VCC.',
+    lib: 'arduino-LoRa (set 433E6).',
+  },
+  rylr896: {
+    what: 'The RYLR896 is a LoRa module with a built-in UART AT command interface — no SPI coding needed. Just send text commands over serial: AT+SEND, AT+RECEIVE. Great for prototypers who aren\'t comfortable with SPI. 915MHz, up to 15km range.',
+    wiring: 'TX/RX to MCU UART (cross them: module TX → MCU RX). 3.3V VCC. Baud rate default 115200. VDD→3.3V only.',
+    tips: 'Set network parameters: AT+NETWORKID=6 (match on all nodes), AT+ADDRESS=1 (unique per node), AT+PARAMETER=9,7,1,12 (SF9, BW125, CR4/5, preamble 12). Use hardware UART not SoftwareSerial for reliability.',
+    lib: 'No library — use Serial.print("AT+SEND=2,5,HELLO\\r\\n").',
+  },
+  e32_433: {
+    what: 'The E32-433T is a UART LoRa module at 433MHz from EBYTE, also using the SX1278. Mode is controlled by two pins (M0, M1), making it easy to switch between transmit, sleep, and config modes without code changes. Has an AUX pin that signals when the module is busy.',
+    wiring: 'TX/RX to MCU UART. M0 and M1 to digital outputs (mode select). AUX to digital input (busy indicator). 3.3V VCC. Wait for AUX=HIGH before sending data.',
+    tips: 'Mode 00 (M0=0, M1=0) = normal transparent serial. Mode 11 = config mode (send AT commands). Mode 01/10 = power-saving wake-up modes. Set baud rate, air rate, channel, and power via config commands.',
+    lib: 'EByte LoRa E32 library by Renzo Mischianti.',
+  },
+  heltec_lora32: {
+    what: 'The Heltec WiFi LoRa 32 V2 combines an ESP32, a SX1276/SX1278 LoRa radio, and a 0.96" OLED display on a single development board. It\'s arguably the best all-in-one board for guardian network nodes: WiFi for internet backhaul, LoRa for long-range mesh, OLED for status display. USB-C charging.',
+    wiring: 'Self-contained — LoRa and OLED are wired internally. External connections: I2C on GPIO4/15, UART on GPIO39/37. LoRa antenna: REQUIRED on the IPEX connector (868 or 915MHz). A 8.2cm wire works as a quarter-wave for 868MHz.',
+    tips: 'Use the "Heltec ESP32" board package, not generic ESP32. Built-in battery connector (PH 1.25mm). The LED is on GPIO25. Deep sleep with LoRa: radio.sleep() then ESP.deepSleep(). Wake via timer or external interrupt on GPIO39.',
+    lib: 'Heltec library (includes LoRa + OLED). Also works with arduino-LoRa + Adafruit SSD1306.',
+  },
+  neo6m: {
+    what: 'The NEO-6M from u-blox is the most popular GPS module for maker projects. It outputs NMEA sentences (standard GPS text protocol) over UART at 9600 baud. Provides latitude, longitude, altitude, speed, heading, and UTC time. Uses GPS satellites only (slower fix vs newer multi-constellation chips).',
+    wiring: 'VCC→3.3-5V, GND→GND, TX(GPS)→MCU RX, RX(GPS)→MCU TX. PPS pin outputs 1Hz pulse when satellite lock is acquired — connect to an LED or interrupt pin as a lock indicator.',
+    tips: 'Cold start (no cached almanac) takes ~30 seconds for first fix — needs clear sky view. Once locked, hot start <1s. Keep away from metal enclosures and ground planes. BAUD rate configurable 4800-115200 via UBX protocol commands, but 9600 is fine for 1Hz updates.',
+    lib: 'TinyGPS++ by Mikal Hart (easiest). Or parse NMEA strings manually: $GPRMC, $GPGGA.',
+  },
+  neo8m: {
+    what: 'The NEO-M8N/NEO-8M is u-blox\'s 8th-generation GPS that supports multiple constellations simultaneously: GPS (US), GLONASS (Russia), BeiDou (China), and Galileo (EU). More satellites = faster fix, better accuracy in cities with building obstruction.',
+    wiring: 'Same as NEO-6M: UART TX/RX swap, VCC, GND. I2C also available. Some boards have a backup battery (VBackup pin) for keeping almanac during power-off — dramatically improves fix time.',
+    tips: 'Accuracy: 2.5m CEP (circular error probable) under open sky, vs NEO-6M\'s 2m. For navigation use NEO-8M. For simple location logging, NEO-6M is fine. Configure via u-center software (Windows only).',
+    lib: 'TinyGPS++. For full config: SparkFun u-blox GNSS library.',
+  },
+  l76k: {
+    what: 'The Quectel L76K is a compact, ultra-low-power GPS module (GPS+BeiDou). Its AlwaysLocate™ algorithm adaptively manages power — when the device isn\'t moving, it takes fewer satellite readings to save battery. Ideal for battery-powered guardian field nodes.',
+    wiring: '3.3V VCC (NOT 5V tolerant). UART TX/RX. FORCE_ON pin: pull LOW to disable power-save and force continuous tracking. NRESET active-low reset.',
+    tips: 'Standby current <1mA with AlwaysLocate. Use 1PPS output for precision time sync between nodes. Small form factor (10.1×9.7mm) suits compact enclosures. Backup battery recommended for faster fix after sleep.',
+    lib: 'TinyGPS++ works fine with standard NMEA output.',
+  },
+  gtu7: {
+    what: 'The GT-U7 is a low-cost NEO-6M compatible GPS module — same chip, same pinout, same software. An excellent starting point for first GPS projects. Includes an integrated ceramic patch antenna and SMA connector for external antenna.',
+    wiring: 'Same as NEO-6M: VCC 3.3-5V, GND, TX→MCU RX, RX→MCU TX. LED blinks when acquiring satellites, stays steady when locked.',
+    tips: 'The built-in ceramic patch antenna works outdoors. For indoor testing or partial sky view, connect an external active GPS antenna via the SMA connector (needs 3.3V bias on the antenna pin — check your module variant). Default baud rate: 9600.',
+    lib: 'TinyGPS++.',
+  },
+  atgm336h: {
+    what: 'The ATGM336H is a GPS+BeiDou receiver made by ZHONGKEWEI. Low cost, 3.3V, UART NMEA output. Similar performance to NEO-6M but adds BeiDou constellation for better coverage in Asia. Includes PPS (1 pulse per second) and NRESET pins.',
+    wiring: '3.3V VCC only. UART TX→MCU RX, RX→MCU TX (9600 baud default). PPS and NRESET are optional but useful. Active ceramic patch antenna on the PCB.',
+    tips: 'Good budget option for North American use — BeiDou adds some extra satellites. Not as extensively documented as u-blox. Avoid the counterfeits that re-label older ATGM336H-5N as the H variant — check the module markings.',
+    lib: 'TinyGPS++.',
+  },
+  sim800l: {
+    what: 'The SIM800L is a quad-band GSM/GPRS module — it works like a simple cell phone. Send SMS, make calls, open TCP connections, and do HTTP requests using AT commands over UART. GPRS data (2G only) gives ~85kbps download. Works on any standard SIM card.',
+    wiring: 'VCC: 3.4-4.4V — this is critical. Do NOT use 5V or 3.3V directly. Use a LiPo battery or a dedicated 4V regulator. Needs up to 2A during transmission bursts. TX/RX to MCU UART. Add a 1000µF capacitor at VCC to handle peak current. ANTENNA: required, any GSM antenna.',
+    tips: 'Most common beginner mistake: powering from Arduino\'s 3.3V or 5V pin — the module resets under load. Use a dedicated power supply. AT+CMGF=1 sets SMS text mode. AT+CGATT=1 attaches GPRS. RSSI check: AT+CSQ (above 10 is usable).',
+    lib: 'TinyGSM library by Volodymyr Shymanskyy — excellent AT abstraction.',
+  },
+  sim7600e: {
+    what: 'The SIM7600E is a 4G LTE Cat-4 module supporting real broadband speeds: 150Mbps down, 50Mbps up. Also falls back to 3G/2G. This is for deployments where upload bandwidth matters — streaming video, uploading large files, real-time video feeds from field nodes.',
+    wiring: 'Main UART (AT commands): TX/RX at 115200 baud. USB port for direct data connection. 3.3-4.2V VCC (same power supply cautions as SIM800L — can draw 2A peaks). Needs proper LTE antenna (4G antenna, not old GSM antenna).',
+    tips: 'Use USB for high-speed data and UART for AT command control simultaneously. Network registration: AT+CREG?, AT+CGREG?. For LTE-only: AT+CNMP=38. Check signal: AT+CSQ and AT+CPSI for detailed band info.',
+    lib: 'TinyGSM (for AT control). Direct USB: standard Linux/Windows modem driver (appears as USB network interface).',
+  },
+  a9g: {
+    what: 'The AI-Thinker A9G combines GSM/GPRS cellular and GPS on one module — one chip handles both. Two separate UARTs: one for cellular AT commands, one for GPS NMEA data. Ideal when you want to minimize components: location + internet in a single module for guardian field nodes.',
+    wiring: 'UART1 (GPIO11/10): cellular AT commands. UART2 (GPIO16/17): GPS NMEA sentences. VCC: 3.8V (LiPo direct). BOOT pin must be pulled LOW for 1 second on startup. PWRKEY: toggle to power on/off.',
+    tips: 'GPS fix takes longer than dedicated GPS modules — shared antenna path. The module runs its own RTOS and has 4MB flash for custom firmware if needed. Comes with a small PCB antenna for GSM; GPS needs a clear sky view.',
+    lib: 'Custom A9G library or raw AT commands. Use TinyGPS++ on the GPS UART.',
+  },
+  sim7000g: {
+    what: 'The SIM7000G is designed for IoT: it supports NB-IoT and eMTC (LTE Cat-M1) — low-bandwidth cellular protocols specifically designed for battery-powered sensors. Instead of streaming video, think: send 50 bytes of GPS position every 10 minutes for months on a single battery. Also falls back to GPRS.',
+    wiring: 'UART AT commands at 115200. VCC 3.3-4.2V. NB-IoT requires a nano-SIM and a carrier that supports NB-IoT (Telus, Rogers in Canada; T-Mobile, AT&T in US). Sleep current <1µA.',
+    tips: 'NB-IoT costs much less per MB than LTE. Perfect pairing with solar + LiPo for permanent field nodes. AT+CBANDCFG sets the LTE bands. AT+CMNB=1 forces NB-IoT, =2 forces eMTC. Check carrier support before buying.',
+    lib: 'TinyGSM (full support for SIM7000G).',
+  },
+  ec21: {
+    what: 'The Quectel EC21 is an LTE Cat-1 module — a step below Cat-4 in speed (10Mbps/5Mbps) but cheaper, lower power, and widely compatible. The EC21-G global variant covers all LTE bands worldwide. Has QuecOpen: you can run custom C applications directly on the module without a separate MCU.',
+    wiring: 'Main UART at 115200. USB for debug/firmware. 3.3V I/O. Needs proper LTE antenna (included with most dev boards). Mini-PCIe form factor available for embedded designs.',
+    tips: 'QuecOpen means you can eliminate the Arduino/ESP32 entirely for simple tasks — the EC21 can run your sensor polling and cloud upload code internally. Cat-1 is ideal for guardian nodes that need reliable upload without the cost of Cat-4.',
+    lib: 'TinyGSM works. For QuecOpen: Quectel OpenLinux SDK.',
+  },
+};
+
+function showWiki(type) {
+  const wiki = WIKI[type];
+  if (!wiki) return;
+  const def = getCompDef(type);
+  const w = typeof wiki === 'string' ? { what: wiki } : wiki;
+  const section = (label, color, text) => text
+    ? `<div style="margin-bottom:14px"><div style="color:${color};font-size:11px;letter-spacing:1.5px;margin-bottom:5px">${label}</div><div style="color:var(--text);line-height:1.8;font-size:13px">${text}</div></div>`
+    : '';
+  const pins = (def?.pins||[]).map(p=>`<span class="pin-chip">${p}</span>`).join('');
+  const dim = def?.dim ? `<div style="margin-bottom:14px"><div style="color:var(--text-dim);font-size:11px;letter-spacing:1.5px;margin-bottom:5px">DIMENSIONS</div><div style="color:var(--amber);font-size:13px">${def.dim}</div></div>` : '';
+  document.getElementById('wikiContent').innerHTML = `
+    <div style="color:var(--amber);margin-bottom:14px;font-size:15px;letter-spacing:1px">${def?.icon||'⚙'} ${def?.label||type}</div>
+    ${section('WHAT IS IT', 'var(--green)', w.what)}
+    ${section('WIRING', 'var(--cyan)', w.wiring)}
+    ${dim}
+    ${section('TIPS', 'var(--amber)', w.tips)}
+    ${section('LIBRARY', 'var(--lora)', w.lib)}
+    ${pins ? `<div style="margin-bottom:14px"><div style="color:var(--text-dim);font-size:11px;letter-spacing:1.5px;margin-bottom:5px">PINS</div><div style="display:flex;flex-wrap:wrap;gap:4px">${pins}</div></div>` : ''}
+    <div style="border-top:1px solid var(--edge);padding-top:10px;font-size:12px;color:var(--text-dim)">
+      Share datasheets via IPFS CID in <a href="chat.html" style="color:var(--amber)">#hardware-lab ↗</a>
+    </div>
+  `;
+  switchSTab('wiki');
+}
+
+switchSTab = function(tab) {
+  document.querySelectorAll('.stab').forEach(t => t.classList.toggle('active', t.id==='stab-'+tab));
+  document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.toggle('active', p.id==='spane-'+tab));
+}
+
+// ── JSON EDITOR ───────────────────────────────────────────────────────────────
+function updateJson() {
+  const snap = JSON.parse(JSON.stringify(circuit));
+  snap.components.forEach(c => { delete c.vx; delete c.vy; delete c.index; });
+  document.getElementById('jsonEditor').value = JSON.stringify(snap, null, 2);
+}
+
+renderFromJson = function() {
+  try {
+    const circ = JSON.parse(document.getElementById('jsonEditor').value);
+    renderCircuit(circ);
+    setStatus('Circuit rendered from JSON.');
+  } catch(e) {
+    setStatus('JSON parse error: '+e.message);
+  }
+}
+
+toggleJson = function() {
+  const panel = document.getElementById('jsonPanel');
+  const btn   = document.getElementById('jsonToggleBtn');
+  const open  = panel.classList.contains('expanded');
+  panel.classList.toggle('expanded', !open);
+  panel.classList.toggle('collapsed', open);
+  btn.textContent = open ? 'EXPAND' : 'COLLAPSE';
+  if (!open) updateJson();
+}
+
+exportJson = function() {
+  updateJson();
+  const blob = new Blob([document.getElementById('jsonEditor').value], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`circuit-${circuit.title.replace(/\s+/g,'-').toLowerCase()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  setStatus('Exported circuit JSON.');
+  GN_GAME.trackStat('circuitsDesigned');
+  if (GN_GAME.getPlayer().stats.circuitsDesigned === 1) GN_GAME.unlockAchievement('circuit_designed');
+}
+
+// ── IPFS SHARE ────────────────────────────────────────────────────────────────
+shareCircuit = function() {
+  updateJson();
+  // Enable LIVE if not already on, to get a session URL
+  if (!liveMode) toggleLive();
+  const sessionUrl = location.href.split('#')[0] + '#' + liveSession;
+  const compList = circuit.components.slice(0,5).map(c=>c.label||c.type).join(', ') + (circuit.components.length>5?`… +${circuit.components.length-5} more`:'');
+  const chatMsg = `🔧 CIRCUIT SHARED — "${circuit.title}" · ${circuit.components.length} components (${compList}) · Join: ${sessionUrl}`;
+  shareToChatGun(chatMsg);
+  const info = `Circuit shared!\n\n🔗 Collab URL (paste in browser or chat):\n${sessionUrl}\n\nAnyone opening this URL joins the same live editing session.\n\n── "${circuit.title}"\n   ${circuit.components.length} components · ${circuit.connections.length} connections\n\n✉ Posted to #hardware-lab chat via GUN.`;
+  alert(info);
+  setStatus(`Shared to chat: ${circuit.title}`);
+  GN_GAME.unlockAchievement('hw_designer');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+clearCanvas = function() {
+  if (!confirm('Clear the circuit? This cannot be undone.')) return;
+  renderCircuit({ title: document.getElementById('circuitTitle').value, components:[], connections:[] });
+  setStatus('Canvas cleared.');
+}
+
+autoLayout = function() {
+  // Grid-pack components
+  getSvgSize();
+  const cols = Math.max(1, Math.floor((W - 80) / 180));
+  circuit.components.forEach((c, i) => {
+    c.x = 90 + (i % cols) * 180;
+    c.y = 90 + Math.floor(i / cols) * 140;
+  });
+  renderCircuit(circuit);
+  setStatus('Components arranged in grid.');
+}
+
+function setStatus(msg) {
+  document.getElementById('sbMsg').textContent = msg;
+}
+
+// ── EXAMPLE CIRCUITS ──────────────────────────────────────────────────────────
+const EXAMPLES = {
+  'temp-monitor': {
+    title: 'Temperature Monitor (Arduino + DHT22 + OLED)',
+    components: [
+      { id:'U1', type:'arduino_uno',   label:'Arduino Uno',    x:400, y:300 },
+      { id:'S1', type:'dht22',         label:'DHT22 Sensor',   x:650, y:180 },
+      { id:'D1', type:'oled_128x64',   label:'OLED 128×64',    x:150, y:180 },
+      { id:'R1', type:'resistor',      label:'10kΩ pullup',    x:650, y:380 },
+      { id:'P1', type:'usb_power',     label:'USB 5V',         x:400, y:500 },
+    ],
+    connections: [
+      { from:'U1.A4',  to:'D1.SDA',   label:'SDA' },
+      { from:'U1.A5',  to:'D1.SCL',   label:'SCL' },
+      { from:'U1.D2',  to:'R1.2',     label:'DATA' },
+      { from:'R1.2',   to:'S1.DATA',  label:'DATA' },
+      { from:'U1.5V',  to:'S1.VCC',   label:'5V' },
+      { from:'U1.5V',  to:'D1.VCC',   label:'5V' },
+      { from:'U1.5V',  to:'R1.1',     label:'5V pullup' },
+      { from:'U1.GND', to:'S1.GND',   label:'GND' },
+      { from:'U1.GND', to:'D1.GND',   label:'GND' },
+      { from:'P1.5V',  to:'U1.VIN',   label:'5V' },
+      { from:'P1.GND', to:'U1.GND',   label:'GND' },
+    ],
+  },
+  'guardian-node': {
+    title: 'Guardian Field Node (ESP32 + GPS + SIM800L + LoRa)',
+    components: [
+      { id:'U1', type:'esp32',    label:'ESP32 DevKit',    x:400, y:280 },
+      { id:'G1', type:'neo6m',    label:'NEO-6M GPS',      x:160, y:150 },
+      { id:'C1', type:'sim800l',  label:'SIM800L GSM',     x:640, y:150 },
+      { id:'L1', type:'sx1278',   label:'LoRa SX1278 433', x:640, y:400 },
+      { id:'P1', type:'lipo_3v7', label:'LiPo 3.7V',       x:160, y:420 },
+      { id:'P2', type:'tp4056',   label:'TP4056 Charger',  x:160, y:280 },
+    ],
+    connections: [
+      { from:'U1.GPIO16', to:'G1.TX',    label:'GPS RX' },
+      { from:'U1.GPIO17', to:'G1.RX',    label:'GPS TX' },
+      { from:'U1.GPIO2',  to:'C1.TXD',   label:'GSM RX' },
+      { from:'U1.GPIO3',  to:'C1.RXD',   label:'GSM TX' },
+      { from:'U1.GPIO5',  to:'L1.NSS',   label:'CS' },
+      { from:'U1.GPIO18', to:'L1.SCK',   label:'SCK' },
+      { from:'U1.GPIO19', to:'L1.MISO',  label:'MISO' },
+      { from:'U1.GPIO23', to:'L1.MOSI',  label:'MOSI' },
+      { from:'U1.GPIO4',  to:'L1.RST',   label:'RST' },
+      { from:'U1.GPIO26', to:'L1.DIO0',  label:'IRQ' },
+      { from:'P1.+',      to:'P2.BAT+',  label:'+' },
+      { from:'P1.+',      to:'C1.VCC',   label:'3.7V' },
+      { from:'P2.OUT+',   to:'U1.VIN',   label:'3.7V' },
+      { from:'U1.3V3',    to:'G1.VCC',   label:'3.3V' },
+      { from:'U1.3V3',    to:'L1.VCC',   label:'3.3V' },
+      { from:'U1.GND',    to:'G1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'C1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'L1.GND',   label:'GND' },
+    ],
+  },
+  'lora-node': {
+    title: 'LoRa Guardian Node (ESP32 + SX1278)',
+    components: [
+      { id:'U1', type:'esp32',    label:'ESP32 DevKit',  x:400, y:300 },
+      { id:'L1', type:'sx1278',   label:'LoRa SX1278',   x:650, y:200 },
+      { id:'S1', type:'bmp280',   label:'BMP280',        x:150, y:200 },
+      { id:'P1', type:'lipo_3v7', label:'LiPo 3.7V',     x:400, y:480 },
+      { id:'C1', type:'tp4056',   label:'TP4056',        x:650, y:420 },
+    ],
+    connections: [
+      { from:'U1.GPIO5',  to:'L1.NSS',   label:'CS' },
+      { from:'U1.GPIO18', to:'L1.SCK',   label:'SCK' },
+      { from:'U1.GPIO19', to:'L1.MISO',  label:'MISO' },
+      { from:'U1.GPIO23', to:'L1.MOSI',  label:'MOSI' },
+      { from:'U1.GPIO4',  to:'L1.RST',   label:'RST' },
+      { from:'U1.GPIO2',  to:'L1.DIO0',  label:'IRQ' },
+      { from:'U1.GPIO21', to:'S1.SDA',   label:'SDA' },
+      { from:'U1.GPIO22', to:'S1.SCL',   label:'SCL' },
+      { from:'P1.+',      to:'C1.BAT+',  label:'+' },
+      { from:'C1.OUT+',   to:'U1.VIN',   label:'3.7V' },
+      { from:'U1.3V3',    to:'L1.VCC',   label:'3.3V' },
+      { from:'U1.3V3',    to:'S1.VIN',   label:'3.3V' },
+      { from:'U1.GND',    to:'L1.GND',   label:'GND' },
+      { from:'U1.GND',    to:'S1.GND',   label:'GND' },
+    ],
+  },
+};
+
+loadExample = function(key) {
+  const ex = EXAMPLES[key];
+  if (!ex) return;
+  renderCircuit(JSON.parse(JSON.stringify(ex)));
+  setStatus(`Loaded example: ${ex.title}`);
+}
+
+// ── POWER BUDGET CALCULATOR ───────────────────────────────────────────────────
+const BATTERY_SPECS = {
+  lipo_1000: { name:'LiPo 1000mAh', voltage:3.7, capacity:1000, form:'small' },
+  lipo_2000: { name:'LiPo 2000mAh', voltage:3.7, capacity:2000, form:'small' },
+  lipo_3000: { name:'LiPo 3000mAh', voltage:3.7, capacity:3000, form:'small' },
+  lipo_5000: { name:'LiPo 5000mAh', voltage:3.7, capacity:5000, form:'medium' },
+  vape_400:  { name:'Vape 400mAh', voltage:3.7, capacity:400,  form:'vape' },
+  vape_800:  { name:'Vape 800mAh', voltage:3.7, capacity:800,  form:'vape' },
+  vape_1200: { name:'Vape 1200mAh', voltage:3.7, capacity:1200, form:'vape' },
+  cr2032:   { name:'CR2032 Coin', voltage:3.0, capacity:225,  form:'coin' },
+  cr123a:   { name:'CR123A', voltage:3.0, capacity:1500, form:'camera' },
+  aa_alkaline: { name:'AA Alkaline', voltage:3.0, capacity:2800, form:'aa' },
+  aaa_alkaline: { name:'AAA Alkaline', voltage:3.0, capacity:1200, form:'aaa' },
+};
+
+const COMPONENT_POWER = {
+  // MCU
+  arduino_uno: { active:50, sleep:15, deep:0.1 },
+  arduino_nano: { active:20, sleep:10, deep:0.05 },
+  arduino_mega: { active:80, sleep:20, deep:0.2 },
+  esp32: { active:180, sleep:10, deep:0.01 },
+  esp8266: { active:70, sleep:15, deep:0.02 },
+  attiny85: { active:5, sleep:1, deep:0.001 },
+  stm32f103: { active:30, sleep:5, deep:0.01 },
+  raspberry_pi: { active:500, sleep:100, deep:10 },
+
+  // Sensors
+  dht22: { active:0.5, sleep:0.01, deep:0.001 },
+  bmp280: { active:1, sleep:0.5, deep:0.001 },
+  hcsr04: { active:15, sleep:0.1, deep:0.001 },
+  pir: { active:60, sleep:10, deep:0.001 },
+  mpu6050: { active:3, sleep:1, deep:0.001 },
+  ds18b20: { active:1, sleep:0.01, deep:0.001 },
+  gy521: { active:3, sleep:1, deep:0.001 },
+  photores: { active:0.1, sleep:0.01, deep:0.001 },
+
+  // Displays
+  oled_128x64: { active:20, sleep:0.1, deep:0.001 },
+  lcd_16x2: { active:10, sleep:0.5, deep:0.001 },
+  tft_240x320: { active:100, sleep:5, deep:0.001 },
+  neopixel: { active:60, sleep:0.1, deep:0.001 },
+  max7219: { active:5, sleep:0.1, deep:0.001 },
+  sevenseg: { active:10, sleep:0.1, deep:0.001 },
+
+  // Power
+  battery_9v: { active:0, sleep:0, deep:0 },
+  lm7805: { active:0, sleep:0, deep:0 },
+  lipo_3v7: { active:0, sleep:0, deep:0 },
+  tp4056: { active:0, sleep:0, deep:0 },
+  usb_power: { active:0, sleep:0, deep:0 },
+
+  // Passive
+  resistor: { active:0, sleep:0, deep:0 },
+  capacitor: { active:0, sleep:0, deep:0 },
+  led: { active:5, sleep:0, deep:0 },
+  button: { active:0, sleep:0, deep:0 },
+  pot: { active:0, sleep:0, deep:0 },
+  relay_5v: { active:70, sleep:0, deep:0 },
+
+  // Cellular
+  sim800l: { active:400, sleep:10, deep:0.1 },
+  sim7600e: { active:800, sleep:20, deep:0.5 },
+  a9g: { active:300, sleep:15, deep:0.2 },
+  sim7000g: { active:200, sleep:5, deep:0.1 },
+  ec21: { active:350, sleep:10, deep:0.2 },
+
+  // GPS
+  neo6m: { active:45, sleep:10, deep:0.1 },
+  neo8m: { active:40, sleep:8, deep:0.1 },
+  l76k: { active:25, sleep:5, deep:0.1 },
+  gtu7: { active:45, sleep:10, deep:0.1 },
+  atgm336h: { active:20, sleep:5, deep:0.1 },
+
+  // LoRa
+  sx1276: { active:120, sleep:0.1, deep:0.01 },
+  sx1278: { active:120, sleep:0.1, deep:0.01 },
+  rfm95w: { active:100, sleep:0.1, deep:0.01 },
+  ra02: { active:120, sleep:0.1, deep:0.01 },
+  rylr896: { active:80, sleep:0.1, deep:0.01 },
+  e32_433: { active:100, sleep:0.1, deep:0.01 },
+  heltec_lora32: { active:180, sleep:10, deep:0.01 },
+
+  // Radio
+  hc05: { active:30, sleep:1, deep:0.01 },
+  nrf24l01: { active:12, sleep:0.1, deep:0.001 },
+  hc12: { active:15, sleep:1, deep:0.01 },
+};
+
+calculatePowerBudget = function() {
+  const batteryType = document.getElementById('batteryType').value;
+  const mode = document.getElementById('operatingMode').value;
+  const battery = BATTERY_SPECS[batteryType];
+  const resultsDiv = document.getElementById('powerResults');
+
+  if (!battery) {
+    resultsDiv.innerHTML = '<div style="color:var(--red)">Please select a battery type</div>';
+    return;
+  }
+
+  // Calculate total power consumption
+  let totalActive = 0;
+  let totalSleep = 0;
+  let totalDeep = 0;
+
+  circuit.components.forEach(comp => {
+    const spec = COMPONENT_POWER[comp.type];
+    if (spec) {
+      totalActive += spec.active;
+      totalSleep += spec.sleep;
+      totalDeep += spec.deep;
+    }
+  });
+
+  // Apply duty cycles based on mode
+  let dutyActive = 1.0, dutySleep = 0.0, dutyDeep = 0.0;
+  let modeName = 'Continuous';
+
+  switch(mode) {
+    case 'periodic':
+      dutyActive = 0.01; // 1% active, 99% sleep
+      dutySleep = 0.99;
+      modeName = 'Periodic (10min intervals)';
+      break;
+    case 'low_power':
+      dutyActive = 0.1; // 10% active, 90% sleep
+      dutySleep = 0.9;
+      modeName = 'Low Power (90% sleep)';
+      break;
+    case 'ultra_low':
+      dutyActive = 0.01; // 1% active, 99% deep sleep
+      dutyDeep = 0.99;
+      modeName = 'Ultra Low (99% deep sleep)';
+      break;
+  }
+
+  const avgCurrent = (totalActive * dutyActive) + (totalSleep * dutySleep) + (totalDeep * dutyDeep);
+  const batteryWh = (battery.voltage * battery.capacity) / 1000; // Watt-hours
+  const runtimeHours = batteryWh / (avgCurrent / 1000); // Hours
+  const runtimeDays = runtimeHours / 24;
+
+  // Calculate form factor constraints
+  const formFactor = battery.form;
+  const maxComponents = {
+    'coin': 5, 'vape': 8, 'small': 12, 'aa': 15, 'aaa': 10, 'camera': 10, 'medium': 20
+  };
+  const componentCount = circuit.components.length;
+  const formOk = componentCount <= maxComponents[formFactor];
+
+  // Generate results HTML
+  const resultsHTML = `
+    <div style="color:var(--green);margin-bottom:6px">🔋 Power Budget Results</div>
+    <div style="font-size:8px;color:var(--cyan-d);margin-bottom:6px">Mode: ${modeName} | Battery: ${battery.name}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:9px">
+      <div style="background:var(--deep);padding:6px;border-radius:4px">
+        <div style="color:var(--amber)">📊 Power Consumption</div>
+        <div>Active: ${totalActive.toFixed(1)}mA</div>
+        <div>Sleep: ${totalSleep.toFixed(1)}mA</div>
+        <div>Deep: ${totalDeep.toFixed(3)}mA</div>
+        <div style="color:var(--green)">Avg: ${avgCurrent.toFixed(2)}mA</div>
+      </div>
+      <div style="background:var(--deep);padding:6px;border-radius:4px">
+        <div style="color:var(--amber)">⏱️ Runtime Estimate</div>
+        <div>Battery: ${battery.capacity}mAh @ ${battery.voltage}V</div>
+        <div>Energy: ${batteryWh.toFixed(2)}Wh</div>
+        <div style="color:var(--green)">Runtime: ${runtimeDays.toFixed(1)} days</div>
+        <div style="color:var(--green)">${Math.floor(runtimeHours)} hours</div>
+      </div>
+    </div>
+    <div style="margin-top:6px;font-size:8px;color:var(--cyan-d)">
+      <div>Components: ${componentCount} (max ${maxComponents[formFactor]} for ${formFactor})</div>
+      <div style="color:${formOk?'var(--green)':'var(--red)'}">Form factor: ${formOk?'✓ OK':'✗ Too large'}</div>
+      <div style="margin-top:4px;color:var(--lora)">Tip: Use sleep modes and efficient regulators for longer battery life</div>
+    </div>
+  `;
+
+  resultsDiv.innerHTML = resultsHTML;
+}
+
+showPowerBudget = function() {
+  switchSTab('power');
+}
+
+// ── PROBLEM DEFINITION ────────────────────────────────────────────────────────
+saveProblemDefinition = function() {
+  const problem = {
+    problemStatement: document.getElementById('problemStatement').value.trim(),
+    constraints: document.getElementById('constraints').value.trim(),
+    features: document.getElementById('features').value.trim()
+  };
+  circuit.problemDefinition = problem;
+  updateJson();
+  document.getElementById('problemResults').innerHTML = `
+    <div style="color:var(--green);margin-bottom:6px">✅ Problem definition saved</div>
+    <div style="font-size:8px;color:var(--cyan-d)">This information will be included when exporting the circuit</div>
+  `;
+  setStatus('Problem definition saved with circuit');
+}
+
+
+// ── GUN P2P COLLAB ────────────────────────────────────────────────────────────
+let gunDb = null;
+let liveMode = false;
+let liveSession = null;
+let syncTimer = null;
+let peersOnline = 0;
+
+function initGun() {
+  if (gunDb) return;
+  gunDb = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+}
+
+toggleLive = function() {
+  if (!liveMode) {
+    initGun();
+    // Session ID from URL hash, or generate one
+    if (!location.hash) location.hash = '#' + Math.random().toString(36).slice(2,8);
+    liveSession = location.hash.replace('#','');
+    liveMode = true;
+    document.getElementById('liveBtn').textContent = 'LIVE: ON';
+    document.getElementById('liveBtn').classList.add('active');
+    subscribeCollab();
+    setStatus(`Collab LIVE — session: ${liveSession} — share URL to collaborate`);
+  } else {
+    liveMode = false;
+    document.getElementById('liveBtn').textContent = 'LIVE: OFF';
+    document.getElementById('liveBtn').classList.remove('active');
+    setStatus('Collab LIVE disabled.');
+  }
+}
+
+function subscribeCollab() {
+  if (!gunDb || !liveSession) return;
+  const node = gunDb.get('guardian-circuit-lab-v1').get(liveSession);
+  // Track peer presence via heartbeat key
+  const myId = Math.random().toString(36).slice(2,6);
+  const heartbeat = setInterval(() => {
+    if (!liveMode) { clearInterval(heartbeat); return; }
+    node.get('peers').get(myId).put({ ts: Date.now() });
+  }, 5000);
+  node.get('peers').map().on((data, key) => {
+    if (!data) return;
+    const alive = Object.keys({}).constructor === Object; // placeholder
+    // Count peers active in last 15s
+    node.get('peers').once(allPeers => {
+      if (!allPeers) return;
+      const now = Date.now();
+      const count = Object.entries(allPeers).filter(([k,v]) => k!=='_' && v && (now-(v.ts||0)) < 15000).length;
+      peersOnline = count;
+      document.getElementById('peerCount').textContent = `· peers: ${count}`;
+      document.getElementById('peerCount').style.color = count > 1 ? 'var(--green)' : 'var(--text-dim)';
+    });
+  });
+  // Subscribe to circuit updates
+  node.get('circuit').on(data => {
+    if (!data || !liveMode) return;
+    try {
+      const remote = JSON.parse(data);
+      // Only apply if different from current (avoid echo)
+      if (JSON.stringify(remote.components) !== JSON.stringify(circuit.components) ||
+          JSON.stringify(remote.connections) !== JSON.stringify(circuit.connections)) {
+        circuit = remote;
+        renderCircuit(circuit);
+        setStatus(`Collab sync received — ${circuit.components.length} components`);
+      }
+    } catch(e) {}
+  });
+}
+
+function pushCollab() {
+  if (!liveMode || !gunDb || !liveSession) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    const snap = JSON.parse(JSON.stringify(circuit));
+    snap.components.forEach(c => { delete c.vx; delete c.vy; delete c.index; });
+    gunDb.get('guardian-circuit-lab-v1').get(liveSession).get('circuit').put(JSON.stringify(snap));
+  }, 600);
+}
+
+function shareToChatGun(message) {
+  initGun();
+  const msg = { text: message, user: 'CIRCUIT-LAB', ts: Date.now(), type: 'circuit' };
+  gunDb.get('guardian-chat-v1').get('messages').set(msg);
+}
+
+// ── STARTUP ───────────────────────────────────────────────────────────────────
+if (typeof Gun !== 'undefined') {
+  GN_GAME.init(gun);
+} else {
+  GN_GAME.init(null);
+}
+var p = GN_GAME.getPlayer();
+var xpEl = document.getElementById('circuitXP');
+if (xpEl) xpEl.textContent = p.rank + ' · ' + p.xp + ' XP';
+
+buildCatalog();
+loadExample('guardian-node');
+
+document.getElementById('circuitTitle').addEventListener('input', e => {
+  circuit.title = e.target.value;
+});
+
+// Auto-join collab session from URL hash
+if (location.hash && location.hash.length > 1) {
+  setTimeout(() => toggleLive(), 500);
+}
+
+window.addEventListener('resize', () => { getSvgSize(); });
+
+  });
+</script>
+
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="logo">⚡ CIRCUIT LAB <span class="blink">_</span></span>
+  <span class="circuit-status-badge edu">EDUCATIONAL</span>
+  <div class="tb-sep"></div>
+  <input class="tb-title" id="circuitTitle" value="Untitled Circuit" maxlength="48" spellcheck="false">
+  <div class="tb-sep"></div>
+  <button class="tb-btn" on:click={() => { loadExample('guardian-node') }}>Guardian Node</button>
+  <button class="tb-btn" on:click={() => { loadExample('lora-node') }}>LoRa Node</button>
+  <button class="tb-btn" on:click={() => { loadExample('temp-monitor') }}>Temp Monitor</button>
+  <button class="tb-btn" on:click={() => { clearCanvas() }}>Clear</button>
+  <button class="tb-btn" on:click={() => { autoLayout() }}>Auto Layout</button>
+  <button class="tb-btn" on:click={() => { showPowerBudget() }}>Power Budget</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" on:click={() => { shareCircuit() }}>Share via IPFS…</button>
+  <button class="tb-btn" id="liveBtn" on:click={() => { toggleLive() }} title="Enable P2P collaborative editing">LIVE: OFF</button>
+  <div class="tb-sep"></div>
+  <span class="cid-pill" id="cidPill" title="Circuit CID">CID: none</span>
+  <div class="tb-right">
+    <span id="circuitXP" style="font-size:0.78rem;color:#fbbf24;font-weight:600;cursor:pointer" on:click={() => { GN_GAME.showProfileModal() }}></span>
+    <a href="/index.html">← MISSIONS</a>
+    <a href="#/chat">CHAT ↗</a>
+    <a href="/chain.html">CHAIN ↗</a>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar collapsed-mobile" id="sidebarEl">
+    <button class="sidebar-toggle-btn" on:click={(e) => { document.getElementById('sidebarEl').classList.toggle('collapsed-mobile'); e.currentTarget.textContent = e.currentTarget.textContent.includes('SHOW') ? '▲ HIDE SIDEBAR' : '▼ SHOW SIDEBAR' }}>▼ SHOW SIDEBAR</button>
+    <div class="sidebar-tabs">
+      <div class="stab active" id="stab-catalog" on:click={() => { switchSTab('catalog') }}>CATALOG</div>
+      <div class="stab" id="stab-props" on:click={() => { switchSTab('props') }}>PROPS</div>
+      <div class="stab" id="stab-power" on:click={() => { switchSTab('power') }}>POWER</div>
+      <div class="stab" id="stab-problem" on:click={() => { switchSTab('problem') }}>PROBLEM</div>
+      <div class="stab" id="stab-wiki" on:click={() => { switchSTab('wiki') }}>WIKI</div>
+      <div class="stab" id="stab-bom" on:click={() => { switchSTab('bom') }}>BOM</div>
+    </div>
+
+    <!-- Catalog pane -->
+    <div class="sidebar-pane active" id="spane-catalog"></div>
+
+    <!-- Properties pane -->
+    <div class="sidebar-pane" id="spane-props">
+      <div class="no-sel" id="propsNoSel">
+        <div style="font-size:24px;margin-bottom:8px;opacity:.4">⚙</div>
+        Click a component<br>to see its properties
+      </div>
+      <div style="display:none" id="propsPanel">
+        <div class="prop-section">
+          <div class="prop-title">COMPONENT</div>
+          <div class="prop-row"><div class="prop-label">ID</div><input class="prop-input" id="propId"></div>
+          <div class="prop-row"><div class="prop-label">LABEL</div><input class="prop-input" id="propLabel"></div>
+          <div class="prop-row"><div class="prop-label">TYPE</div><div class="prop-val" id="propType">—</div></div>
+          <div class="prop-row"><div class="prop-label">CATEGORY</div><div class="prop-val" id="propCat">—</div></div>
+        </div>
+        <div class="prop-section">
+          <div class="prop-title">PINS</div>
+          <div class="pin-list" id="propPins"></div>
+        </div>
+        <div class="prop-section" style="margin-top:8px;display:flex;gap:6px">
+          <button class="tb-btn" on:click={() => { applyProps() }}>Apply</button>
+          <button class="tb-btn" on:click={() => { deleteSelected() }} style="border-color:#ff3344;color:#ff3344">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Power pane -->
+    <div class="sidebar-pane" id="spane-power">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🔋 POWER BUDGET</div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">BATTERY TYPE</label>
+          <select id="batteryType" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:6px 8px">
+            <option value="lipo_1000">LiPo 1000mAh (3.7V)</option>
+            <option value="lipo_2000">LiPo 2000mAh (3.7V)</option>
+            <option value="lipo_3000">LiPo 3000mAh (3.7V)</option>
+            <option value="lipo_5000">LiPo 5000mAh (3.7V)</option>
+            <option value="vape_400">Vape 400mAh (3.7V)</option>
+            <option value="vape_800">Vape 800mAh (3.7V)</option>
+            <option value="vape_1200">Vape 1200mAh (3.7V)</option>
+            <option value="cr2032">CR2032 Coin Cell (3V)</option>
+            <option value="cr123a">CR123A (3V)</option>
+            <option value="aa_alkaline">AA Alkaline (1.5V x 2)</option>
+            <option value="aaa_alkaline">AAA Alkaline (1.5V x 2)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">OPERATING MODE</label>
+          <select id="operatingMode" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:6px 8px">
+            <option value="continuous">Continuous (24/7)</option>
+            <option value="periodic">Periodic (every 10min)</option>
+            <option value="low_power">Low Power (sleep 90%)</option>
+            <option value="ultra_low">Ultra Low (sleep 99%)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <button class="tb-btn" on:click={() => { calculatePowerBudget() }} style="width:100%;font-size:14px;padding:8px">Calculate Budget</button>
+        </div>
+        <div id="powerResults" style="background:var(--deep);border:1px solid var(--edge);padding:12px;font-size:13px;line-height:1.8">
+          <div style="color:var(--green);margin-bottom:6px">Results will appear here</div>
+          <div style="color:var(--text-dim)">Select battery and mode, then click Calculate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem pane -->
+    <div class="sidebar-pane" id="spane-problem">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🎯 PROBLEM & SOLUTION</div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">PROBLEM STATEMENT</label>
+          <textarea id="problemStatement" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:90px;resize:vertical" placeholder="Describe the problem this circuit is solving..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">CONSTRAINTS & REQUIREMENTS</label>
+          <textarea id="constraints" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:70px;resize:vertical" placeholder="Power budget, size limits, environmental conditions, cost targets..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;letter-spacing:1px">FEATURE REQUESTS</label>
+          <textarea id="features" style="width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:8px 10px;outline:none;min-height:70px;resize:vertical" placeholder="Specific capabilities, interfaces, performance targets..."></textarea>
+        </div>
+        <div style="margin-bottom:12px">
+          <button class="tb-btn" on:click={() => { saveProblemDefinition() }} style="width:100%;font-size:14px;padding:8px">Save Problem Definition</button>
+        </div>
+        <div id="problemResults" style="background:var(--deep);border:1px solid var(--edge);padding:12px;font-size:13px;line-height:1.8">
+          <div style="color:var(--green);margin-bottom:6px">Problem definition will be saved with circuit</div>
+          <div style="color:var(--text-dim)">This information travels with the design when exported</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wiki pane -->
+    <div class="sidebar-pane" id="spane-wiki">
+      <div id="wikiContent" style="padding:14px;font-size:14px;color:var(--text);line-height:1.9">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">📚 COMPONENT WIKI</div>
+        <div>Click a component in the catalog to see its datasheet links and usage notes.</div>
+        <div style="margin-top:14px;color:var(--text-dim)">Or paste an IPFS CID in chat to share a schematic file.</div>
+        <div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px">
+          <div style="color:var(--green);margin-bottom:8px;letter-spacing:1px">QUICK LINKS</div>
+          <div>• Arduino pinout: <span style="color:var(--amber)">ipfs add pinout.pdf</span></div>
+          <div>• DHT22 datasheet</div>
+          <div>• ESP32 dev board</div>
+          <div>• KiCad files via IPFS</div>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px">
+          <div style="color:var(--lora);margin-bottom:8px;letter-spacing:1px">NECTO / MIKROC</div>
+          <div>Export NECTO project → zip → ipfs add → share CID in #hardware-lab</div>
+        </div>
+      </div>
+    <!-- BOM pane -->
+    <div class="sidebar-pane" id="spane-bom">
+      <div style="padding:14px;font-size:14px;color:var(--text)">
+        <div style="color:var(--amber);margin-bottom:12px;font-size:15px;letter-spacing:1px">🛒 BILL OF MATERIALS</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <button class="tb-btn" on:click={() => { buildBOM();buildFit(); }} style="flex:1;padding:7px 0">Refresh BOM</button>
+          <button class="tb-btn" on:click={() => { exportBOM() }} style="flex:1;padding:7px 0">Export CSV</button>
+        </div>
+        <div id="bomEmpty" style="color:var(--text-dim);font-size:13px">Add components to the canvas, then click Refresh BOM.</div>
+        <div id="bomTable" style="display:none"></div>
+        <div id="bomTotal" style="display:none;margin-top:12px;padding:10px;background:var(--deep);border:1px solid var(--edge)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:var(--text-dim);font-size:12px;letter-spacing:1px">COMPONENT COST</span>
+            <span style="color:var(--green)" id="bomCompCost">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:var(--text-dim);font-size:12px;letter-spacing:1px">SHIPPING EST.</span>
+            <span style="color:var(--text-dim)" id="bomShipping">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid var(--edge);padding-top:6px;margin-top:4px">
+            <span style="color:var(--amber);font-size:13px;letter-spacing:1px">TOTAL EST.</span>
+            <span style="color:var(--amber);font-size:15px" id="bomTotalVal">$0.00</span>
+          </div>
+        </div>
+        <div id="fitEstimator" style="display:none;margin-top:14px"></div>
+        <div style="margin-top:14px;padding:10px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);font-size:12px;color:var(--text-dim);line-height:1.7">
+          <div style="color:var(--green);margin-bottom:4px;letter-spacing:1px">BUYING TIPS</div>
+          <div>• DigiKey: reliable, ships CA/US same day</div>
+          <div>• Adafruit: beginner-friendly, good docs</div>
+          <div>• SparkFun: maker-focused breakouts</div>
+          <div>• Amazon: fast shipping, mixed quality</div>
+          <div style="margin-top:6px;color:var(--cyan)">LTE+GPS combo modules save $10-20 vs separate</div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- ── Canvas area ── -->
+  <div class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <span>COMPONENTS: <span class="sv" id="sbComps">0</span></span>
+      <span>CONNECTIONS: <span class="sv" id="sbConns">0</span></span>
+      <span>SIGNALS:</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff4455"></div>PWR</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#808080"></div>GND</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#00ccff"></div>I2C</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ffaa00"></div>SPI</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#00ff41"></div>GPIO</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff66ff"></div>UART</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#cc44ff"></div>LoRa</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#44ffaa"></div>GPS</span>
+      <span class="legend-item"><div class="legend-dot" style="background:#ff6633"></div>GSM</span>
+      <span class="canvas-spacer"></span>
+      <span id="simStatus" style="color:var(--green)">● sim running</span>
+    </div>
+    <svg id="circuitSvg"></svg>
+
+    <!-- JSON panel -->
+    <div class="json-panel collapsed" id="jsonPanel">
+      <div class="json-bar">
+        <span style="color:var(--amber)">▾ CIRCUIT JSON</span>
+        <button class="tb-btn" id="jsonToggleBtn" on:click={() => { toggleJson() }}>EXPAND</button>
+        <button class="tb-btn" on:click={() => { renderFromJson() }}>▶ RENDER</button>
+        <button class="tb-btn" on:click={() => { loadExample('temp-monitor') }}>EXAMPLE</button>
+        <button class="tb-btn" on:click={() => { exportJson() }}>EXPORT</button>
+        <span style="margin-left:auto;color:var(--cyan-d)">edit JSON below to modify circuit</span>
+      </div>
+      <textarea class="json-editor" id="jsonEditor" spellcheck="false"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── Status bar ── -->
+<div class="statusbar">
+  <span>CIRCUIT LAB v1 <span class="circuit-status-badge edu">EDUCATIONAL</span></span>
+  <span>|</span>
+  <span>OPEN-SOURCE HARDWARE FOR DEMOCRACY DEFENDERS</span>
+  <span>|</span>
+  <span>P2P: GUN.JS</span>
+  <span id="peerCount" style="color:var(--text-dim)">· peers: 0</span>
+  <span style="margin-left:auto" id="sbMsg">drag components · click to select · scroll to zoom</span>
+</div>
+
+
+<svelte:head>
+<style>
+    :root {
+      --bg:#060a12; --panel:#0c1422; --deep:#040810;
+      --green:#22c55e; --green-d:#16a34a; --cyan:#38bdf8; --cyan-d:#0ea5e9;
+      --amber:#f59e0b; --red:#ef4444; --lora:#c084fc; --edge:#1a2840;
+      --text:#cbd5e1; --text-dim:#64748b;
+      --font:'Open Sans','Segoe UI',sans-serif;
+      --glow-g:0 0 12px rgba(34,197,94,0.5);
+      --glow-c:0 0 12px rgba(56,189,248,0.5);
+      --glow-a:0 0 12px rgba(245,158,11,0.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;overflow:hidden}
+    body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
+
+    /* ── Toolbar ── */
+    .toolbar{background:linear-gradient(90deg,#080f1e,#0d1e38,#080f1e);border-bottom:1px solid var(--edge);padding:0 16px;display:flex;align-items:center;gap:10px;height:52px;flex-shrink:0}
+    .logo{font-size:16px;color:var(--amber);text-shadow:var(--glow-a);letter-spacing:2px;white-space:nowrap}
+    .tb-title{flex:1;font-size:15px;color:var(--cyan);letter-spacing:1px;cursor:pointer;border:none;background:transparent;font-family:var(--font);outline:none;min-width:0}
+    .tb-title:focus{border-bottom:1px solid var(--cyan)}
+    .tb-btn{background:rgba(56,189,248,0.06);border:1px solid var(--edge);color:var(--text-dim);font-family:var(--font);font-size:13px;padding:5px 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
+    .tb-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow-c)}
+    .tb-btn.active{background:rgba(56,189,248,0.15);border-color:var(--cyan);color:var(--cyan)}
+    .tb-sep{width:1px;height:24px;background:var(--edge)}
+    .tb-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .tb-right a{color:var(--text-dim);text-decoration:none;font-size:13px}
+    .tb-right a:hover{color:var(--cyan)}
+    .cid-pill{background:rgba(34,197,94,0.07);border:1px solid var(--green-d);color:var(--green-d);font-size:12px;padding:3px 9px;letter-spacing:.5px;white-space:nowrap;cursor:pointer}
+    .cid-pill:hover{border-color:var(--green);color:var(--green)}
+
+    /* ── Layout ── */
+    .layout{display:flex;height:calc(100vh - 52px);overflow:hidden}
+
+    /* ── Sidebar ── */
+    .sidebar{width:420px;min-width:420px;border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
+    .sidebar-tabs{display:flex;border-bottom:1px solid var(--edge);flex-shrink:0}
+    .stab{flex:1;padding:8px 4px;font-size:12px;color:var(--text-dim);cursor:pointer;text-align:center;letter-spacing:.5px;border-bottom:2px solid transparent}
+    .stab:hover{color:var(--cyan)}
+    .stab.active{color:var(--amber);border-bottom-color:var(--amber)}
+    .sidebar-pane{flex:1;overflow-y:auto;display:none;flex-direction:column}
+    .sidebar-pane.active{display:flex}
+
+    /* Catalog */
+    .cat-hdr{padding:8px 12px;font-size:11px;color:var(--text-dim);letter-spacing:2px;background:rgba(0,0,0,0.2);cursor:pointer;display:flex;justify-content:space-between;user-select:none;flex-shrink:0}
+    .cat-hdr:hover{color:var(--cyan)}
+    .cat-body{display:flex;flex-direction:column}
+    .comp-entry{padding:8px 14px;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;border-left:2px solid transparent}
+    .comp-entry:hover{color:var(--green);border-left-color:var(--green);background:rgba(34,197,94,0.04)}
+    .comp-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+    .comp-name{flex:1;font-size:13px;letter-spacing:.5px}
+
+    /* Properties */
+    .prop-section{padding:14px 14px 6px}
+    .prop-title{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid var(--edge);padding-bottom:5px}
+    .prop-row{margin-bottom:10px}
+    .prop-label{font-size:12px;color:var(--text-dim);margin-bottom:3px}
+    .prop-val{font-size:14px;color:var(--amber);letter-spacing:.5px}
+    .prop-input{width:100%;background:var(--deep);border:1px solid var(--edge);color:var(--text);font-family:var(--font);font-size:14px;padding:5px 8px;outline:none}
+    .prop-input:focus{border-color:var(--cyan)}
+    .pin-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+    .pin-chip{background:rgba(56,189,248,0.08);border:1px solid var(--edge);color:var(--cyan);font-size:12px;padding:2px 7px;letter-spacing:.5px}
+    .no-sel{padding:20px 14px;text-align:center;font-size:14px;color:var(--text-dim);line-height:2;opacity:0.6}
+
+    /* ── Canvas ── */
+    .canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+    .canvas-toolbar{padding:5px 12px;background:var(--panel);border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:12px;color:var(--text-dim)}
+    .canvas-toolbar span{white-space:nowrap}
+    .canvas-spacer{flex:1}
+    .legend-item{display:flex;align-items:center;gap:4px}
+    .legend-dot{width:10px;height:2px;flex-shrink:0}
+    #circuitSvg{flex:1;width:100%;cursor:default}
+
+    /* ── JSON panel ── */
+    .json-panel{background:var(--panel);border-top:1px solid var(--edge);flex-shrink:0;display:flex;flex-direction:column;transition:height .2s}
+    .json-panel.collapsed{height:34px}
+    .json-panel.expanded{height:220px}
+    .json-bar{height:34px;padding:0 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--edge);flex-shrink:0;font-size:12px;color:var(--text-dim)}
+    .json-bar .tb-btn{padding:2px 8px;font-size:12px}
+    .json-editor{flex:1;background:var(--deep);border:none;color:var(--green);font-family:var(--font);font-size:13px;padding:8px 12px;outline:none;resize:none;tab-size:2;display:none}
+    .json-panel.expanded .json-editor{display:block}
+
+    /* ── Status bar ── */
+    .statusbar{height:28px;background:#050d1a;border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 16px;gap:16px;font-size:12px;color:var(--text-dim);flex-shrink:0}
+    .sv{color:var(--green)}
+
+    /* ── D3 node styles (set on SVG elements) ── */
+    .node-group{cursor:pointer}
+    .node-group:hover .node-rect{filter:brightness(1.3)}
+    .link-line{stroke-width:1.5;fill:none;opacity:0.8}
+    .link-label{font-size:11px;font-family:var(--font);fill:rgba(56,189,248,0.6);pointer-events:none}
+    .node-rect{rx:3;ry:3;stroke-width:1}
+    .node-label-id{font-family:var(--font);font-weight:bold;pointer-events:none}
+    .node-label-name{font-family:var(--font);pointer-events:none;fill:#94a3b8}
+
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:var(--panel)}
+    ::-webkit-scrollbar-thumb{background:var(--edge)}
+    @keyframes blink{50%{opacity:0}}
+    .blink{animation:blink 1.1s step-end infinite}
+
+    /* status badge */
+    .circuit-status-badge{display:inline-block;font-size:0.7rem;padding:2px 10px;letter-spacing:1px;border:1px solid;border-radius:2px;font-family:var(--font);white-space:nowrap;vertical-align:middle}
+    .circuit-status-badge.edu{color:var(--lora);border-color:#7c3aed;background:rgba(192,132,252,0.08)}
+
+    /* mobile toggle for sidebar */
+    .sidebar-toggle-btn{display:none;background:rgba(245,158,11,0.06);border:1px solid var(--amber);color:var(--amber);font-family:var(--font);font-size:14px;padding:10px;cursor:pointer;letter-spacing:1px;width:100%;text-align:center;min-height:44px}
+
+    @media(max-width:600px){
+      html,body{overflow:auto;height:auto;font-size:16px}
+      body{display:flex;flex-direction:column;height:auto!important}
+      .toolbar{flex-wrap:wrap;height:auto;padding:10px 14px;gap:8px}
+      .logo{font-size:16px}
+      .tb-title{font-size:16px;width:100%;order:2}
+      .tb-btn{font-size:14px;padding:8px 12px;min-height:44px}
+      .tb-sep{display:none}
+      .tb-right{width:100%;justify-content:center;flex-wrap:wrap}
+      .tb-right a{font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+      .cid-pill{font-size:14px;min-height:44px;display:flex;align-items:center}
+      .layout{flex-direction:column;height:auto;overflow:auto}
+      .sidebar{width:100%;min-width:100%;border-right:none;border-bottom:1px solid var(--edge);max-height:none}
+      .sidebar.collapsed-mobile .sidebar-pane{display:none!important}
+      .sidebar.collapsed-mobile .sidebar-tabs{display:none}
+      .sidebar-toggle-btn{display:block}
+      .sidebar-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .stab{font-size:14px;padding:10px 8px;min-height:44px;white-space:nowrap}
+      .comp-entry{font-size:16px;padding:12px 14px;min-height:44px}
+      .comp-name{font-size:14px}
+      .prop-label{font-size:14px}
+      .prop-val{font-size:16px}
+      .prop-input{font-size:16px;min-height:44px}
+      .canvas-wrap{min-height:60vh}
+      .canvas-toolbar{flex-wrap:wrap;font-size:14px;gap:6px}
+      #circuitSvg{touch-action:pan-x pan-y;overflow:auto}
+      .json-panel.expanded{height:200px}
+      .json-editor{font-size:14px}
+      .json-bar{flex-wrap:wrap;gap:6px;height:auto;padding:8px 10px}
+      .statusbar{height:auto;padding:8px 14px;flex-wrap:wrap;font-size:14px}
+      .no-sel{font-size:16px}
+    }
+</style>
+</svelte:head>
