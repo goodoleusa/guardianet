@@ -25,12 +25,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Serve the static site verbatim from repo root. webapp/ is a
-          # separate Vite sub-app with its own build step and is excluded
-          # so Pages doesn't try to serve its raw source.
+          # Serves the repo root verbatim (vanilla static HTML/JS/CSS, no
+          # build step). webapp/ (a separate Vite sub-app with its own
+          # package.json) is included as inert static files too -- it is
+          # never executed by Pages, so this is harmless, just unused.
           path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
